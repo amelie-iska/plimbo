@@ -4,7 +4,7 @@
 # See "LICENSE" for further details.
 
 '''
-Top-level Planarian Interface for Modelling Body Organization (pLIMBO) module.
+Top-level Planarian Interface for Modelling Body Organization (PLIMBO) module.
 '''
 
 # ....................{ IMPORTS                           }....................

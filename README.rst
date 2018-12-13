@@ -12,16 +12,16 @@
 .. # ------------------( SYNOPSIS                           )------------------
 
 ======
-pLIMBO
+PLIMBO
 ======
 
-**pLIMBO** (**p**\ lanarian **I**\ nterface for **M**\ odelling **B**\ ody
+**PLIMBO** (**P**\ lanarian **I**\ nterface for **M**\ odelling **B**\ ody
 **O**\ rganization) is an open-source cross-platform... *something, something.*
-pLIMBO is associated with the `Paul Allen Discovery Center`_ at `Tufts
+PLIMBO is associated with the `Paul Allen Discovery Center`_ at `Tufts
 University`_ and supported by a `Paul Allen Discovery Center award`_ from the
 `Paul G. Allen Frontiers Group`_.
 
-pLIMBO is `portably implemented <codebase_>`__ in pure `Python 3`_,
+PLIMBO is `portably implemented <codebase_>`__ in pure `Python 3`_,
 `continuously stress-tested <testing_>`__ with GitLab-CI_ **×** Appveyor_ **+**
 py.test_, and `permissively distributed <License_>`__ under the `BSD 2-clause
 license`_.
@@ -29,7 +29,7 @@ license`_.
 Contact
 =======
 
-To contact `Dr. Pietak`_, the principal developer of the pLIMBO codebase and
+To contact `Dr. Pietak`_, the principal developer of the PLIMBO codebase and
 first or second author of all above papers, cordially direct correspondence to
 either:
 
@@ -43,7 +43,7 @@ either:
   * *Hostname:* **gmail** ``{dot}`` **com**
 
 To report a software issue (e.g., bug, crash, or other unexpected behaviour)
-*or* request a new feature in pLIMBO, consider `submitting a new issue <issue
+*or* request a new feature in PLIMBO, consider `submitting a new issue <issue
 submission_>`__ to our `issue tracker`_. Thanks in advance; it's only through
 generous user contributions that your user experience can continue to improve.
 
@@ -61,7 +61,7 @@ generous user contributions that your user experience can continue to improve.
 Authors
 =======
 
-pLIMBO comes courtesy a dedicated community of `authors <author list_>`__ and
+PLIMBO comes courtesy a dedicated community of `authors <author list_>`__ and
 contributors_ – without whom this project would be computationally impoverished,
 biologically misaligned, and simply unusable.
 
@@ -70,7 +70,7 @@ biologically misaligned, and simply unusable.
 License
 =======
 
-pLIMBO is open-source software `released <license_>`__ under the permissive
+PLIMBO is open-source software `released <license_>`__ under the permissive
 `BSD 2-clause license`_.
 
 .. # ------------------( LINKS ~ plimbo                     )------------------
