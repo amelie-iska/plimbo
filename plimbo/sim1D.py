@@ -27,7 +27,7 @@ from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 from betse.science.parameters import Parameters
 
 
-class PlanariaGRN(object):
+class PlanariaGRN1D(object):
     """
     Object describing 1D version of core GRN model.
     A BETSE config file is used to define paths for saving image and data exports.
@@ -63,7 +63,6 @@ class PlanariaGRN(object):
             print("Successfully generated 1D model!")
             print("-----------------------------")
 
-
     def make_mesh(self):
 
         if self.verbose is True:
@@ -84,7 +83,6 @@ class PlanariaGRN(object):
 
         # build matrices
         self.build_matrices()
-
 
     def prime_model(self):
 
@@ -323,6 +321,8 @@ class PlanariaGRN(object):
 
         return np.asarray(segments)
 
+    # GRN Updating functions---------------------------------------
+
     def update_bc(self, rnai=1.0, kinesin=1.0):
         """
         Method describing change in beta-cat levels in space and time.
@@ -500,6 +500,8 @@ class PlanariaGRN(object):
         del_cAMP = rnai * self.r_camp - self.d_camp * self.c_cAMP
 
         return del_cAMP
+
+    # GRN Running functions---------------------------------------
 
     def clear_cache_init(self):
 
@@ -694,7 +696,8 @@ class PlanariaGRN(object):
                    knockdown= None,
                    run_time=48.0 * 3600,
                    run_time_step=10,
-                   run_time_sample=100):
+                   run_time_sample=100,
+                   reset_clims = True):
 
         # set time parameters:
         self.tmin = 0.0
@@ -709,6 +712,22 @@ class PlanariaGRN(object):
         self.runtype = 'init'
         self.run_loop(knockdown=knockdown)
         self.tsample_init = self.tsample
+
+        if reset_clims:
+            # Reset default clims to levels at the end of the initialization phase:
+            # default plot legend scaling (can be modified)
+            mol_clims = OrderedDict()
+
+            mol_clims['β-Cat'] = [0, np.max(self.molecules_time['β-Cat'])]
+            mol_clims['Erk'] = [0, 1.0]
+            mol_clims['Wnt'] = [0, np.max(self.molecules_time['Wnt'])]
+            mol_clims['Hh'] = [0, np.max(self.molecules_time['Hh'])]
+            mol_clims['NRF'] = [0, np.max(self.molecules_time['NRF'])]
+            mol_clims['Notum'] = [0, 1.0]
+            mol_clims['APC'] = [0, 1.0]
+            mol_clims['cAMP'] = [0, 1.0]
+
+            self.default_clims = mol_clims
 
         if self.verbose:
             print("-----------------------------")
@@ -744,7 +763,8 @@ class PlanariaGRN(object):
                  knockdown=None,
                  run_time=48.0 * 3600,
                  run_time_step=10,
-                 run_time_sample=100):
+                 run_time_sample=100,
+                 reset_clims = False):
 
         # set time parameters:
         self.tmin = 0.0
@@ -761,24 +781,42 @@ class PlanariaGRN(object):
 
         self.tsample_sim = self.tsample
 
+        if reset_clims:
+            # Reset default clims to levels at the end of the initialization phase:
+            # default plot legend scaling (can be modified)
+            mol_clims = OrderedDict()
+
+            mol_clims['β-Cat'] = [0, np.max(self.molecules_sim_time['β-Cat'])]
+            mol_clims['Erk'] = [0, 1.0]
+            mol_clims['Wnt'] = [0, np.max(self.molecules_sim_time['Wnt'])]
+            mol_clims['Hh'] = [0, np.max(self.molecules_sim_time['Hh'])]
+            mol_clims['NRF'] = [0, np.max(self.molecules_sim_time['NRF'])]
+            mol_clims['Notum'] = [0, 1.0]
+            mol_clims['APC'] = [0, 1.0]
+            mol_clims['cAMP'] = [0, 1.0]
+
+            self.default_clims = mol_clims
+
         if self.verbose:
             print("-----------------------------")
             print("Successfully completed sim of 1D model!")
             print("-----------------------------")
+
+    # Plotting functions---------------------------------------
 
     def init_plots(self):
 
         # default plot legend scaling (can be modified)
         mol_clims = OrderedDict()
 
-        mol_clims['β-Cat'] = (0, 100.0)
-        mol_clims['Erk'] = (0, 1.0)
-        mol_clims['Wnt'] = (0, 200.0)
-        mol_clims['Hh'] = (0, 650.0)
-        mol_clims['NRF'] = (0, 3000.0)
-        mol_clims['Notum'] = (0, 1.0)
-        mol_clims['APC'] = (0, 1.0)
-        mol_clims['cAMP'] = (0, 1.0)
+        mol_clims['β-Cat'] = [0, 100.0]
+        mol_clims['Erk'] = [0, 1.0]
+        mol_clims['Wnt'] = [0, 200.0]
+        mol_clims['Hh'] = [0, 650.0]
+        mol_clims['NRF'] = [0, 3000.0]
+        mol_clims['Notum'] = [0, 1.0]
+        mol_clims['APC'] = [0, 1.0]
+        mol_clims['cAMP'] = [0, 1.0]
 
         self.default_clims = mol_clims
 
@@ -795,12 +833,16 @@ class PlanariaGRN(object):
 
         self.default_cmaps = mol_cmaps
 
+
     def triplot(self, ti, plot_type = 'init', dirsave = 'Triplot', reso = 150, linew = 3.0,
-                      cmaps = None, fontsize = 16.0, fsize = (12, 12)):
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
 
 
         if cmaps is None:
             cmaps = self.default_cmaps
+
+        if clims is None:
+            clims = self.default_clims
 
         # Plot an init:
         if plot_type == 'init':
@@ -832,6 +874,10 @@ class PlanariaGRN(object):
             carray2 = self.molecules_sim_time['β-Cat'][ti]
             carray3 = self.molecules_sim_time['Notum'][ti]
 
+            xs, cs1 = self.get_plot_segs(carray1)
+            _, cs2 = self.get_plot_segs(carray2)
+            _, cs3 = self.get_plot_segs(carray3)
+
             fstr = 'Triplot_' + str(ti) + '_.png'
 
             dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
@@ -846,19 +892,39 @@ class PlanariaGRN(object):
 
         fig, axarr = plt.subplots(3, sharex=True, figsize=fsize)
 
-        axarr[0].plot(self.X/self.xmax, carray1, color=cmaps['Erk'], linewidth=linew)
+        if plot_type == 'init' or plot_type == 'reinit':
+
+            axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
+            axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
+            axarr[2].plot(self.X*1e3, carray3, color=cmaps['Notum'], linewidth=linew)
+
+        elif plot_type == 'sim':
+
+            for xi, ci in zip(xs, cs1):
+                axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs2):
+                axarr[1].plot(xi, ci, color=cmaps['β-Cat'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs3):
+                axarr[2].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
+
         axarr[0].set_title("ERK")
         axarr[0].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[0].set_ylim(clims['Erk'][0], clims['Erk'][1])
 
-        axarr[1].plot(self.X /self.xmax, carray2, color=cmaps['β-Cat'], linewidth=linew)
         axarr[1].set_title("beta-cat")
         axarr[1].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[1].set_ylim(clims['β-Cat'][0], clims['β-Cat'][1])
 
-        axarr[2].plot(self.X /self.xmax, carray3, color=cmaps['Notum'], linewidth=linew)
         axarr[2].set_title("Notum")
         axarr[2].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[2].set_ylim(clims['Notum'][0], clims['Notum'][1])
 
-        axarr[2].set_xlabel('Normalized Axis Distance')
+        axarr[2].set_xlabel('Axis Distance [mm]')
 
         fig.subplots_adjust(hspace=0.15)
         fig.suptitle('Initialization', x=0.1, y=0.94)
@@ -873,11 +939,14 @@ class PlanariaGRN(object):
         plt.close()
 
     def biplot(self, ti, plot_type = 'init', dirsave = 'Biplot', reso = 150, linew = 3.0,
-                      cmaps = None, fontsize = 16.0, fsize = (12, 12)):
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
 
 
         if cmaps is None:
             cmaps = self.default_cmaps
+
+        if clims is None:
+            clims = self.default_clims
 
         # Plot an init:
         if plot_type == 'init':
@@ -908,6 +977,9 @@ class PlanariaGRN(object):
             carray1 = self.molecules_sim_time['Erk'][ti]
             carray2 = self.molecules_sim_time['β-Cat'][ti]
 
+            xs, cs1 = self.get_plot_segs(carray1)
+            _, cs2 = self.get_plot_segs(carray2)
+
             fstr = 'Biplot_sim_' + str(ti) + '_.png'
 
             dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
@@ -922,15 +994,32 @@ class PlanariaGRN(object):
 
         fig, axarr = plt.subplots(2, sharex=True, figsize=fsize)
 
-        axarr[0].plot(self.X/self.xmax, carray1, color=cmaps['Erk'], linewidth=linew)
+        if plot_type == 'init' or plot_type == 'reinit':
+
+            axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
+            axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
+
+        elif plot_type == 'sim':
+
+            for xi, ci in zip(xs, cs1):
+                axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs2):
+                axarr[1].plot(xi, ci, color=cmaps['β-Cat'], linewidth=linew)
+
         axarr[0].set_title("ERK")
         axarr[0].set_ylabel('Concentration [nM]')
 
-        axarr[1].plot(self.X /self.xmax, carray2, color=cmaps['β-Cat'], linewidth=linew)
+        if autoscale is False:
+            axarr[0].set_ylim(clims['Erk'][0], clims['Erk'][1])
+
         axarr[1].set_title("beta-cat")
         axarr[1].set_ylabel('Concentration [nM]')
 
-        axarr[1].set_xlabel('Normalized Axis Distance')
+        if autoscale is False:
+            axarr[1].set_ylim(clims['β-Cat'][0], clims['β-Cat'][1])
+
+        axarr[1].set_xlabel('Axis Distance [mm]')
 
         fig.subplots_adjust(hspace=0.15)
 
@@ -943,12 +1032,14 @@ class PlanariaGRN(object):
         plt.savefig(fname, format='png', dpi=reso,  transparent = True)
         plt.close()
 
-    def plot(self, ti, ctag, plot_type='init', auto_clim=True, fsave = 'Plot', reso = 150, linew = 3.0,
-                cmaps=None, fontsize=16.0, fsize=(4, 10)):
-
+    def plot(self, ti, ctag, plot_type='init', dirsave = 'Plot', reso = 150, linew = 3.0,
+                cmaps=None, fontsize=16.0, fsize=(10, 6), clims = None, autoscale = True):
 
         if cmaps is None:
             cmaps = self.default_cmaps
+
+        if clims is None:
+            clims = self.default_clims
 
         # Plot an init:
         if plot_type == 'init':
@@ -957,7 +1048,7 @@ class PlanariaGRN(object):
 
             fstr = ctag + '_' + str(ti) + '_.png'
 
-            dirstr = os.path.join(self.p.init_export_dirname, fsave)
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'reinit':
@@ -965,15 +1056,17 @@ class PlanariaGRN(object):
             carray = self.molecules_time2[ctag][ti]
 
             fstr = ctag + '_' + str(ti) + '_.png'
-            dirstr = os.path.join(self.p.init_export_dirname, fsave)
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
             carray = self.molecules_sim_time[ctag][ti]
 
+            xs, cs1 = self.get_plot_segs(carray)
+
             fstr = ctag + '_' + str(ti) + '_.png'
-            dirstr = os.path.join(self.p.sim_export_dirname, fsave)
+            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         else:
@@ -983,8 +1076,19 @@ class PlanariaGRN(object):
 
         rcParams.update({'font.size': fontsize})
         plt.figure(figsize=fsize)
+        ax = plt.subplot(111)
 
-        plt.plot(self.X / self.xmax, carray, color=cmaps[ctag], linewidth=linew)
+        if plot_type == 'init' or plot_type == 'reinit':
+
+            plt.plot(self.X*1e3, carray, color=cmaps[ctag], linewidth=linew)
+
+        elif plot_type == 'sim':
+
+            for xi, ci in zip(xs, cs1):
+                plt.plot(xi, ci, color=cmaps[ctag], linewidth=linew)
+
+        if autoscale is False:
+            ax.set_ylim(clims[ctag][0], clims[ctag][1])
 
         tt = tsample[ti]
 
@@ -994,6 +1098,73 @@ class PlanariaGRN(object):
 
         plt.savefig(fname, format='png', dpi=reso,  transparent = True)
         plt.close()
+
+    def get_plot_segs(self, conc):
+
+        xoo = self.X * 1e3
+
+        sim_coo = []
+        sim_xoo = []
+
+        for a, b in self.seg_inds:
+            sim_coo.append(conc[a:b])
+            sim_xoo.append(xoo[a:b])
+
+        sim_coo = np.asarray(sim_coo)
+        sim_xoo = np.asarray(sim_xoo)
+
+        return sim_xoo, sim_coo
+
+    def animate_triplot(self, ani_type = 'init', dirsave = 'TriplotAni', reso = 150, linew = 3.0,
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
+
+        if ani_type == 'init' or ani_type == 'reinit':
+
+            for ii, ti in enumerate(self.tsample_init):
+                self.triplot(ii, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
+                              cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+        elif ani_type == 'sim':
+
+            for ii, ti in enumerate(self.tsample_sim):
+                self.triplot(ii, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
+                              cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+
+    def animate_biplot(self, ani_type='init', dirsave = 'BiplotAni', reso = 150, linew = 3.0,
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
+
+        if ani_type == 'init' or ani_type == 'reinit':
+
+            for ii, ti in enumerate(self.tsample_init):
+                self.biplot(ii, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
+                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+        elif ani_type == 'sim':
+
+            for ii, ti in enumerate(self.tsample_sim):
+                self.biplot(ii, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
+                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+    def animate_plot(self, ctag, ani_type='init', dirsave = 'PlotAni', reso = 150, linew = 3.0,
+                cmaps=None, fontsize=16.0, fsize=(10, 6), clims = None, autoscale = True):
+
+        if ani_type == 'init' or ani_type == 'reinit':
+
+            for ii, ti in enumerate(self.tsample_init):
+                self.plot(ii, ctag, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
+                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+        elif ani_type == 'sim':
+
+            for ii, ti in enumerate(self.tsample_sim):
+
+                self.plot(ii, ctag, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
+                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+
+
+
 
 
 

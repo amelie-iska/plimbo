@@ -39,7 +39,7 @@ from betse.science.math import toolbox as tb
 from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 
 
-class PlanariaGRN(object):
+class PlanariaGRN2D(object):
     """
     Object describing 2D version of core GRN model.
     """
@@ -66,6 +66,9 @@ class PlanariaGRN(object):
 
         # Initialize the transport field and nerve density:
         self.load_transport_field()
+
+        # Flag to mark cutting event:
+        self.model_has_been_cut = False
 
         if self.verbose is True:
             print("-----------------------------")
@@ -372,76 +375,80 @@ class PlanariaGRN(object):
 
         """
 
-        new_cell_centres = []
-        new_ecm_verts = []
-        removal_flags = np.zeros(len(self.cells.cell_i))
-        removal_flags[self.target_inds_cell] = 1
+        if self.model_has_been_cut is False:
 
-        for i, flag in enumerate(removal_flags):
-            if flag == 0:
-                new_cell_centres.append(self.cells.cell_centres[i])
-                new_ecm_verts.append(self.cells.ecm_verts[i])
+            new_cell_centres = []
+            new_ecm_verts = []
+            removal_flags = np.zeros(len(self.cells.cell_i))
+            removal_flags[self.target_inds_cell] = 1
 
-        self.cells.cell_centres = np.asarray(new_cell_centres)
-        self.cells.ecm_verts = np.asarray(new_ecm_verts)
+            for i, flag in enumerate(removal_flags):
+                if flag == 0:
+                    new_cell_centres.append(self.cells.cell_centres[i])
+                    new_ecm_verts.append(self.cells.ecm_verts[i])
 
-        # recalculate ecm_verts_unique:
-        ecm_verts_flat, _, _ = tb.flatten(self.cells.ecm_verts)
-        ecm_verts_set = set()
+            self.cells.cell_centres = np.asarray(new_cell_centres)
+            self.cells.ecm_verts = np.asarray(new_ecm_verts)
 
-        for vert in ecm_verts_flat:
-            ptx = vert[0]
-            pty = vert[1]
-            ecm_verts_set.add((ptx, pty))
+            # recalculate ecm_verts_unique:
+            ecm_verts_flat, _, _ = tb.flatten(self.cells.ecm_verts)
+            ecm_verts_set = set()
 
-        self.cells.ecm_verts_unique = [list(verts) for verts in list(ecm_verts_set)]
-        self.cells.ecm_verts_unique = np.asarray(self.cells.ecm_verts_unique)  # convert to numpy arra
+            for vert in ecm_verts_flat:
+                ptx = vert[0]
+                pty = vert[1]
+                ecm_verts_set.add((ptx, pty))
 
-        self.cells.cellVerts(self.p)  # create individual cell polygon vertices and other essential data structures
-        self.cells.cellMatrices(self.p)  # creates a variety of matrices used in routine cells calculations
-        self.cells.intra_updater(self.p)  # creates matrix used for finite volume integration on cell patch
-        self.cells.cell_vols(self.p)  # calculate the volume of cell and its internal regions
-        self.cells.mem_processing(self.p)  # calculates membrane nearest neighbours, ecm interaction, boundary tags, etc
-        self.cells.near_neigh(self.p)  # Calculate the nn array for each cell
-        self.cells.voronoiGrid(self.p)
-        self.cells.calc_gj_vects(self.p)
-        self.cells.environment(self.p)  # define features of the ecm grid
-        self.cells.make_maskM(self.p)
-        self.cells.grid_len = len(self.cells.xypts)
+            self.cells.ecm_verts_unique = [list(verts) for verts in list(ecm_verts_set)]
+            self.cells.ecm_verts_unique = np.asarray(self.cells.ecm_verts_unique)  # convert to numpy arra
 
-        #         self.cells.graphLaplacian(self.p)
+            self.cells.cellVerts(self.p)  # create individual cell polygon vertices and other essential data structures
+            self.cells.cellMatrices(self.p)  # creates a variety of matrices used in routine cells calculations
+            self.cells.intra_updater(self.p)  # creates matrix used for finite volume integration on cell patch
+            self.cells.cell_vols(self.p)  # calculate the volume of cell and its internal regions
+            self.cells.mem_processing(self.p)  # calculates membrane nearest neighbours, ecm interaction, boundary tags, etc
+            self.cells.near_neigh(self.p)  # Calculate the nn array for each cell
+            self.cells.voronoiGrid(self.p)
+            self.cells.calc_gj_vects(self.p)
+            self.cells.environment(self.p)  # define features of the ecm grid
+            self.cells.make_maskM(self.p)
+            self.cells.grid_len = len(self.cells.xypts)
 
-        # re-do tissue profiles and GJ
-        self.phase.dyna.init_profiles(self.phase)
-        self.cells.redo_gj(self.phase)  # redo gap junctions to isolate different tissue types
+            #         self.cells.graphLaplacian(self.p)
 
-        # reassign commonly used quantities
-        self.assign_easy_x(self.cells)
+            # re-do tissue profiles and GJ
+            self.phase.dyna.init_profiles(self.phase)
+            self.cells.redo_gj(self.phase)  # redo gap junctions to isolate different tissue types
 
-        # assign updated cells object to a simulation object for plotting
-        self.cells_s = copy.deepcopy(self.cells)
+            # reassign commonly used quantities
+            self.assign_easy_x(self.cells)
 
-        # Cut model variable arrays to new dimenstions:
-        self.c_BC = np.delete(self.c_BC, self.target_inds_cell)
-        self.c_ERK = np.delete(self.c_ERK, self.target_inds_cell)
-        self.c_HH = np.delete(self.c_HH, self.target_inds_cell)
-        self.c_WNT = np.delete(self.c_WNT, self.target_inds_cell)
-        self.c_Notum = np.delete(self.c_Notum, self.target_inds_cell)
-        self.c_NRF = np.delete(self.c_NRF, self.target_inds_cell)
-        self.c_APC = np.delete(self.c_APC, self.target_inds_cell)
-        self.c_cAMP = np.delete(self.c_cAMP, self.target_inds_cell)
+            # assign updated cells object to a simulation object for plotting
+            self.cells_s = copy.deepcopy(self.cells)
 
-        self.NerveDensity = np.delete(self.NerveDensity, self.target_inds_cell)
-        self.ux = np.delete(self.ux, self.target_inds_mem)
-        self.uy = np.delete(self.uy, self.target_inds_mem)
+            # Cut model variable arrays to new dimenstions:
+            self.c_BC = np.delete(self.c_BC, self.target_inds_cell)
+            self.c_ERK = np.delete(self.c_ERK, self.target_inds_cell)
+            self.c_HH = np.delete(self.c_HH, self.target_inds_cell)
+            self.c_WNT = np.delete(self.c_WNT, self.target_inds_cell)
+            self.c_Notum = np.delete(self.c_Notum, self.target_inds_cell)
+            self.c_NRF = np.delete(self.c_NRF, self.target_inds_cell)
+            self.c_APC = np.delete(self.c_APC, self.target_inds_cell)
+            self.c_cAMP = np.delete(self.c_cAMP, self.target_inds_cell)
 
-        # magnitude of updated transport field
-        self.u_mag = self.cells.mag(self.ux, self.uy)
+            self.NerveDensity = np.delete(self.NerveDensity, self.target_inds_cell)
+            self.ux = np.delete(self.ux, self.target_inds_mem)
+            self.uy = np.delete(self.uy, self.target_inds_mem)
 
-        # Get the average transport field at the cell centres:
-        self.ucx, self.ucy = self.cells.average_vector(self.ux, self.uy)
-        # cell-centre average magnitude
-        self.uc_mag = self.cells.mag(self.ucx, self.ucy)
+            # magnitude of updated transport field
+            self.u_mag = self.cells.mag(self.ux, self.uy)
+
+            # Get the average transport field at the cell centres:
+            self.ucx, self.ucy = self.cells.average_vector(self.ux, self.uy)
+            # cell-centre average magnitude
+            self.uc_mag = self.cells.mag(self.ucx, self.ucy)
+
+            self.model_has_been_cut = True
 
     def scale_cells(self, xscale):
         """
@@ -678,6 +685,8 @@ class PlanariaGRN(object):
         del_cAMP = rnai * self.r_camp - self.d_camp * self.c_cAMP
 
         return del_cAMP
+
+    # GRN Running functions---------------------------------------
 
     def clear_cache_init(self):
 
@@ -930,7 +939,8 @@ class PlanariaGRN(object):
                    knockdown=None,
                    run_time=48.0 * 3600,
                    run_time_step=10,
-                   run_time_sample=100):
+                   run_time_sample=100,
+                   reset_clims = True):
 
         if knockdown is None:
             knockdown = self.RNAi_defaults
@@ -955,6 +965,22 @@ class PlanariaGRN(object):
         self.runtype = 'init'
         self.run_loop(knockdown=knockdown)
         self.tsample_init = self.tsample
+
+        if reset_clims:
+            # Reset default clims to levels at the end of the initialization phase:
+            # default plot legend scaling (can be modified)
+            mol_clims = OrderedDict()
+
+            mol_clims['β-Cat'] = (0, np.max(self.molecules_time['β-Cat']))
+            mol_clims['Erk'] = (0, 1.0)
+            mol_clims['Wnt'] = (0, np.max(self.molecules_time['Wnt']))
+            mol_clims['Hh'] = (0, np.max(self.molecules_time['Hh']))
+            mol_clims['NRF'] = (0, np.max(self.molecules_time['NRF']))
+            mol_clims['Notum'] = (0, 1.0)
+            mol_clims['APC'] = (0, 1.0)
+            mol_clims['cAMP'] = (0, 1.0)
+
+            self.default_clims = mol_clims
 
         if self.verbose:
             print("-----------------------------")
@@ -993,7 +1019,8 @@ class PlanariaGRN(object):
                  knockdown = None,
                  run_time=48.0 * 3600,
                  run_time_step=10,
-                 run_time_sample=100):
+                 run_time_sample=100,
+                 reset_clims=False):
 
         if knockdown is None:
             knockdown = self.RNAi_defaults
@@ -1017,10 +1044,28 @@ class PlanariaGRN(object):
 
         self.tsample_sim = self.tsample
 
+        if reset_clims:
+            # Reset default clims to levels at the end of the initialization phase:
+            # default plot legend scaling (can be modified)
+            mol_clims = OrderedDict()
+
+            mol_clims['β-Cat'] = (0, np.max(self.molecules_sim_time['β-Cat']))
+            mol_clims['Erk'] = (0, 1.0)
+            mol_clims['Wnt'] = (0, np.max(self.molecules_sim_time['Wnt']))
+            mol_clims['Hh'] = (0, np.max(self.molecules_sim_time['Hh']))
+            mol_clims['NRF'] = (0, np.max(self.molecules_sim_time['NRF']))
+            mol_clims['Notum'] = (0, 1.0)
+            mol_clims['APC'] = (0, 1.0)
+            mol_clims['cAMP'] = (0, 1.0)
+
+            self.default_clims = mol_clims
+
         if self.verbose:
             print("-----------------------------")
             print("Successfully completed sim of 2D model!")
             print("-----------------------------")
+
+    # Plotting functions---------------------------------------
 
     def init_plots(self):
 
@@ -1051,7 +1096,7 @@ class PlanariaGRN(object):
 
         self.default_cmaps = mol_cmaps
 
-    def triplot(self, ti, plot_type='init', auto_clim=True, dirsave='Triplot', reso=150,
+    def triplot(self, ti, plot_type='init', autoscale=True, dirsave='Triplot', reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False):
 
         if clims is None:
@@ -1117,36 +1162,38 @@ class PlanariaGRN(object):
         ax3.yaxis.set_ticklabels([])
 
         col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
+        if autoscale is False:
+            col1.set_clim(clims['Erk'][0], clims['Erk'][1])
         col1.set_array(carray1)
 
-        if auto_clim is False:
-            col1.set_clim(clims['Erk'])
+
 
         col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
+        if autoscale is False:
+            col2.set_clim(clims['β-Cat'][0], clims['β-Cat'][1])
         col2.set_array(carray2)
 
-        if auto_clim is False:
-            col2.set_clim(clims['β-Cat'])
 
         col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
+        if autoscale is False:
+            col3.set_clim(clims['Notum'][0], clims['Notum'][1])
         col3.set_array(carray3)
 
-        if auto_clim is False:
-            col3.set_clim(clims['Notum'])
 
         ax1.add_collection(col1)
-        ax1.axis('tight')
+
         ax1.set_title('Erk')
+        ax1.axis('tight')
         ax1.axis('off')
 
         ax2.add_collection(col2)
-        ax2.axis('tight')
         ax2.set_title('β-Cat')
+        ax2.axis('tight')
         ax2.axis('off')
 
         ax3.add_collection(col3)
-        ax3.axis('tight')
         ax3.set_title('Notum')
+        ax3.axis('tight')
         ax3.axis('off')
 
         tt = tsample[ti]
@@ -1155,15 +1202,12 @@ class PlanariaGRN(object):
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string, x=0.5, y=0.1)
 
-        if axisoff is True:
-            plt.axis('off')
-
         fig.subplots_adjust(wspace=0.0)
 
         plt.savefig(fname, format='png', dpi=reso,  transparent = True)
         plt.close()
 
-    def biplot(self, ti, plot_type='init', auto_clim=True, dirsave='Triplot', reso=150,
+    def biplot(self, ti, plot_type='init', autoscale=True, dirsave='Biplot', reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
 
         if clims is None:
@@ -1226,13 +1270,13 @@ class PlanariaGRN(object):
         col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
         col1.set_array(carray1)
 
-        if auto_clim is False:
+        if autoscale is False:
             col1.set_clim(clims['Erk'])
 
         col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
         col2.set_array(carray2)
 
-        if auto_clim is False:
+        if autoscale is False:
             col2.set_clim(clims['β-Cat'])
 
         ax1.add_collection(col1)
@@ -1259,7 +1303,7 @@ class PlanariaGRN(object):
         plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
 
-    def plot(self, ti, ctag, plot_type='init', auto_clim=True, dirsave = 'Plot', reso = 150,
+    def plot(self, ti, ctag, plot_type='init', autoscale=True, dirsave = 'Plot', reso = 150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff = False):
 
         if clims is None:
@@ -1310,7 +1354,7 @@ class PlanariaGRN(object):
                               cmap=cmaps[ctag], linewidth=0.0)
         col1.set_array(carray)
 
-        if auto_clim is False:
+        if autoscale is False:
             col1.set_clim(clims[ctag])
 
         ax.add_collection(col1)
@@ -1329,3 +1373,49 @@ class PlanariaGRN(object):
 
         plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
+
+    def animate_triplot(self, ti, ani_type='init', autoscale=True, dirsave='TriplotAni', reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False):
+
+        if ani_type == 'init' or ani_type == 'reinit':
+
+            for ii, ti in enumerate(self.tsample_init):
+                self.triplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+
+        elif ani_type == 'sim':
+
+            for ii, ti in enumerate(self.tsample_sim):
+                self.triplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+
+    def animate_biplot(self, ti, ani_type='init', autoscale=True, dirsave='BiplotAni', reso=150,
+               clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
+
+        if ani_type == 'init' or ani_type == 'reinit':
+
+            for ii, ti in enumerate(self.tsample_init):
+                self.biplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+
+        elif ani_type == 'sim':
+
+            for ii, ti in enumerate(self.tsample_sim):
+                self.biplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+
+    def animate_plot(self, ti, ctag, ani_type='init', autoscale=True, dirsave='PlotAni', reso=150,
+             clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff=False):
+
+        if ani_type == 'init' or ani_type == 'reinit':
+
+            for ii, ti in enumerate(self.tsample_init):
+                self.plot(ii, ctag, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+
+        elif ani_type == 'sim':
+
+            for ii, ti in enumerate(self.tsample_sim):
+                self.plot(ii, ctag, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+

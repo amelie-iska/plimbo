@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+# --------------------( LICENSE                           )--------------------
+# Copyright 2018-2019 by Alexis Pietak & Cecil Curry.
+# See "LICENSE" for further details.
+
+'''
+Auto-parameter generator for sensitivity analysis and automatic model searching in PLIMBO module.
+Works for both 1D and 2D simulation types.
+'''
+
+import numpy as np
+
+
+class ParamsManager(object):
+    """
+    Object creating sets of procedurally-generated model parameters.
+
+    """
+
+    def __init__(self, param_o, levels=1, factor=0.1, free_params=None,
+                 N_runs_max=10.0):
+
+        self.paramo_dict = param_o  # base parameters as a dictionary
+
+        self.paramo_array = np.array(list(param_o.values()))  # base parameters as an array
+        self.param_labels = np.array(list(param_o.keys()))  # Names of parameters as an array
+
+        self.factor = factor  # factor used as a percentage
+
+        self.df = factor  # factor used as a multiple to reduction scale base parameters
+        self.uf = 1 / factor  # factor used as a multiple to magnify base parameters
+
+        self.levels = levels  # number of levels to change the parameters by
+
+        self.N_runs_max = N_runs_max
+
+        if free_params is not None:
+            self.free_params = free_params
+
+        else:
+            self.free_params = None
+
+    def create_sensitivity_matrix(self):
+
+        # array of percent changes to each parameter
+        self.delta_vect = self.factor * self.paramo_array
+
+        # diagonal array of delta factors for each parameter
+        self.delta_M = np.diag(self.delta_vect)
+
+        params_M = [self.paramo_array]
+
+        for i in range(len(self.paramo_array)):
+            params_M.append(self.paramo_array + self.delta_M[i, :])
+
+        self.params_M = np.asarray(params_M)
+
+        self.N_runs = self.params_M.shape[0]
+        self.N_params = self.params_M.shape[1]
+
+    def create_search_matrix(self, style='log'):
+
+        if style == 'log':
+
+            self.delta_vect = (self.factor - 1) * np.ones(len(self.paramo_array))
+            self.delta_M = np.diag(self.delta_vect) + 1
+
+            params_M = [self.paramo_array]
+
+            for i in range(len(self.paramo_array)):
+
+                for j in range(self.levels):
+                    params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
+
+                for j in range(self.levels):
+                    params_M.append(self.paramo_array * (1 / self.delta_M[i, :]) ** (j + 1))
+
+        elif style == 'lin':
+
+            # array of percent changes to each parameter
+            self.delta_vect = self.factor * self.paramo_array
+
+            # diagonal array of delta factors for each parameter
+            self.delta_M = np.diag(self.delta_vect)
+
+            params_M = [self.paramo_array]
+
+            for i in range(len(self.paramo_array)):
+
+                for j in range(self.levels):
+                    params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
+
+                for j in range(self.levels):
+                    params_M.append(self.paramo_array + (j + 1) * self.delta_M[i, :])
+
+        else:
+            print("Error! The choices for search matrix style are 'log' and 'lin'")
+
+        self.params_M = np.asarray(params_M)
+        self.N_runs = self.params_M.shape[0]
+        self.N_params = self.params_M.shape[1]
+
+    def create_random_matrix(self, style='lin'):
+
+        params_at_levels = []
+
+        if self.free_params is not None:
+
+            for para, fi in zip(self.paramo_dict.values(), self.free_params.values()):
+
+                if fi:
+
+                    if style == 'lin':
+
+                        pv = np.hstack((np.linspace(para * (1 - self.levels * self.factor),
+                                                    para * (1 + self.levels * self.factor), 2 * self.levels), para))
+
+                    elif style == 'log':
+
+                        lowv = np.log(para) + self.levels * np.log(self.factor)
+                        highv = np.log(para) - self.levels * np.log(self.factor)
+
+                        log_pv = np.linspace(lowv, highv, 2 * self.levels)
+
+                        pv = np.hstack((np.exp(log_pv), para))
+
+                    else:
+                        print("Error! Valid style choices are 'lin' and 'log'.")
+
+                else:
+
+                    pv = np.ones(2 * self.levels + 1) * para
+
+                params_at_levels.append(pv * 1)
+
+        else:  # else if free parameters aren't mentioned, alter all of them:
+
+            for para in self.paramo_dict.values():
+
+                if style == 'lin':
+
+                    pv = np.hstack((np.linspace(para * (1 - self.levels * self.factor),
+                                                para * (1 + self.levels * self.factor), 2 * self.levels), para))
+
+                elif style == 'log':
+
+                    lowv = np.log(para) + self.levels * np.log(self.factor)
+                    highv = np.log(para) - self.levels * np.log(self.factor)
+
+                    log_pv = np.linspace(lowv, highv, 2 * self.levels)
+
+                    pv = np.hstack((np.exp(log_pv), para))
+
+                else:
+                    print("Error! Valid style choices are 'lin' and 'log'.")
+
+                params_at_levels.append(pv * 1)
+
+        unique_combos = set()  # define a set that will hold unique combinations
+        for i in range(self.N_runs_max):
+            para_list = []
+
+            for pi_choices in params_at_levels:  # for each parameters vector
+
+                pi_shuffled = np.random.permutation(pi_choices)  # shuffle it
+                para_list.append(pi_shuffled[0])  # append the first value to the list
+
+            unique_combos.add(tuple(para_list))  # add the set of parameters to the combos set
+
+        params_M = [self.paramo_array]
+
+        for paraset in unique_combos:
+            params_M.append(list(paraset))
+
+        self.params_at_levels = np.asarray(params_at_levels)
+
+        self.params_M = np.asarray(params_M)
+        self.N_runs = self.params_M.shape[0]
+        self.N_params = self.params_M.shape[1]
