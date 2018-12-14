@@ -37,10 +37,9 @@ from betse.science.phase.phasecls import SimPhase
 from betse.science.phase.phaseenum import SimPhaseKind
 from betse.science.math import toolbox as tb
 from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
-from betse.util.type.types import type_check, NumericTypes, NumpyArrayType
 
 
-class PlanariaGRN2D(object):
+class PlanariaGRN(object):
     """
     Object describing 2D version of core GRN model.
     """
@@ -49,6 +48,7 @@ class PlanariaGRN2D(object):
                  verbose=False):
 
         self.verbose = verbose
+
         # BETSE parameters object:
         self.p = Parameters.make(config_filename)
 
@@ -67,13 +67,9 @@ class PlanariaGRN2D(object):
         # Initialize the transport field and nerve density:
         self.load_transport_field()
 
-        # Default RNAi keys:
-        self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
-         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1}
-
         if self.verbose is True:
             print("-----------------------------")
-            print("Successfully generated model!")
+            print("Successfully generated 2D model!")
             print("-----------------------------")
 
     def prime_model(self):
@@ -88,6 +84,10 @@ class PlanariaGRN2D(object):
 
         # tags for easy reference to concentrations of the model:
         self.conc_tags = ['β-Cat', 'Erk', 'Wnt', 'Hh', 'NRF', 'Notum', 'APC', 'cAMP']
+
+        # Default RNAi keys:
+        self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
+         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1}
 
         self.init_plots()
 
@@ -327,7 +327,6 @@ class PlanariaGRN2D(object):
 
         # rotate x and y axes to the vertical
         self.xcr, self.ycr = self.rotate_field(-45.0, self.xc, self.yc)
-
 
     def rotate_verts(self, cellverts, angle_o, trans_x = 0.0, trans_y = 0.0):
         """
@@ -957,6 +956,11 @@ class PlanariaGRN2D(object):
         self.run_loop(knockdown=knockdown)
         self.tsample_init = self.tsample
 
+        if self.verbose:
+            print("-----------------------------")
+            print("Successfully completed init of 2D model!")
+            print("-----------------------------")
+
     def reinitialize(self,
                      knockdown= None,
                      run_time=48.0 * 3600,
@@ -979,6 +983,11 @@ class PlanariaGRN2D(object):
         self.runtype = 'reinit'
         self.run_loop(knockdown=knockdown)
         self.tsample_reinit = self.tsample
+
+        if self.verbose:
+            print("-----------------------------")
+            print("Successfully completed reinit of 2D model!")
+            print("-----------------------------")
 
     def simulate(self,
                  knockdown = None,
@@ -1007,6 +1016,11 @@ class PlanariaGRN2D(object):
         self.run_loop(knockdown=knockdown)
 
         self.tsample_sim = self.tsample
+
+        if self.verbose:
+            print("-----------------------------")
+            print("Successfully completed sim of 2D model!")
+            print("-----------------------------")
 
     def init_plots(self):
 
@@ -1037,10 +1051,8 @@ class PlanariaGRN2D(object):
 
         self.default_cmaps = mol_cmaps
 
-    def triplot_2d(self, ti, plot_type = 'init', auto_clim = True, offset_x = 0.004,
-                      offset_y = 0.0,  angle_r = -45.0, fsave = 'Triplot', reso = 150,
-                      clims = None, cmaps = None, fontsize = 18.0, fsize = (6, 8)):
-
+    def triplot(self, ti, plot_type='init', auto_clim=True, dirsave='Triplot', reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False):
 
         if clims is None:
             clims = self.default_clims
@@ -1059,7 +1071,7 @@ class PlanariaGRN2D(object):
 
             fstr = 'Triplot_' + str(ti) + '_.png'
 
-            dirstr = os.path.join(self.p.init_export_dirname, fsave)
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'reinit':
@@ -1071,8 +1083,8 @@ class PlanariaGRN2D(object):
             carray2 = self.molecules_time2['β-Cat'][ti]
             carray3 = self.molecules_time2['Notum'][ti]
 
-            fstr = 'Triplot2_'+ str(ti) + '_.png'
-            dirstr = os.path.join(self.p.init_export_dirname, fsave)
+            fstr = 'Triplot2_' + str(ti) + '_.png'
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'sim':
@@ -1085,7 +1097,7 @@ class PlanariaGRN2D(object):
 
             fstr = 'Triplot_' + str(ti) + '_.png'
 
-            dirstr = os.path.join(self.p.sim_export_dirname, fsave)
+            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         else:
@@ -1093,49 +1105,162 @@ class PlanariaGRN2D(object):
 
         os.makedirs(dirstr, exist_ok=True)
 
-        verts1 = self.rotate_verts(self.verts, angle_o = angle_r, trans_x=offset_x)
-        verts2 = self.rotate_verts(self.verts, angle_o = angle_r, trans_x=offset_x*2)
-        verts3 = self.rotate_verts(self.verts, angle_o = angle_r, trans_x=offset_x*3)
-
         rcParams.update({'font.size': fontsize})
-        plt.figure(figsize=fsize)
-        ax = plt.subplot(111)
 
-        col1 = PolyCollection(verts1 * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=fsize)
+
+        ax1.xaxis.set_ticklabels([])
+        ax1.yaxis.set_ticklabels([])
+        ax2.xaxis.set_ticklabels([])
+        ax2.yaxis.set_ticklabels([])
+        ax3.xaxis.set_ticklabels([])
+        ax3.yaxis.set_ticklabels([])
+
+        col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
         col1.set_array(carray1)
 
         if auto_clim is False:
             col1.set_clim(clims['Erk'])
 
-        col2 = PolyCollection(verts2 * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
+        col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
         col2.set_array(carray2)
 
         if auto_clim is False:
             col2.set_clim(clims['β-Cat'])
 
-        col3 = PolyCollection(verts3 * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
+        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
         col3.set_array(carray3)
 
         if auto_clim is False:
             col3.set_clim(clims['Notum'])
 
-        ax.add_collection(col1)
-        ax.add_collection(col2)
-        ax.add_collection(col3)
+        ax1.add_collection(col1)
+        ax1.axis('tight')
+        ax1.set_title('Erk')
+        ax1.axis('off')
+
+        ax2.add_collection(col2)
+        ax2.axis('tight')
+        ax2.set_title('β-Cat')
+        ax2.axis('off')
+
+        ax3.add_collection(col3)
+        ax3.axis('tight')
+        ax3.set_title('Notum')
+        ax3.axis('off')
 
         tt = tsample[ti]
 
-        tdays = np.round(tt / (3600), 2)
-        tit_string = 'Time: ' + str(tdays) + ' Hours'
-        plt.title(tit_string)
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
+        fig.suptitle(tit_string, x=0.5, y=0.1)
 
-        plt.axis('equal')
+        if axisoff is True:
+            plt.axis('off')
 
-        plt.savefig(fname, format='png', dpi=reso)
+        fig.subplots_adjust(wspace=0.0)
+
+        plt.savefig(fname, format='png', dpi=reso,  transparent = True)
         plt.close()
 
-    def plot_2D(self, ti, ctag, plot_type='init', auto_clim=True, fsave = 'Plot', reso = 150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6)):
+    def biplot(self, ti, plot_type='init', auto_clim=True, dirsave='Triplot', reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
+
+        if clims is None:
+            clims = self.default_clims
+
+        if cmaps is None:
+            cmaps = self.default_cmaps
+
+        # Plot an init:
+        if plot_type == 'init':
+
+            tsample = self.tsample_init
+            self.assign_easy_x(self.cells_i)
+            carray1 = self.molecules_time['Erk'][ti]
+            carray2 = self.molecules_time['β-Cat'][ti]
+
+            fstr = 'Biplot_' + str(ti) + '_.png'
+
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
+            fname = os.path.join(dirstr, fstr)
+
+        elif plot_type == 'reinit':
+
+            tsample = self.tsample_reinit
+
+            self.assign_easy_x(self.cells_i)
+            carray1 = self.molecules_time2['Erk'][ti]
+            carray2 = self.molecules_time2['β-Cat'][ti]
+
+            fstr = 'Biplot2_' + str(ti) + '_.png'
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
+            fname = os.path.join(dirstr, fstr)
+
+        elif plot_type == 'sim':
+            tsample = self.tsample_sim
+
+            self.assign_easy_x(self.cells_s)
+            carray1 = self.molecules_sim_time['Erk'][ti]
+            carray2 = self.molecules_sim_time['β-Cat'][ti]
+
+            fstr = 'Biplot_' + str(ti) + '_.png'
+
+            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
+            fname = os.path.join(dirstr, fstr)
+
+        else:
+            print("Valid plot types are 'init', 'reinit', and 'sim'.")
+
+        os.makedirs(dirstr, exist_ok=True)
+
+        rcParams.update({'font.size': fontsize})
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=fsize)
+
+        ax1.xaxis.set_ticklabels([])
+        ax1.yaxis.set_ticklabels([])
+        ax2.xaxis.set_ticklabels([])
+        ax2.yaxis.set_ticklabels([])
+
+        col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
+        col1.set_array(carray1)
+
+        if auto_clim is False:
+            col1.set_clim(clims['Erk'])
+
+        col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
+        col2.set_array(carray2)
+
+        if auto_clim is False:
+            col2.set_clim(clims['β-Cat'])
+
+        ax1.add_collection(col1)
+        ax1.axis('tight')
+        ax1.set_title('Erk')
+        ax1.axis('off')
+
+        ax2.add_collection(col2)
+        ax2.axis('tight')
+        ax2.set_title('β-Cat')
+        ax2.axis('off')
+
+        tt = tsample[ti]
+
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
+        fig.suptitle(tit_string, x=0.5, y=0.1)
+
+        if axisoff is True:
+            plt.axis('off')
+
+        fig.subplots_adjust(wspace=0.0)
+
+        plt.savefig(fname, format='png', dpi=reso, transparent = True)
+        plt.close()
+
+    def plot(self, ti, ctag, plot_type='init', auto_clim=True, dirsave = 'Plot', reso = 150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff = False):
 
         if clims is None:
             clims = self.default_clims
@@ -1151,7 +1276,7 @@ class PlanariaGRN2D(object):
 
             fstr = ctag + '_' + str(ti) + '_.png'
 
-            dirstr = os.path.join(self.p.init_export_dirname, fsave)
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'reinit':
@@ -1160,7 +1285,7 @@ class PlanariaGRN2D(object):
             carray = self.molecules_time2[ctag][ti]
 
             fstr = ctag + '_' + str(ti) + '_.png'
-            dirstr = os.path.join(self.p.init_export_dirname, fsave)
+            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'sim':
@@ -1169,7 +1294,7 @@ class PlanariaGRN2D(object):
             carray = self.molecules_sim_time[ctag][ti]
 
             fstr = ctag + '_' + str(ti) + '_.png'
-            dirstr = os.path.join(self.p.sim_export_dirname, fsave)
+            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
             fname = os.path.join(dirstr, fstr)
 
         else:
@@ -1193,11 +1318,14 @@ class PlanariaGRN2D(object):
 
         tt = tsample[ti]
 
-        tdays = np.round(tt / (3600), 2)
-        tit_string = 'Time: ' + str(tdays) + ' Hours'
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
         plt.title(tit_string)
 
         plt.axis('equal')
 
-        plt.savefig(fname, format='png', dpi=reso)
+        if axisoff is True:
+            plt.axis('off')
+
+        plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
