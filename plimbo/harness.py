@@ -216,7 +216,7 @@ class ModelHarness(object):
 
         # general saving directory for this procedure:
         self.savedir_searchRNAi = os.path.join(self.savepath, save_dir)
-        os.makedirs(self.savedir_search, exist_ok=True)
+        os.makedirs(self.savedir_searchRNAi, exist_ok=True)
 
         self.subfolders_dict['searchRNAi'] = self.savedir_searchRNAi
 
@@ -224,6 +224,10 @@ class ModelHarness(object):
         self.datatags = []
 
         self.datatags.append('base')
+
+        # add in new datatags for RNAi_series
+        for rnai_n in RNAi_names:
+            self.datatags.append(rnai_n)
 
         # Create the parameters matrix:
         self.pm.create_search_matrix(factor=factor, levels = levels, style = search_style)
@@ -316,127 +320,112 @@ class ModelHarness(object):
 
                 if verbose is True:
                     print('----------------')
-    #
-    # def scale_and_rnai(self, run_params, xscales, RNAi_series, RNAi_names,
-    #                    verbose=True, plotwhilesolving=True, t_reinit=0.0):
-    #
-    #     # Create datatags for the harness to save data series to:
-    #     self.datatags = []
-    #
-    #     for tag in self.model.conc_tags:
-    #         data_tagi = tag + '_init'
-    #         data_tags = tag + '_sim'
-    #         self.datatags.append(data_tagi)
-    #         self.datatags.append(data_tags)
-    #
-    #     # add in new datatags for RNAi_series
-    #     for rnai_n in RNAi_names:
-    #         self.datatags.append(rnai_n)
-    #
-    #     self.outputs = []  # Storage array for all last timestep outputs
-    #
-    #     for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
-    #
-    #         if verbose is True:
-    #             print('Run ', ii + 1, " of ", len(xscales))
-    #
-    #         model = PlanariaGRN1D(run_params, xscale=xxs)  # create a model using the specific parameters
-    #
-    #         # Run initialization of full model:
-    #         model.initialize(knock_down=self.RNAi,
-    #                          run_time=self.runtime,
-    #                          run_time_step=self.runstep,
-    #                          run_time_sample=self.runsample)
-    #
-    #         model.simulate(knock_down=self.RNAi,
-    #                        run_time=self.runtime,
-    #                        run_time_step=self.runstep,
-    #                        run_time_sample=self.runsample)
-    #
-    #         data_dict = OrderedDict()
-    #
-    #         data_dict['bc_init'] = model.c_BC_time[-1]
-    #         data_dict['wnt_init'] = model.c_WNT_time[-1]
-    #         data_dict['notum_init'] = model.c_Notum_time[-1]
-    #         data_dict['nrf_init'] = model.c_NRF_time[-1]
-    #         data_dict['hh_init'] = model.c_HH_time[-1]
-    #         data_dict['erk_init'] = model.c_ERK_time[-1]
-    #         data_dict['apc_init'] = model.c_APC_time[-1]
-    #         data_dict['camp_init'] = model.c_cAMP_time[-1]
-    #
-    #         data_dict['bc_sim'] = model.c_BC_sim_time[-1]
-    #         data_dict['wnt_sim'] = model.c_WNT_sim_time[-1]
-    #         data_dict['notum_sim'] = model.c_Notum_sim_time[-1]
-    #         data_dict['nrf_sim'] = model.c_NRF_sim_time[-1]
-    #         data_dict['hh_sim'] = model.c_HH_sim_time[-1]
-    #         data_dict['erk_sim'] = model.c_ERK_sim_time[-1]
-    #         data_dict['apc_sim'] = model.c_APC_sim_time[-1]
-    #         data_dict['camp_sim'] = model.c_cAMP_sim_time[-1]
-    #
-    #         self.X = model.X
-    #         self.Xscale = model.X / model.xmax
-    #         self.seg_inds = model.seg_inds
-    #
-    #         for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
-    #
-    #             if verbose is True:
-    #                 print('Runing RNAi Sequence ', rnai_n)
-    #
-    #             model2 = PlanariaGRN(run_params, xscale=xxs)  # create a model using the specific parameters
-    #
-    #             # Run a new initialization of full model:
-    #             model2.initialize(knock_down=self.RNAi,
-    #                               run_time=self.runtime,
-    #                               run_time_step=self.runstep,
-    #                               run_time_sample=self.runsample)
-    #
-    #             if t_reinit > 0.0:
-    #                 model2.reinitialize(knock_down=rnai_s,
-    #                                     run_time=t_reinit,
-    #                                     run_time_step=self.runstep,
-    #                                     run_time_sample=self.runsample)
-    #
-    #             model2.simulate(knock_down=rnai_s,
-    #                             run_time=self.runtime,
-    #                             run_time_step=self.runstep,
-    #                             run_time_sample=self.runsample)
-    #
-    #             # FIXME later we want this to be Markov Model output
-    #             dic_lab_erk = rnai_n + '_outerk_sim'
-    #             dic_lab_bc = rnai_n + '_outbc_sim'
-    #             data_dict[dic_lab_erk] = model2.c_ERK_sim_time[-1] * 1
-    #             data_dict[dic_lab_bc] = model2.c_BC_sim_time[-1] * 1
-    #
-    #         self.outputs.append(data_dict)
-    #
-    #         if plotwhilesolving:
-    #
-    #             for tag in self.datatags:
-    #
-    #                 if tag.endswith('sim'):
-    #                     rtype = 'sim'
-    #
-    #                 else:
-    #                     rtype = 'init'
-    #
-    #                 cj = data_dict[tag]
-    #
-    #                 impath = os.path.join(self.savepath, tag)
-    #                 os.makedirs(impath, exist_ok=True)
-    #
-    #                 fnme = tag + '_Xscale' + str(xxs) + '.png'
-    #
-    #                 impath_c_init = os.path.join(impath, fnme)
-    #
-    #                 self.lineplot_1D(cj, impath_c_init, runtype=rtype)
-    #
-    #                 #                     plt.figure()
-    #                 #                     ax = plt.subplot(111)
-    #                 #                     plt.plot(self.X*1e3, cj, '-r', linewidth = 2.0)
-    #                 #                     plt.xlabel('Distance [mm]')
-    #                 #                     plt.ylabel('Concentration [mM/L]')
-    #                 #                     plt.savefig(impath_c_init, format = 'png', dpi = 300)
-    #                 #                     plt.close()
+
+    def run_scaleRNAi(self, run_params, xscales, RNAi_series, RNAi_names, verbose=True,
+                       run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
+                       run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
+                       animate=False, save_dir='scaleRNAi1'
+                       ):
+
+        # general saving directory for this procedure:
+        self.savedir_scaleRNAi = os.path.join(self.savepath, save_dir)
+        os.makedirs(self.savedir_scaleRNAi, exist_ok=True)
+
+        self.subfolders_dict['scaleRNAi'] = self.savedir_scaleRNAi
+
+        # Create datatags for the harness to save data series to:
+        self.datatags = []
+
+        self.datatags.append('base')
+
+        # add in new datatags for RNAi_series
+        for rnai_n in RNAi_names:
+            self.datatags.append(rnai_n)
+
+        self.outputs = []  # Storage array for all last timestep outputs
+
+        for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
+
+            if verbose is True:
+                print('Run ', ii + 1, " of ", len(xscales))
+
+            data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
+            data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+
+            # create a model using the specific parameters from the params manager for this run at this scale:
+            self.model.model_init(self.config_fn, run_params, xscale=xxs,
+                                  verbose=self.verbose, new_mesh=self.new_mesh)
+
+            # Run initialization of full model:
+            self.model.initialize(knockdown=None,
+                                  run_time=run_time_init,
+                                  run_time_step=run_time_step,
+                                  run_time_sample=run_time_sample,
+                                  reset_clims=reset_clims)
+
+            self.model.simulate(knockdown=None,
+                                run_time=run_time_sim,
+                                run_time_step=run_time_step,
+                                run_time_sample=run_time_sample,
+                                reset_clims=reset_clims)
+
+            data_dict_inits['base'] = self.model.molecules_time.copy()
+            data_dict_sims['base'] = self.model.molecules_sim_time.copy()
+
+            self.outputs.append([data_dict_inits, data_dict_sims])
+
+            if plot:
+                self.plot_single('base', ii, harness_type='scaleRNAi', plot_type='Triplot', output_type='init')
+                self.plot_single('base', ii, harness_type='scaleRNAi', plot_type='Triplot', output_type='sim')
+
+            if animate:
+                self.ani_single('base', ii, harness_type='scaleRNAi', ani_type='Triplot', output_type='init')
+                self.ani_single('base', ii, harness_type='scaleRNAi', ani_type='Triplot', output_type='sim')
+
+            if verbose is True:
+                print('----------------')
+
+            for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
+
+                if verbose is True:
+                    print('Runing RNAi Sequence ', rnai_n)
+
+                # Reinitialize the model again:
+                self.model.model_init(self.config_fn, run_params, xscale=xxs,
+                                      verbose=self.verbose, new_mesh=self.new_mesh)
+
+                # Run initialization phase of full model:
+                self.model.initialize(knockdown=None,
+                                      run_time=run_time_init,
+                                      run_time_step=run_time_step,
+                                      run_time_sample=run_time_sample,
+                                      reset_clims=reset_clims)
+
+                if run_time_reinit > 0.0:  # if there is a reinitialization phase (RNAi applied, no cutting)
+                    self.model.reinitialize(knockdown=rnai_s,
+                                            run_time=run_time_reinit,
+                                            run_time_step=run_time_step,
+                                            run_time_sample=run_time_sample
+                                            )
+                # Run the simulation with RNAi intervention applied:
+                self.model.simulate(knockdown=rnai_s,
+                                    run_time=run_time_sim,
+                                    run_time_step=run_time_step,
+                                    run_time_sample=run_time_sample,
+                                    reset_clims=False)
+
+                # Save whole molecules master arrays to their respective data dictionaries:
+                data_dict_inits[rnai_n] = self.model.molecules_time.copy()
+                data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
+
+                if plot:
+                    self.plot_single(rnai_n, ii, harness_type='scaleRNAi', plot_type='Triplot', output_type='sim')
+
+                if animate:
+                    self.ani_single(rnai_n, ii, harness_type='scaleRNAi', ani_type='Triplot', output_type='sim')
+
+                if verbose is True:
+                    print('----------------')
 
     def run_simRNAi(self, run_params, RNAi_series, RNAi_names, verbose=True, run_time_init = 36000.0,
                  run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50, run_time_reinit = 12,
@@ -577,7 +566,7 @@ class ModelHarness(object):
                         if self.verbose is True:
                             print('Plotting init of', tagi, 'for run ', ri, '...')
 
-                        fni = plot_type + '_' + tagi + '_init_' + str(ri) + '_'
+                        fni = plot_type + '_' + tagi + '_init_' + str(ri)
 
                         self.model.molecules_time = init_i
 
@@ -598,7 +587,7 @@ class ModelHarness(object):
                         if self.verbose is True:
                             print('Plotting sim of', tagi, 'for run ', ri, '...')
 
-                        fns = plot_type + '_' + tagi + '_sim_' + str(ri) + '_'
+                        fns = plot_type + '_' + tagi + '_sim_' + str(ri)
                         self.model.molecules_sim_time = sim_i
 
                         if plot_type == 'Triplot':
@@ -713,7 +702,7 @@ class ModelHarness(object):
             if self.verbose is True:
                 print('Plotting init of', tagi, 'for run ', ri, '...')
 
-            fni = plot_type + '_' + tagi + '_init_' + str(ri) + '_'
+            fni = plot_type + '_' + tagi + '_init_' + str(ri)
 
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
@@ -728,7 +717,7 @@ class ModelHarness(object):
             if self.verbose is True:
                 print('Plotting sim of', tagi, 'for run ', ri, '...')
 
-            fns = plot_type + '_' + tagi + '_sim_' + str(ri) + '_'
+            fns = plot_type + '_' + tagi + '_sim_' + str(ri)
 
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,

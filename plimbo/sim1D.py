@@ -60,9 +60,7 @@ class PlanariaGRN1D(object):
         self.runtype = 'init'
 
         if self.verbose is True:
-            print("-----------------------------")
             print("Successfully generated 1D model!")
-            print("-----------------------------")
 
     def make_mesh(self):
 
@@ -358,7 +356,7 @@ class PlanariaGRN1D(object):
         # divergence of the flux
         div_flux = self.get_div(flux, self.runtype)
 
-        # change of bc:
+        # change of bc:  #FIXME: BC produced on nerves or everywhere??
         del_bc = (-div_flux + rnai * self.r_bc * self.NerveDensity -
                   self.d_bc * self.c_BC - self.d_bc_deg * term_apc * self.c_BC * term_camp)
 
@@ -674,9 +672,7 @@ class PlanariaGRN1D(object):
 
 
         if self.verbose:
-            print("-----------------------------")
             print("Successfully completed init of 1D model!")
-            print("-----------------------------")
 
     def reinitialize(self,
                      knockdown=None,
@@ -715,9 +711,7 @@ class PlanariaGRN1D(object):
         self.molecules_time2['cAMP'] = self.c_cAMP_time2
 
         if self.verbose:
-            print("-----------------------------")
             print("Successfully completed reinit of 1D model!")
-            print("-----------------------------")
 
     def simulate(self,
                  knockdown=None,
@@ -771,9 +765,7 @@ class PlanariaGRN1D(object):
             self.default_clims = mol_clims
 
         if self.verbose:
-            print("-----------------------------")
             print("Successfully completed sim of 1D model!")
-            print("-----------------------------")
 
     # Plotting functions---------------------------------------
 

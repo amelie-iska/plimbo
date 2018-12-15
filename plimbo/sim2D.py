@@ -75,9 +75,7 @@ class PlanariaGRN2D(object):
         self.model_has_been_cut = False
 
         if self.verbose is True:
-            print("-----------------------------")
             print("Successfully generated 2D model!")
-            print("-----------------------------")
 
     def prime_model(self):
         """
@@ -922,9 +920,7 @@ class PlanariaGRN2D(object):
             self.default_clims = mol_clims
 
         if self.verbose:
-            print("-----------------------------")
             print("Successfully completed init of 2D model!")
-            print("-----------------------------")
 
     def reinitialize(self,
                      knockdown= None,
@@ -959,9 +955,7 @@ class PlanariaGRN2D(object):
         self.molecules_time2['cAMP'] = self.c_cAMP_time2
 
         if self.verbose:
-            print("-----------------------------")
             print("Successfully completed reinit of 2D model!")
-            print("-----------------------------")
 
     def simulate(self,
                  knockdown = None,
@@ -1018,9 +1012,7 @@ class PlanariaGRN2D(object):
             self.default_clims = mol_clims
 
         if self.verbose:
-            print("-----------------------------")
             print("Successfully completed sim of 2D model!")
-            print("-----------------------------")
 
     # Plotting functions---------------------------------------
 
