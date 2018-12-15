@@ -77,6 +77,9 @@ class ModelHarness(object):
         # save the model's concentration tags:
         self.conctags = self.model.conc_tags
 
+        # reference data set to null
+        self.ref_data = None
+
 
     def run_sensitivity(self, factor = 0.1, verbose=True, run_time_init = 36000.0,
                         run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50,
@@ -125,6 +128,10 @@ class ModelHarness(object):
                                    run_time_sample=run_time_sample,
                                    reset_clims = reset_clims)
 
+            # if we're on the first timestep, set it as the reference data set:
+            if ii == 0:
+                self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
+
 
             data_dict_inits['base'] = self.model.molecules_time.copy()
             data_dict_sims['base'] = self.model.molecules_sim_time.copy()
@@ -132,12 +139,16 @@ class ModelHarness(object):
             self.outputs.append([data_dict_inits, data_dict_sims])
 
             if plot:
-                self.plot_single('base', ii, harness_type='sensitivity', plot_type='Triplot', output_type='init')
-                self.plot_single('base', ii, harness_type='sensitivity', plot_type='Triplot', output_type='sim')
+                self.plot_single('base', ii, harness_type='sensitivity', plot_type='Triplot',
+                                 output_type='init', ref_data=self.ref_data[0])
+                self.plot_single('base', ii, harness_type='sensitivity', plot_type='Triplot',
+                                 output_type='sim', ref_data=self.ref_data[1])
 
             if animate:
-                self.ani_single('base', ii, harness_type='sensitivity', ani_type='Triplot', output_type='init')
-                self.ani_single('base', ii, harness_type='sensitivity', ani_type='Triplot', output_type='sim')
+                self.ani_single('base', ii, harness_type='sensitivity', ani_type='Triplot',
+                                output_type='init', ref_data=self.ref_data[0])
+                self.ani_single('base', ii, harness_type='sensitivity', ani_type='Triplot',
+                                output_type='sim', ref_data=self.ref_data[1])
 
             if verbose is True:
                 print('----------------')
@@ -192,6 +203,10 @@ class ModelHarness(object):
                                    run_time_sample=run_time_sample,
                                    reset_clims = reset_clims)
 
+            # if we're on the first timestep, set the reference data set:
+            if ii == 0:
+                self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
+
 
             data_dict_inits['base'] = self.model.molecules_time.copy()
             data_dict_sims['base'] = self.model.molecules_sim_time.copy()
@@ -199,12 +214,16 @@ class ModelHarness(object):
             self.outputs.append([data_dict_inits, data_dict_sims])
 
             if plot:
-                self.plot_single('base', ii, harness_type='search', plot_type='Triplot', output_type='init')
-                self.plot_single('base', ii, harness_type='search', plot_type='Triplot', output_type='sim')
+                self.plot_single('base', ii, harness_type='search', plot_type='Triplot', output_type='init',
+                                 ref_data = self.ref_data[0])
+                self.plot_single('base', ii, harness_type='search', plot_type='Triplot', output_type='sim',
+                                 ref_data=self.ref_data[1])
 
             if animate:
-                self.ani_single('base', ii, harness_type='search', ani_type='Triplot', output_type='init')
-                self.ani_single('base', ii, harness_type='search', ani_type='Triplot', output_type='sim')
+                self.ani_single('base', ii, harness_type='search', ani_type='Triplot',
+                                output_type='init', ref_data = self.ref_data[0])
+                self.ani_single('base', ii, harness_type='search', ani_type='Triplot',
+                                output_type='sim', ref_data = self.ref_data[1])
 
             if verbose is True:
                 print('----------------')
@@ -262,6 +281,10 @@ class ModelHarness(object):
                                    run_time_sample=run_time_sample,
                                    reset_clims = reset_clims)
 
+            # if we're on the first timestep, set it as the reference data set:
+            if ii == 0:
+                self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
+
 
             data_dict_inits['base'] = self.model.molecules_time.copy()
             data_dict_sims['base'] = self.model.molecules_sim_time.copy()
@@ -269,12 +292,16 @@ class ModelHarness(object):
             self.outputs.append([data_dict_inits, data_dict_sims])
 
             if plot:
-                self.plot_single('base', ii, harness_type='searchRNAi', plot_type='Triplot', output_type='init')
-                self.plot_single('base', ii, harness_type='searchRNAi', plot_type='Triplot', output_type='sim')
+                self.plot_single('base', ii, harness_type='searchRNAi', plot_type='Triplot',
+                                 output_type='init', ref_data = self.ref_data[0])
+                self.plot_single('base', ii, harness_type='searchRNAi', plot_type='Triplot',
+                                 output_type='sim', ref_data = self.ref_data[1])
 
             if animate:
-                self.ani_single('base', ii, harness_type='searchRNAi', ani_type='Triplot', output_type='init')
-                self.ani_single('base', ii, harness_type='searchRNAi', ani_type='Triplot', output_type='sim')
+                self.ani_single('base', ii, harness_type='searchRNAi', ani_type='Triplot',
+                                output_type='init', ref_data = self.ref_data[0])
+                self.ani_single('base', ii, harness_type='searchRNAi', ani_type='Triplot',
+                                output_type='sim', ref_data = self.ref_data[1])
 
             if verbose is True:
                 print('----------------')
@@ -320,6 +347,66 @@ class ModelHarness(object):
 
                 if verbose is True:
                     print('----------------')
+
+    def run_scale(self, run_params, xscales, verbose=True,
+                       run_time_init=36000.0, run_time_sim=36000.0,
+                       run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
+                       animate=False, save_dir='scale1'
+                       ):
+
+        # general saving directory for this procedure:
+        self.savedir_scale = os.path.join(self.savepath, save_dir)
+        os.makedirs(self.savedir_scale, exist_ok=True)
+
+        self.subfolders_dict['scale'] = self.savedir_scale
+
+        # Create datatags for the harness to save data series to:
+        self.datatags = []
+
+        self.datatags.append('base')
+
+        self.outputs = []  # Storage array for all last timestep outputs
+
+        for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
+
+            if verbose is True:
+                print('Run ', ii + 1, " of ", len(xscales))
+
+            data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
+            data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+
+            # create a model using the specific parameters from the params manager for this run at this scale:
+            self.model.model_init(self.config_fn, run_params, xscale=xxs,
+                                  verbose=self.verbose, new_mesh=self.new_mesh)
+
+            # Run initialization of full model:
+            self.model.initialize(knockdown=None,
+                                  run_time=run_time_init,
+                                  run_time_step=run_time_step,
+                                  run_time_sample=run_time_sample,
+                                  reset_clims=reset_clims)
+
+            self.model.simulate(knockdown=None,
+                                run_time=run_time_sim,
+                                run_time_step=run_time_step,
+                                run_time_sample=run_time_sample,
+                                reset_clims=reset_clims)
+
+            data_dict_inits['base'] = self.model.molecules_time.copy()
+            data_dict_sims['base'] = self.model.molecules_sim_time.copy()
+
+            self.outputs.append([data_dict_inits, data_dict_sims])
+
+            if plot:
+                self.plot_single('base', ii, harness_type='scale', plot_type='Triplot', output_type='init')
+                self.plot_single('base', ii, harness_type='scale', plot_type='Triplot', output_type='sim')
+
+            if animate:
+                self.ani_single('base', ii, harness_type='scale', ani_type='Triplot', output_type='init')
+                self.ani_single('base', ii, harness_type='scale', ani_type='Triplot', output_type='sim')
+
+            if verbose is True:
+                print('----------------')
 
     def run_scaleRNAi(self, run_params, xscales, RNAi_series, RNAi_names, verbose=True,
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
@@ -535,8 +622,8 @@ class ModelHarness(object):
         self.outputs.append([data_dict_inits, data_dict_sims])
 
 
-
-    def plot_all_output(self, harness_type=None, plot_type='Triplot', output_type='sim'):
+#FIXME we need to create a special after-plotter for the scale sim...
+    def plot_all_output(self, harness_type=None, plot_type='Triplot', output_type='sim', ref_data = None):
 
         if harness_type is None:
             harness_type = ''
@@ -572,11 +659,11 @@ class ModelHarness(object):
 
                         if plot_type == 'Triplot':
                             self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
-                                               cmaps=None, clims=None, autoscale=False)
+                                               cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
                         elif plot_type == 'Biplot':
                             self.model.biplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
-                                               cmaps=None, clims=None, autoscale=False)
+                                               cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             elif output_type == 'sim':
 
@@ -592,11 +679,11 @@ class ModelHarness(object):
 
                         if plot_type == 'Triplot':
                             self.model.triplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
-                                               cmaps=None, clims=None, autoscale=False)
+                                               cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
                         elif plot_type == 'Biplot':
                             self.model.biplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
-                                              cmaps=None, clims=None, autoscale=False)
+                                              cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             else:
 
@@ -606,7 +693,7 @@ class ModelHarness(object):
 
             print('No outputs to plot.')
 
-    def ani_all_output(self, harness_type=None, ani_type='Triplot', output_type='sim'):
+    def ani_all_output(self, harness_type=None, ani_type='Triplot', output_type='sim', ref_data = None):
 
         if harness_type is None:
             harness_type = ''
@@ -643,11 +730,11 @@ class ModelHarness(object):
 
                         if ani_type == 'Triplot':
                             self.model.animate_triplot(ani_type='init', dirsave=plotdiri,
-                                               cmaps=None, clims=None, autoscale=False)
+                                               cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
                         elif ani_type == 'Biplot':
                             self.model.animate_biplot(ani_type='init', dirsave=plotdiri,
-                                              cmaps=None, clims=None, autoscale=False)
+                                              cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             elif output_type == 'sim':
 
@@ -665,11 +752,11 @@ class ModelHarness(object):
 
                         if ani_type == 'Triplot':
                             self.model.animate_triplot(ani_type='sim', dirsave=plotdirs,
-                                               cmaps=None, clims=None, autoscale=False)
+                                               cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
                         elif ani_type == 'Biplot':
                             self.model.animate_biplot(ani_type='sim', dirsave=plotdirs,
-                                              cmaps=None, clims=None, autoscale=False)
+                                              cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             else:
 
@@ -679,7 +766,7 @@ class ModelHarness(object):
 
             print('No outputs to animate.')
 
-    def plot_single(self, tagi, ri, harness_type=None, plot_type='Triplot', output_type='sim'):
+    def plot_single(self, tagi, ri, harness_type=None, plot_type='Triplot', output_type='sim', ref_data = None):
         """
 
         :param tagi: datatag for the plot
@@ -706,11 +793,11 @@ class ModelHarness(object):
 
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
-                                   cmaps=None, clims=None, autoscale=False)
+                                   cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             elif plot_type == 'Biplot':
                 self.model.biplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
-                                   cmaps=None, clims=None, autoscale=False)
+                                   cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
         elif output_type == 'sim':
 
@@ -721,13 +808,13 @@ class ModelHarness(object):
 
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
-                                   cmaps=None, clims=None, autoscale=False)
+                                   cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             elif plot_type == 'Biplot':
                 self.model.biplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
-                                  cmaps=None, clims=None, autoscale=False)
+                                  cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
-    def ani_single(self, tagi, ri, harness_type=None, ani_type='Triplot', output_type='sim'):
+    def ani_single(self, tagi, ri, harness_type=None, ani_type='Triplot', output_type='sim', ref_data = None):
 
         if harness_type is None:
             harness_type = ''
@@ -746,11 +833,11 @@ class ModelHarness(object):
 
             if ani_type == 'Triplot':
                 self.model.animate_triplot(ani_type='init', dirsave=plotdiri,
-                                   cmaps=None, clims=None, autoscale=False)
+                                   cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             elif ani_type == 'Biplot':
                 self.model.animate_biplot(ani_type='init', dirsave=plotdiri,
-                                  cmaps=None, clims=None, autoscale=False)
+                                  cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
         elif output_type == 'sim':
 
@@ -762,11 +849,11 @@ class ModelHarness(object):
 
             if ani_type == 'Triplot':
                 self.model.animate_triplot(ani_type='sim', dirsave=plotdirs,
-                                   cmaps=None, clims=None, autoscale=False)
+                                   cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
             elif ani_type == 'Biplot':
                 self.model.animate_biplot(ani_type='sim', dirsave=plotdirs,
-                                  cmaps=None, clims=None, autoscale=False)
+                                  cmaps=None, clims=None, autoscale=False, ref_data = ref_data)
 
 
 

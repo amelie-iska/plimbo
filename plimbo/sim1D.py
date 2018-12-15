@@ -800,8 +800,8 @@ class PlanariaGRN1D(object):
 
 
     def triplot(self, ti, plot_type = 'init',  fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
-                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
-
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
+                      ref_data = None):
 
         if cmaps is None:
             cmaps = self.default_cmaps
@@ -861,12 +861,49 @@ class PlanariaGRN1D(object):
 
         if plot_type == 'init' or plot_type == 'reinit':
 
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew*0.5 # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+                carray3r = ref_data['Notum'][ti]
+
+                axarr[0].plot(self.X * 1e3, carray1r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[1].plot(self.X * 1e3, carray2r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[2].plot(self.X * 1e3, carray3r, color='Black', linewidth=linewr, linestyle='dashed')
+
+            # main plot data:
             axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
             axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
             axarr[2].plot(self.X*1e3, carray3, color=cmaps['Notum'], linewidth=linew)
 
+
+
         elif plot_type == 'sim':
 
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew * 0.5  # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+                carray3r = ref_data['Notum'][ti]
+
+                xsr, cs1r = self.get_plot_segs(carray1r)
+                _, cs2r = self.get_plot_segs(carray2r)
+                _, cs3r = self.get_plot_segs(carray3r)
+
+                for xi, ci in zip(xsr, cs1r):
+                    axarr[0].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs2r):
+                    axarr[1].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs3r):
+                    axarr[2].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+            # main plot data
             for xi, ci in zip(xs, cs1):
                 axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
 
@@ -875,6 +912,8 @@ class PlanariaGRN1D(object):
 
             for xi, ci in zip(xs, cs3):
                 axarr[2].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
+
+
 
         axarr[0].set_title("ERK")
         axarr[0].set_ylabel('Concentration [nM]')
@@ -906,7 +945,8 @@ class PlanariaGRN1D(object):
         plt.close()
 
     def biplot(self, ti, plot_type = 'init', fname = 'Biplot_', dirsave = None, reso = 150, linew = 3.0,
-                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
+               ref_data=None):
 
 
         if cmaps is None:
@@ -970,10 +1010,36 @@ class PlanariaGRN1D(object):
 
         if plot_type == 'init' or plot_type == 'reinit':
 
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew*0.5 # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+
+                axarr[0].plot(self.X * 1e3, carray1r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[1].plot(self.X * 1e3, carray2r, color='Black', linewidth=linewr, linestyle='dashed')
+
             axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
             axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
 
         elif plot_type == 'sim':
+
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew * 0.5  # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+
+                xsr, cs1r = self.get_plot_segs(carray1r)
+                _, cs2r = self.get_plot_segs(carray2r)
+
+                for xi, ci in zip(xsr, cs1r):
+                    axarr[0].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs2r):
+                    axarr[1].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
 
             for xi, ci in zip(xs, cs1):
                 axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
@@ -1090,35 +1156,41 @@ class PlanariaGRN1D(object):
         return sim_xoo, sim_coo
 
     def animate_triplot(self, ani_type = 'init', dirsave = None, reso = 150, linew = 3.0,
-                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
+                        ref_data=None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.triplot(ii, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
-                              cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+                              cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
+                             ref_data=ref_data)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.triplot(ii, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
-                              cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+                              cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
+                             ref_data=ref_data)
 
 
     def animate_biplot(self, ani_type='init', dirsave = None, reso = 150, linew = 3.0,
-                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
+                       ref_data=None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.biplot(ii, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
-                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
+                            ref_data=ref_data)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.biplot(ii, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
-                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+                            cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
+                            ref_data=ref_data)
 
     def animate_plot(self, ctag, ani_type='init', dirsave = 'PlotAni', reso = 150, linew = 3.0,
                 cmaps=None, fontsize=16.0, fsize=(10, 6), clims = None, autoscale = True):

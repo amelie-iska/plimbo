@@ -1046,7 +1046,8 @@ class PlanariaGRN2D(object):
         self.default_cmaps = mol_cmaps
 
     def triplot(self, ti, plot_type='init', autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0):
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
+                ref_data = None):
 
         if clims is None:
             clims = self.default_clims
@@ -1161,7 +1162,8 @@ class PlanariaGRN2D(object):
         plt.close()
 
     def biplot(self, ti, plot_type='init', autoscale=True, fname = 'Biplot_', dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
+                clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False,
+               ref_data = None):
 
         if clims is None:
             clims = self.default_clims
@@ -1334,34 +1336,40 @@ class PlanariaGRN2D(object):
         plt.close()
 
     def animate_triplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,):
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
+                        ref_data=None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.triplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
-                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
+                             ref_data=ref_data)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.triplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
-                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
+                             ref_data=ref_data)
 
     def animate_biplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
-               clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
+               clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False,
+                       ref_data=None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.biplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso,
-                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
+                            ref_data=ref_data)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.biplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
-                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+                             clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
+                            ref_data=ref_data)
 
     def animate_plot(self, ctag, ani_type='init', autoscale=True, dirsave='PlotAni', reso=150,
              clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff=False):
