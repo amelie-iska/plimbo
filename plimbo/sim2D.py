@@ -44,7 +44,11 @@ class PlanariaGRN2D(object):
     Object describing 2D version of core GRN model.
     """
 
-    def __init__(self, config_filename, pdict, xscale=1.0, new_mesh=False,
+    def __init__(self, *args, **kwargs):
+
+        self.model_init(*args, **kwargs)
+
+    def model_init(self, config_filename, pdict, xscale=1.0, new_mesh=False,
                  verbose=False):
 
         self.verbose = verbose
@@ -1096,14 +1100,29 @@ class PlanariaGRN2D(object):
 
         self.default_cmaps = mol_cmaps
 
-    def triplot(self, ti, plot_type='init', autoscale=True, dirsave='Triplot', reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False):
+    def triplot(self, ti, plot_type='init', autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0):
 
         if clims is None:
             clims = self.default_clims
 
         if cmaps is None:
             cmaps = self.default_cmaps
+
+        # Filesaving:
+
+        fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'Triplot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'Triplot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
 
         # Plot an init:
         if plot_type == 'init':
@@ -1114,11 +1133,6 @@ class PlanariaGRN2D(object):
             carray2 = self.molecules_time['β-Cat'][ti]
             carray3 = self.molecules_time['Notum'][ti]
 
-            fstr = 'Triplot_' + str(ti) + '_.png'
-
-            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
-
         elif plot_type == 'reinit':
 
             tsample = self.tsample_reinit
@@ -1128,10 +1142,6 @@ class PlanariaGRN2D(object):
             carray2 = self.molecules_time2['β-Cat'][ti]
             carray3 = self.molecules_time2['Notum'][ti]
 
-            fstr = 'Triplot2_' + str(ti) + '_.png'
-            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
-
         elif plot_type == 'sim':
             tsample = self.tsample_sim
 
@@ -1140,15 +1150,9 @@ class PlanariaGRN2D(object):
             carray2 = self.molecules_sim_time['β-Cat'][ti]
             carray3 = self.molecules_sim_time['Notum'][ti]
 
-            fstr = 'Triplot_' + str(ti) + '_.png'
-
-            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
 
         else:
             print("Valid plot types are 'init', 'reinit', and 'sim'.")
-
-        os.makedirs(dirstr, exist_ok=True)
 
         rcParams.update({'font.size': fontsize})
 
@@ -1374,19 +1378,19 @@ class PlanariaGRN2D(object):
         plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
 
-    def animate_triplot(self, ti, ani_type='init', autoscale=True, dirsave='TriplotAni', reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False):
+    def animate_triplot(self, ti, ani_type='init', autoscale=True, dirsave=None, reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
-                self.triplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                self.triplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
-                self.triplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
+                self.triplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
 
     def animate_biplot(self, ti, ani_type='init', autoscale=True, dirsave='BiplotAni', reso=150,

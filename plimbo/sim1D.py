@@ -34,16 +34,17 @@ class PlanariaGRN1D(object):
 
     """
 
-    def __init__(self, config_filename, pdict, xscale=1.0, verbose = False):
+    def __init__(self, *args, **kwargs):
 
+        self.model_init(*args, **kwargs)
+
+    def model_init(self, config_filename, pdict, xscale=1.0, new_mesh=False,
+                 verbose=False):
 
         # BETSE parameters object:
         self.p = Parameters.make(config_filename)
 
         self.verbose = verbose
-
-        self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
-                               'wnt': 1, 'hh': 1, 'camp': 1, 'dynein': 1}
 
         self.pdict = pdict
 
@@ -85,7 +86,6 @@ class PlanariaGRN1D(object):
         self.build_matrices()
 
     def prime_model(self):
-
 
         if self.verbose is True:
             print("Initializing parameters and variables...")
@@ -630,6 +630,9 @@ class PlanariaGRN1D(object):
     def run_loop(self,
                  knockdown=None):
 
+        if knockdown is None:
+            knockdown = self.RNAi_defaults
+
         for tt in self.time:
 
             delta_bc = self.update_bc(rnai=knockdown['bc']) * self.dt  # time update beta-catenin
@@ -699,6 +702,9 @@ class PlanariaGRN1D(object):
                    run_time_sample=100,
                    reset_clims = True):
 
+        if knockdown is None:
+            knockdown = self.RNAi_defaults
+
         # set time parameters:
         self.tmin = 0.0
         self.tmax = run_time
@@ -740,6 +746,9 @@ class PlanariaGRN1D(object):
                      run_time_step=10,
                      run_time_sample=100):
 
+        if knockdown is None:
+            knockdown = self.RNAi_defaults
+
         # set time parameters:
         self.tmin = 0.0
         self.tmax = run_time
@@ -765,6 +774,9 @@ class PlanariaGRN1D(object):
                  run_time_step=10,
                  run_time_sample=100,
                  reset_clims = False):
+
+        if knockdown is None:
+            knockdown = self.RNAi_defaults
 
         # set time parameters:
         self.tmin = 0.0
@@ -834,7 +846,7 @@ class PlanariaGRN1D(object):
         self.default_cmaps = mol_cmaps
 
 
-    def triplot(self, ti, plot_type = 'init', dirsave = 'Triplot', reso = 150, linew = 3.0,
+    def triplot(self, ti, plot_type = 'init',  fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
 
 
@@ -844,6 +856,21 @@ class PlanariaGRN1D(object):
         if clims is None:
             clims = self.default_clims
 
+        # Filesaving:
+
+        fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'Triplot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'Triplot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
+
         # Plot an init:
         if plot_type == 'init':
 
@@ -852,21 +879,12 @@ class PlanariaGRN1D(object):
             carray2 = self.molecules_time['β-Cat'][ti]
             carray3 = self.molecules_time['Notum'][ti]
 
-            fstr = 'Triplot_' + str(ti) + '_.png'
-
-            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
-
         elif plot_type == 'reinit':
 
             tsample = self.tsample_reinit
             carray1 = self.molecules_time2['Erk'][ti]
             carray2 = self.molecules_time2['β-Cat'][ti]
             carray3 = self.molecules_time2['Notum'][ti]
-
-            fstr = 'Triplot2_'+ str(ti) + '_.png'
-            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -878,15 +896,8 @@ class PlanariaGRN1D(object):
             _, cs2 = self.get_plot_segs(carray2)
             _, cs3 = self.get_plot_segs(carray3)
 
-            fstr = 'Triplot_' + str(ti) + '_.png'
-
-            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
-
         else:
             print("Valid plot types are 'init', 'reinit', and 'sim'.")
-
-        os.makedirs(dirstr, exist_ok=True)
 
         rcParams.update({'font.size': fontsize})
 
@@ -1115,7 +1126,7 @@ class PlanariaGRN1D(object):
 
         return sim_xoo, sim_coo
 
-    def animate_triplot(self, ani_type = 'init', dirsave = 'TriplotAni', reso = 150, linew = 3.0,
+    def animate_triplot(self, ani_type = 'init', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True):
 
         if ani_type == 'init' or ani_type == 'reinit':

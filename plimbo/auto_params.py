@@ -17,7 +17,7 @@ class ParamsManager(object):
 
     """
 
-    def __init__(self, param_o, levels=1, factor=0.1, free_params=None,
+    def __init__(self, param_o, levels=1, free_params=None,
                  N_runs_max=10.0):
 
         self.paramo_dict = param_o  # base parameters as a dictionary
@@ -25,22 +25,9 @@ class ParamsManager(object):
         self.paramo_array = np.array(list(param_o.values()))  # base parameters as an array
         self.param_labels = np.array(list(param_o.keys()))  # Names of parameters as an array
 
-        self.factor = factor  # factor used as a percentage
+    def create_sensitivity_matrix(self, factor = 0.1):
 
-        self.df = factor  # factor used as a multiple to reduction scale base parameters
-        self.uf = 1 / factor  # factor used as a multiple to magnify base parameters
-
-        self.levels = levels  # number of levels to change the parameters by
-
-        self.N_runs_max = N_runs_max
-
-        if free_params is not None:
-            self.free_params = free_params
-
-        else:
-            self.free_params = None
-
-    def create_sensitivity_matrix(self):
+        self.factor = factor
 
         # array of percent changes to each parameter
         self.delta_vect = self.factor * self.paramo_array
@@ -58,7 +45,10 @@ class ParamsManager(object):
         self.N_runs = self.params_M.shape[0]
         self.N_params = self.params_M.shape[1]
 
-    def create_search_matrix(self, style='log'):
+    def create_search_matrix(self, factor =0.8, levels = 1, style='log'):
+
+        self.factor = factor
+        self.levels = levels
 
         if style == 'log':
 
@@ -100,7 +90,11 @@ class ParamsManager(object):
         self.N_runs = self.params_M.shape[0]
         self.N_params = self.params_M.shape[1]
 
-    def create_random_matrix(self, style='lin'):
+    def create_random_matrix(self, factor = 0.8, levels = 1, free_params = None, style='log'):
+
+        self.factor = factor
+        self.levels = levels
+        self.free_params = free_params
 
         params_at_levels = []
 
