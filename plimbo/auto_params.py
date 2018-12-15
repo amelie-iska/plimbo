@@ -45,7 +45,7 @@ class ParamsManager(object):
         self.N_runs = self.params_M.shape[0]
         self.N_params = self.params_M.shape[1]
 
-    def create_search_matrix(self, factor =0.8, levels = 1, style='log'):
+    def create_search_matrix(self, factor =0.8, levels = 1, style='log'): # FIXME have fixed parameters
 
         self.factor = factor
         self.levels = levels

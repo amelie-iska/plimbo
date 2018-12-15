@@ -36,7 +36,7 @@ from betse.util.path import files
 from betse.science.phase.phasecls import SimPhase
 from betse.science.phase.phaseenum import SimPhaseKind
 from betse.science.math import toolbox as tb
-from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
+# from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 
 
 class PlanariaGRN2D(object):
@@ -91,6 +91,16 @@ class PlanariaGRN2D(object):
 
         # tags for easy reference to concentrations of the model:
         self.conc_tags = ['β-Cat', 'Erk', 'Wnt', 'Hh', 'NRF', 'Notum', 'APC', 'cAMP']
+
+        # Initialize the master molecules handlers to null values to avoid plot/animation issues:
+        self.molecules_time = OrderedDict()
+        self.molecules_time2 = OrderedDict()
+        self.molecules_sim_time = OrderedDict()
+
+        for tag in self.conc_tags:
+            self.molecules_time[tag] = np.zeros(self.cdl)
+            self.molecules_time2[tag] = np.zeros(self.cdl)
+            self.molecules_sim_time[tag] = np.zeros(self.cdl)
 
         # Default RNAi keys:
         self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
@@ -694,8 +704,6 @@ class PlanariaGRN2D(object):
 
     def clear_cache_init(self):
 
-        molecules = OrderedDict({})
-
         self.c_BC_time = []
         self.c_ERK_time = []
         self.c_WNT_time = []
@@ -707,35 +715,7 @@ class PlanariaGRN2D(object):
 
         self.delta_ERK_time = []
 
-        molecules['β-Cat'] = DynamicValue(
-            lambda: self.c_BC_time, lambda value: self.__setattr__('c_BC_time', value))
-
-        molecules['Erk'] = DynamicValue(
-            lambda: self.c_ERK_time, lambda value: self.__setattr__('c_ERK_time', value))
-
-        molecules['Wnt'] = DynamicValue(
-            lambda: self.c_WNT_time, lambda value: self.__setattr__('c_WNT_time', value))
-
-        molecules['Hh'] = DynamicValue(
-            lambda: self.c_HH_time, lambda value: self.__setattr__('c_HH_time', value))
-
-        molecules['NRF'] = DynamicValue(
-            lambda: self.c_NRF_time, lambda value: self.__setattr__('c_NRF_time', value))
-
-        molecules['Notum'] = DynamicValue(
-            lambda: self.c_Notum_time, lambda value: self.__setattr__('c_Notum_time', value))
-
-        molecules['APC'] = DynamicValue(
-            lambda: self.c_APC_time, lambda value: self.__setattr__('c_APC_time', value))
-
-        molecules['cAMP'] = DynamicValue(
-            lambda: self.c_cAMP_time, lambda value: self.__setattr__('c_cAMP_time', value))
-
-        self.molecules_time = DynamicValueDict(molecules)
-
     def clear_cache_reinit(self):
-
-        molecules = OrderedDict({})
 
         self.c_BC_time2 = []
         self.c_ERK_time2 = []
@@ -748,35 +728,7 @@ class PlanariaGRN2D(object):
 
         self.delta_ERK_time2 = []
 
-        molecules['β-Cat'] = DynamicValue(
-            lambda: self.c_BC_time2, lambda value: self.__setattr__('c_BC_time2', value))
-
-        molecules['Erk'] = DynamicValue(
-            lambda: self.c_ERK_time2, lambda value: self.__setattr__('c_ERK_time2', value))
-
-        molecules['Wnt'] = DynamicValue(
-            lambda: self.c_WNT_time2, lambda value: self.__setattr__('c_WNT_time2', value))
-
-        molecules['Hh'] = DynamicValue(
-            lambda: self.c_HH_time2, lambda value: self.__setattr__('c_HH_time2', value))
-
-        molecules['NRF'] = DynamicValue(
-            lambda: self.c_NRF_time2, lambda value: self.__setattr__('c_NRF_time2', value))
-
-        molecules['Notum'] = DynamicValue(
-            lambda: self.c_Notum_time2, lambda value: self.__setattr__('c_Notum_time2', value))
-
-        molecules['APC'] = DynamicValue(
-            lambda: self.c_APC_time2, lambda value: self.__setattr__('c_APC_time2', value))
-
-        molecules['cAMP'] = DynamicValue(
-            lambda: self.c_cAMP_time2, lambda value: self.__setattr__('c_cAMP_time2', value))
-
-        self.molecules_time2 = DynamicValueDict(molecules)
-
     def clear_cache_sim(self):
-
-        molecules = OrderedDict({})
 
         self.c_BC_sim_time = []
         self.c_ERK_sim_time = []
@@ -788,33 +740,6 @@ class PlanariaGRN2D(object):
         self.c_cAMP_sim_time = []
 
         self.delta_ERK_sim_time = []
-
-        molecules['β-Cat'] = DynamicValue(
-            lambda: self.c_BC_sim_time, lambda value: self.__setattr__('c_BC_sim_time', value))
-
-        molecules['Erk'] = DynamicValue(
-            lambda: self.c_ERK_sim_time, lambda value: self.__setattr__('c_ERK_sim_time', value))
-
-        molecules['Wnt'] = DynamicValue(
-            lambda: self.c_WNT_sim_time, lambda value: self.__setattr__('c_WNT_sim_time', value))
-
-        molecules['Hh'] = DynamicValue(
-            lambda: self.c_HH_sim_time, lambda value: self.__setattr__('c_HH_sim_time', value))
-
-        molecules['NRF'] = DynamicValue(
-            lambda: self.c_NRF_sim_time, lambda value: self.__setattr__('c_NRF_sim_time', value))
-
-        molecules['Notum'] = DynamicValue(
-            lambda: self.c_Notum_sim_time, lambda value: self.__setattr__('c_Notum_sim_time', value))
-
-        molecules['APC'] = DynamicValue(
-            lambda: self.c_APC_sim_time, lambda value: self.__setattr__('c_APC_sim_time', value))
-
-        molecules['cAMP'] = DynamicValue(
-            lambda: self.c_cAMP_sim_time, lambda value: self.__setattr__('c_cAMP_sim_time', value))
-
-
-        self.molecules_sim_time = DynamicValueDict(molecules)
 
     def run_loop(self, knockdown = None):
 
@@ -949,11 +874,11 @@ class PlanariaGRN2D(object):
         if knockdown is None:
             knockdown = self.RNAi_defaults
 
-        # set time parameters:
+        # set time parameters: FIXME have a set_time function
         self.tmin = 0.0
         self.tmax = run_time
         self.dt = run_time_step * self.x_scale
-        self.tsamp = run_time_sample
+        self.tsamp = int(run_time_sample/self.x_scale)
         self.nt = int((self.tmax - self.tmin) / self.dt)
         self.time = np.linspace(self.tmin, self.tmax, self.nt)
         self.tsample = self.time[0:-1:self.tsamp]
@@ -969,6 +894,16 @@ class PlanariaGRN2D(object):
         self.runtype = 'init'
         self.run_loop(knockdown=knockdown)
         self.tsample_init = self.tsample
+
+        # write the final molecule time arrays to the master dictionary:
+        self.molecules_time['β-Cat'] = self.c_BC_time
+        self.molecules_time['Erk'] = self.c_ERK_time
+        self.molecules_time['Wnt'] = self.c_WNT_time
+        self.molecules_time['Hh'] = self.c_HH_time
+        self.molecules_time['NRF'] = self.c_NRF_time
+        self.molecules_time['Notum'] = self.c_Notum_time
+        self.molecules_time['APC'] = self.c_APC_time
+        self.molecules_time['cAMP'] = self.c_cAMP_time
 
         if reset_clims:
             # Reset default clims to levels at the end of the initialization phase:
@@ -1004,7 +939,7 @@ class PlanariaGRN2D(object):
         self.tmin = 0.0
         self.tmax = run_time
         self.dt = run_time_step * self.x_scale
-        self.tsamp = run_time_sample
+        self.tsamp = int(run_time_sample/self.x_scale)
         self.nt = int((self.tmax - self.tmin) / self.dt)
         self.time = np.linspace(self.tmin, self.tmax, self.nt)
         self.tsample = self.time[0:-1:self.tsamp]
@@ -1013,6 +948,15 @@ class PlanariaGRN2D(object):
         self.runtype = 'reinit'
         self.run_loop(knockdown=knockdown)
         self.tsample_reinit = self.tsample
+
+        self.molecules_time2['β-Cat'] = self.c_BC_time2
+        self.molecules_time2['Erk'] = self.c_ERK_time2
+        self.molecules_time2['Wnt'] = self.c_WNT_time2
+        self.molecules_time2['Hh'] = self.c_HH_time2
+        self.molecules_time2['NRF'] = self.c_NRF_time2
+        self.molecules_time2['Notum'] = self.c_Notum_time2
+        self.molecules_time2['APC'] = self.c_APC_time2
+        self.molecules_time2['cAMP'] = self.c_cAMP_time2
 
         if self.verbose:
             print("-----------------------------")
@@ -1033,7 +977,7 @@ class PlanariaGRN2D(object):
         self.tmin = 0.0
         self.tmax = run_time
         self.dt = run_time_step * self.x_scale
-        self.tsamp = run_time_sample
+        self.tsamp = int(run_time_sample/self.x_scale)
         self.nt = int((self.tmax - self.tmin) / self.dt)
         self.time = np.linspace(self.tmin, self.tmax, self.nt)
         self.tsample = self.time[0:-1:self.tsamp]
@@ -1047,6 +991,15 @@ class PlanariaGRN2D(object):
         self.run_loop(knockdown=knockdown)
 
         self.tsample_sim = self.tsample
+
+        self.molecules_sim_time['β-Cat'] = self.c_BC_sim_time
+        self.molecules_sim_time['Erk'] = self.c_ERK_sim_time
+        self.molecules_sim_time['Wnt'] = self.c_WNT_sim_time
+        self.molecules_sim_time['Hh'] = self.c_HH_sim_time
+        self.molecules_sim_time['NRF'] = self.c_NRF_sim_time
+        self.molecules_sim_time['Notum'] = self.c_Notum_sim_time
+        self.molecules_sim_time['APC'] = self.c_APC_sim_time
+        self.molecules_sim_time['cAMP'] = self.c_cAMP_sim_time
 
         if reset_clims:
             # Reset default clims to levels at the end of the initialization phase:
@@ -1109,9 +1062,13 @@ class PlanariaGRN2D(object):
         if cmaps is None:
             cmaps = self.default_cmaps
 
-        # Filesaving:
 
-        fstr = fname + str(ti) + '.png'
+        #Filesaving:
+        if ti == -1:
+            fstr = fname + '.png'
+
+        else:
+            fstr = fname + str(ti) + '.png'
 
         if dirsave is None and plot_type != 'sim':
             dirstr = os.path.join(self.p.init_export_dirname, 'Triplot')
@@ -1211,7 +1168,7 @@ class PlanariaGRN2D(object):
         plt.savefig(fname, format='png', dpi=reso,  transparent = True)
         plt.close()
 
-    def biplot(self, ti, plot_type='init', autoscale=True, dirsave='Biplot', reso=150,
+    def biplot(self, ti, plot_type='init', autoscale=True, fname = 'Biplot_', dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
 
         if clims is None:
@@ -1219,6 +1176,24 @@ class PlanariaGRN2D(object):
 
         if cmaps is None:
             cmaps = self.default_cmaps
+
+        # Filesaving:
+        if ti == -1:
+            fstr = fname + '.png'
+
+        else:
+            fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'Triplot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'Triplot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
 
         # Plot an init:
         if plot_type == 'init':
@@ -1228,11 +1203,6 @@ class PlanariaGRN2D(object):
             carray1 = self.molecules_time['Erk'][ti]
             carray2 = self.molecules_time['β-Cat'][ti]
 
-            fstr = 'Biplot_' + str(ti) + '_.png'
-
-            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
-
         elif plot_type == 'reinit':
 
             tsample = self.tsample_reinit
@@ -1241,9 +1211,6 @@ class PlanariaGRN2D(object):
             carray1 = self.molecules_time2['Erk'][ti]
             carray2 = self.molecules_time2['β-Cat'][ti]
 
-            fstr = 'Biplot2_' + str(ti) + '_.png'
-            dirstr = os.path.join(self.p.init_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -1252,10 +1219,6 @@ class PlanariaGRN2D(object):
             carray1 = self.molecules_sim_time['Erk'][ti]
             carray2 = self.molecules_sim_time['β-Cat'][ti]
 
-            fstr = 'Biplot_' + str(ti) + '_.png'
-
-            dirstr = os.path.join(self.p.sim_export_dirname, dirsave)
-            fname = os.path.join(dirstr, fstr)
 
         else:
             print("Valid plot types are 'init', 'reinit', and 'sim'.")
@@ -1378,7 +1341,7 @@ class PlanariaGRN2D(object):
         plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
 
-    def animate_triplot(self, ti, ani_type='init', autoscale=True, dirsave=None, reso=150,
+    def animate_triplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,):
 
         if ani_type == 'init' or ani_type == 'reinit':
@@ -1393,7 +1356,7 @@ class PlanariaGRN2D(object):
                 self.triplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
 
-    def animate_biplot(self, ti, ani_type='init', autoscale=True, dirsave='BiplotAni', reso=150,
+    def animate_biplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
                clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False):
 
         if ani_type == 'init' or ani_type == 'reinit':
@@ -1408,7 +1371,7 @@ class PlanariaGRN2D(object):
                 self.biplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
 
-    def animate_plot(self, ti, ctag, ani_type='init', autoscale=True, dirsave='PlotAni', reso=150,
+    def animate_plot(self, ctag, ani_type='init', autoscale=True, dirsave='PlotAni', reso=150,
              clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff=False):
 
         if ani_type == 'init' or ani_type == 'reinit':
@@ -1422,4 +1385,33 @@ class PlanariaGRN2D(object):
             for ii, ti in enumerate(self.tsample_sim):
                 self.plot(ii, ctag, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
+
+
+#Wastelands:
+#--------------------------------------------
+        # molecules['β-Cat'] = DynamicValue(
+        #     lambda: self.c_BC_time, lambda value: self.__setattr__('c_BC_time', value))
+        #
+        # molecules['Erk'] = DynamicValue(
+        #     lambda: self.c_ERK_time, lambda value: self.__setattr__('c_ERK_time', value))
+        #
+        # molecules['Wnt'] = DynamicValue(
+        #     lambda: self.c_WNT_time, lambda value: self.__setattr__('c_WNT_time', value))
+        #
+        # molecules['Hh'] = DynamicValue(
+        #     lambda: self.c_HH_time, lambda value: self.__setattr__('c_HH_time', value))
+        #
+        # molecules['NRF'] = DynamicValue(
+        #     lambda: self.c_NRF_time, lambda value: self.__setattr__('c_NRF_time', value))
+        #
+        # molecules['Notum'] = DynamicValue(
+        #     lambda: self.c_Notum_time, lambda value: self.__setattr__('c_Notum_time', value))
+        #
+        # molecules['APC'] = DynamicValue(
+        #     lambda: self.c_APC_time, lambda value: self.__setattr__('c_APC_time', value))
+        #
+        # molecules['cAMP'] = DynamicValue(
+        #     lambda: self.c_cAMP_time, lambda value: self.__setattr__('c_cAMP_time', value))
+        #
+        # self.molecules_time = DynamicValueDict(molecules)
 
