@@ -1047,7 +1047,7 @@ class PlanariaGRN2D(object):
 
     def triplot(self, ti, plot_type='init', autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
-                ref_data = None):
+                ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if clims is None:
             clims = self.default_clims
@@ -1156,6 +1156,9 @@ class PlanariaGRN2D(object):
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string, x=0.5, y=0.1)
 
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)
+
         fig.subplots_adjust(wspace=0.0)
 
         plt.savefig(fname, format='png', dpi=reso,  transparent = True)
@@ -1163,7 +1166,7 @@ class PlanariaGRN2D(object):
 
     def biplot(self, ti, plot_type='init', autoscale=True, fname = 'Biplot_', dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False,
-               ref_data = None):
+               ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if clims is None:
             clims = self.default_clims
@@ -1259,6 +1262,9 @@ class PlanariaGRN2D(object):
         if axisoff is True:
             plt.axis('off')
 
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)
+
         fig.subplots_adjust(wspace=0.0)
 
         plt.savefig(fname, format='png', dpi=reso, transparent = True)
@@ -1337,39 +1343,39 @@ class PlanariaGRN2D(object):
 
     def animate_triplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
-                        ref_data=None):
+                        ref_data=None, extra_text = None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.triplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
-                             ref_data=ref_data)
+                             ref_data=ref_data, extra_text = extra_text)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.triplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso, linew = 3.0,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
-                             ref_data=ref_data)
+                             ref_data=ref_data, extra_text = extra_text)
 
     def animate_biplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
                clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False,
-                       ref_data=None):
+                       ref_data=None, extra_text = None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.biplot(ii, plot_type='init', autoscale=autoscale, dirsave=dirsave, reso=reso,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
-                            ref_data=ref_data)
+                            ref_data=ref_data, extra_text = extra_text)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.biplot(ii, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff,
-                            ref_data=ref_data)
+                            ref_data=ref_data, extra_text = extra_text)
 
     def animate_plot(self, ctag, ani_type='init', autoscale=True, dirsave='PlotAni', reso=150,
              clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff=False):

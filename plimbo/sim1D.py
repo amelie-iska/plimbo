@@ -801,7 +801,7 @@ class PlanariaGRN1D(object):
 
     def triplot(self, ti, plot_type = 'init',  fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
-                      ref_data = None):
+                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if cmaps is None:
             cmaps = self.default_cmaps
@@ -932,6 +932,9 @@ class PlanariaGRN1D(object):
 
         axarr[2].set_xlabel('Axis Distance [mm]')
 
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=axarr[0].transAxes)
+
         fig.subplots_adjust(hspace=0.15)
         fig.suptitle('Initialization', x=0.1, y=0.94)
 
@@ -946,7 +949,7 @@ class PlanariaGRN1D(object):
 
     def biplot(self, ti, plot_type = 'init', fname = 'Biplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
-               ref_data=None):
+               ref_data=None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
 
         if cmaps is None:
@@ -1061,6 +1064,9 @@ class PlanariaGRN1D(object):
 
         axarr[1].set_xlabel('Axis Distance [mm]')
 
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=axarr[0].transAxes)
+
         fig.subplots_adjust(hspace=0.15)
 
         tt = tsample[ti]
@@ -1157,40 +1163,40 @@ class PlanariaGRN1D(object):
 
     def animate_triplot(self, ani_type = 'init', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
-                        ref_data=None):
+                        ref_data=None, extra_text = None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.triplot(ii, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
                               cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
-                             ref_data=ref_data)
+                             ref_data=ref_data, extra_text = extra_text)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.triplot(ii, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
                               cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
-                             ref_data=ref_data)
+                             ref_data=ref_data, extra_text = extra_text)
 
 
     def animate_biplot(self, ani_type='init', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
-                       ref_data=None):
+                       ref_data=None, extra_text = None):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
             for ii, ti in enumerate(self.tsample_init):
                 self.biplot(ii, plot_type='init', dirsave=dirsave, reso=reso, linew=linew,
                             cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
-                            ref_data=ref_data)
+                            ref_data=ref_data, extra_text=extra_text)
 
         elif ani_type == 'sim':
 
             for ii, ti in enumerate(self.tsample_sim):
                 self.biplot(ii, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
                             cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
-                            ref_data=ref_data)
+                            ref_data=ref_data, extra_text=extra_text)
 
     def animate_plot(self, ctag, ani_type='init', dirsave = 'PlotAni', reso = 150, linew = 3.0,
                 cmaps=None, fontsize=16.0, fsize=(10, 6), clims = None, autoscale = True):
