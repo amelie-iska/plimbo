@@ -38,15 +38,77 @@ class PlanariaGRN1D(object):
 
         self.model_init(*args, **kwargs)
 
-    def model_init(self, config_filename, pdict, xscale=1.0, new_mesh=False,
+    def model_init(self, config_filename, pdict = None, xscale=1.0, new_mesh=False,
                  verbose=False):
+
+        if pdict is None: # default parameters
+            self.pdict = OrderedDict({  # Dimensional scaling:
+
+                # Flow shape parameters
+                'K_u': 0.5,
+                'n_u': 0.5,
+
+                # Small general diffusion factor:
+                'Do': 1.0e-11,
+
+                # Beta cat parameters
+                'r_bc': 1.0e-3,
+                'd_bc': 5.0e-7,
+                'K_bc_apc': 0.5,
+                'n_bc_apc': 1.0,
+                'd_bc_deg': 3.0e-3,
+                'K_bc_camp': 1.0,
+                'n_bc_camp': 2.0,
+
+                # ERK parameters
+                'K_erk_bc': 10.0,
+                'n_erk_bc': 2.0,
+
+                # APC parameters
+                'K_apc_wnt': 5.0,
+                'n_apc_wnt': 2.0,
+
+                # Hedgehog parameters:
+                'r_hh': 5.0e-3,  # 2.5e-3
+                'd_hh': 1.0e-5,
+                'D_hh': 2.5e-11,
+                'u_hh': 1.5e-7,
+
+                # Wnt parameters
+                'r_wnt': 5.0e-3,
+                'd_wnt': 5.0e-6,
+                'K_wnt_notum': 0.5,
+                'n_wnt_notum': 2.0,
+                'D_wnt': 0.75e-11,
+                'd_wnt_deg_notum': 5.0e-3,
+                'd_wnt_deg_ptc': 2.5e-5,
+                'K_wnt_hh': 62.5,
+                'n_wnt_hh': 2.0,
+                'K_wnt_camp': 0.5,
+                'n_wnt_camp': 2.0,
+
+                # NRF parameters
+                'r_nrf': 2.5e-3,
+                'd_nrf': 1.0e-5,
+                'K_nrf_bc': 100.0,
+                'n_nrf_bc': 1.0,
+                'D_nrf': 2.5e-11,
+                'u_nrf': -1.5e-7,
+
+                # Notum parameters
+                'K_notum_nrf': 300.0,
+                'n_notum_nrf': 2.5,
+                'D_notum': 2.5e-11,
+
+            })
+
+        else:
+            self.pdict = pdict
 
         # BETSE parameters object:
         self.p = Parameters.make(config_filename)
 
         self.verbose = verbose
-
-        self.pdict = pdict
 
         self.x_scale = xscale
 
