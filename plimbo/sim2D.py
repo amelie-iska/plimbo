@@ -102,7 +102,7 @@ class PlanariaGRN2D(object):
 
         # Default RNAi keys:
         self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
-         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1}
+         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1, 'kinesin':1}
 
         self.init_plots()
 
@@ -140,7 +140,7 @@ class PlanariaGRN2D(object):
         self.r_hh = pdict['r_hh']
         self.d_hh = pdict['d_hh']
         self.D_hh = pdict['D_hh']
-        #         self.u_hh = pdict['u_hh']
+        self.u_hh = pdict['u_hh']
 
         self.c_HH = np.zeros(self.cdl)
         self.c_HH_time = []
@@ -148,7 +148,8 @@ class PlanariaGRN2D(object):
         # Wnt parameters
         self.r_wnt = pdict['r_wnt']
         self.d_wnt = pdict['d_wnt']
-        self.d_wnt_deg = pdict['d_wnt_deg']
+        self.d_wnt_deg_notum = pdict['d_wnt_deg_notum']
+        self.d_wnt_deg_ptc = pdict['d_wnt_deg_ptc']
         self.D_wnt = pdict['D_wnt']
         self.K_wnt_notum = pdict['K_wnt_notum']
         self.n_wnt_notum = pdict['n_wnt_notum']
@@ -604,7 +605,7 @@ class PlanariaGRN2D(object):
         iHH = (self.c_HH / self.K_wnt_hh) ** self.n_wnt_hh
         icAMP = (self.c_cAMP / self.K_wnt_camp) ** self.n_wnt_camp
 
-        term_hh = iHH / (1 + iHH)
+        term_hh = 1 / (1 + iHH)
         term_notum = iNotum / (1 + iNotum)
         term_camp = icAMP / (1 + icAMP)
 
@@ -618,8 +619,9 @@ class PlanariaGRN2D(object):
         # divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
 
-        del_wnt = (-div_flux + rnai * self.r_wnt * term_hh * term_camp * self.NerveDensity -
-                   self.d_wnt * self.c_WNT - self.d_wnt_deg * term_notum * self.c_WNT)
+        del_wnt = (-div_flux + rnai * self.r_wnt  * term_camp * self.NerveDensity -
+                   self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT* term_hh
+                                           - self.d_wnt_deg_ptc * term_hh * self.c_WNT)
 
         return del_wnt  # change in Wnt
 
@@ -632,12 +634,17 @@ class PlanariaGRN2D(object):
         _, g_hh_x, g_hh_y = self.cells.gradient(self.c_HH)
 
         #         Motor transport term:
-        #         m_hh = self.cells.meanval(self.c_HH)
-        #         conv_term = m_hh*self.u*self.u_hh*kinesin
-        #         flux = -g_hh*self.D_hh + conv_term
+        m_hh = self.cells.meanval(self.c_HH)
 
-        fx = -g_hh_x * self.D_hh
-        fy = -g_hh_y * self.D_hh
+        # Motor transport term:
+        conv_term_x = m_hh * self.ux * self.u_hh * kinesin
+        conv_term_y = m_hh * self.uy * self.u_hh * kinesin
+
+        fx = -g_hh_x * self.D_hh + conv_term_x
+        fy = -g_hh_y * self.D_hh + conv_term_y
+
+        # fx = -g_hh_x * self.D_hh
+        # fy = -g_hh_y * self.D_hh
 
         #         divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -748,7 +755,8 @@ class PlanariaGRN2D(object):
 
             delta_bc = self.update_bc(rnai=knockdown['bc']) * self.dt  # time update beta-catenin
             delta_wnt = self.update_wnt(rnai=knockdown['wnt']) * self.dt  # time update wnt
-            delta_hh = self.update_hh(rnai=knockdown['hh']) * self.dt  # time update hh
+            delta_hh = self.update_hh(rnai=knockdown['hh'],
+                                      kinesin = knockdown['kinesin']) * self.dt  # time update hh
             delta_nrf = self.update_nrf(dynein=knockdown['dynein']) * self.dt  # update NRF
             delta_notum = self.update_notum(rnai=knockdown['notum']) * self.dt  # time update Notum
             delta_erk = self.update_erk(rnai=knockdown['erk']) * self.dt  # time update ERK
@@ -1158,6 +1166,176 @@ class PlanariaGRN2D(object):
 
         if extra_text is not None:
             fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)
+
+        fig.subplots_adjust(wspace=0.0)
+
+        plt.savefig(fname, format='png', dpi=reso,  transparent = True)
+        plt.close()
+
+    def hexplot(self, ti, plot_type='init', autoscale=True, fname = 'Hexplot_', dirsave=None, reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 14), axisoff=False, linew = 3.0,
+                ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+
+        if clims is None:
+            clims = self.default_clims
+
+        if cmaps is None:
+            cmaps = self.default_cmaps
+
+
+        #Filesaving:
+        if ti == -1:
+            fstr = fname + '.png'
+
+        else:
+            fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'Hexplot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'Hexplot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
+
+        # Plot an init:
+        if plot_type == 'init':
+
+            tsample = self.tsample_init
+            self.assign_easy_x(self.cells_i)
+            carray1 = self.molecules_time['Erk'][ti]
+            carray2 = self.molecules_time['β-Cat'][ti]
+            carray3 = self.molecules_time['Notum'][ti]
+            carray4 = self.molecules_time['Hh'][ti]
+            carray5 = self.molecules_time['Wnt'][ti]
+            carray6 = self.molecules_time['NRF'][ti]
+
+
+        elif plot_type == 'reinit':
+
+            tsample = self.tsample_reinit
+
+            self.assign_easy_x(self.cells_i)
+            carray1 = self.molecules_time2['Erk'][ti]
+            carray2 = self.molecules_time2['β-Cat'][ti]
+            carray3 = self.molecules_time2['Notum'][ti]
+            carray4 = self.molecules_time2['Hh'][ti]
+            carray5 = self.molecules_time2['Wnt'][ti]
+            carray6 = self.molecules_time2['NRF'][ti]
+
+
+        elif plot_type == 'sim':
+            tsample = self.tsample_sim
+
+            self.assign_easy_x(self.cells_s)
+            carray1 = self.molecules_sim_time['Erk'][ti]
+            carray2 = self.molecules_sim_time['β-Cat'][ti]
+            carray3 = self.molecules_sim_time['Notum'][ti]
+            carray4 = self.molecules_sim_time['Hh'][ti]
+            carray5 = self.molecules_sim_time['Wnt'][ti]
+            carray6 = self.molecules_sim_time['NRF'][ti]
+
+
+
+        else:
+            print("Valid plot types are 'init', 'reinit', and 'sim'.")
+
+        rcParams.update({'font.size': fontsize})
+
+        fig, axarr = plt.subplots(2, 3, figsize=fsize)
+
+        axarr[0,0].xaxis.set_ticklabels([])
+        axarr[0, 0].yaxis.set_ticklabels([])
+
+        axarr[0, 1].xaxis.set_ticklabels([])
+        axarr[0, 1].yaxis.set_ticklabels([])
+
+        axarr[0, 2].xaxis.set_ticklabels([])
+        axarr[0, 2].yaxis.set_ticklabels([])
+
+        axarr[1, 0].xaxis.set_ticklabels([])
+        axarr[1, 0].yaxis.set_ticklabels([])
+
+        axarr[1, 1].xaxis.set_ticklabels([])
+        axarr[1, 1].yaxis.set_ticklabels([])
+
+        axarr[1, 2].xaxis.set_ticklabels([])
+        axarr[1, 2].yaxis.set_ticklabels([])
+
+        col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
+        if autoscale is False:
+            col1.set_clim(clims['Erk'][0], clims['Erk'][1])
+        col1.set_array(carray1)
+
+        col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
+        if autoscale is False:
+            col2.set_clim(clims['β-Cat'][0], clims['β-Cat'][1])
+        col2.set_array(carray2)
+
+        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
+        if autoscale is False:
+            col3.set_clim(clims['Notum'][0], clims['Notum'][1])
+        col3.set_array(carray3)
+
+        col4 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Hh'], linewidth=0.0)
+        if autoscale is False:
+            col4.set_clim(clims['Hh'][0], clims['Hh'][1])
+        col4.set_array(carray4)
+
+
+        col5 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Wnt'], linewidth=0.0)
+        if autoscale is False:
+            col5.set_clim(clims['Wnt'][0], clims['Wnt'][1])
+        col5.set_array(carray5)
+
+
+        col6 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['NRF'], linewidth=0.0)
+        if autoscale is False:
+            col6.set_clim(clims['NRF'][0], clims['NRF'][1])
+        col6.set_array(carray6)
+
+
+        axarr[0,0].add_collection(col1)
+        axarr[0, 0].set_title('Erk')
+        axarr[0, 0].axis('tight')
+        axarr[0, 0].axis('off')
+
+        axarr[0, 1].add_collection(col2)
+        axarr[0, 1].set_title('β-Cat')
+        axarr[0, 1].axis('tight')
+        axarr[0, 1].axis('off')
+
+        axarr[0, 2].add_collection(col3)
+        axarr[0, 2].set_title('Notum')
+        axarr[0, 2].axis('tight')
+        axarr[0, 2].axis('off')
+
+        axarr[1,0].add_collection(col4)
+        axarr[1, 0].set_title('Hh')
+        axarr[1, 0].axis('tight')
+        axarr[1, 0].axis('off')
+
+        axarr[1, 1].add_collection(col5)
+        axarr[1, 1].set_title('Wnt')
+        axarr[1, 1].axis('tight')
+        axarr[1, 1].axis('off')
+
+        axarr[1, 2].add_collection(col6)
+        axarr[1, 2].set_title('NRF')
+        axarr[1, 2].axis('tight')
+        axarr[1, 2].axis('off')
+
+        tt = tsample[ti]
+
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
+        fig.suptitle(tit_string, x=0.5, y=0.1)
+
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=axarr[0,0].transAxes)
 
         fig.subplots_adjust(wspace=0.0)
 

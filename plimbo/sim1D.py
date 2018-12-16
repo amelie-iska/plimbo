@@ -104,7 +104,7 @@ class PlanariaGRN1D(object):
 
         # Default RNAi keys:
         self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
-         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1}
+         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1, 'kinesin':1}
 
         self.init_plots()
 
@@ -143,7 +143,7 @@ class PlanariaGRN1D(object):
         self.r_hh = self.pdict['r_hh']
         self.d_hh = self.pdict['d_hh']
         self.D_hh = self.pdict['D_hh']
-        #         self.u_hh = pdict['u_hh']
+        self.u_hh = self.pdict['u_hh']
 
         self.c_HH = np.zeros(self.cdl)
         self.c_HH_time = []
@@ -151,7 +151,8 @@ class PlanariaGRN1D(object):
         # Wnt parameters
         self.r_wnt = self.pdict['r_wnt']
         self.d_wnt = self.pdict['d_wnt']
-        self.d_wnt_deg = self.pdict['d_wnt_deg']
+        self.d_wnt_deg_notum = self.pdict['d_wnt_deg_notum']
+        self.d_wnt_deg_ptc = self.pdict['d_wnt_deg_ptc']
         self.D_wnt = self.pdict['D_wnt']
         self.K_wnt_notum = self.pdict['K_wnt_notum']
         self.n_wnt_notum = self.pdict['n_wnt_notum']
@@ -417,7 +418,7 @@ class PlanariaGRN1D(object):
         iHH = (self.c_HH / self.K_wnt_hh) ** self.n_wnt_hh
         icAMP = (self.c_cAMP / self.K_wnt_camp) ** self.n_wnt_camp
 
-        term_hh = iHH / (1 + iHH)
+        term_hh = 1 / (1 + iHH)
         term_notum = iNotum / (1 + iNotum)
         term_camp = icAMP / (1 + icAMP)
 
@@ -430,8 +431,9 @@ class PlanariaGRN1D(object):
         # divergence
         div_flux = self.get_div(flux, self.runtype)
 
-        del_wnt = (-div_flux + rnai * self.r_wnt * term_hh * term_camp * self.NerveDensity -
-                   self.d_wnt * self.c_WNT - self.d_wnt_deg * term_notum * self.c_WNT)
+        del_wnt = (-div_flux + rnai * self.r_wnt * term_camp * self.NerveDensity -
+                   self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT
+                                           - self.d_wnt_deg_ptc*term_hh*self.c_WNT)
 
         return del_wnt  # change in Wnt
 
@@ -443,11 +445,11 @@ class PlanariaGRN1D(object):
         # Gradient and mean of concentration
         g_hh, m_hh = self.get_gradient(self.c_HH, self.runtype)
 
-        #         Motor transport term:
-        #         conv_term = m_hh*self.u*self.u_hh*kinesin
+        # Motor transport term:
+        conv_term = m_hh*self.u*self.u_hh*kinesin
 
-        #         flux = -g_hh*self.D_hh + conv_term
-        flux = -g_hh * self.D_hh
+        flux = -g_hh*self.D_hh + conv_term
+        # flux = -g_hh * self.D_hh
 
         #         divergence
         div_flux = self.get_div(flux, self.runtype)
@@ -561,7 +563,8 @@ class PlanariaGRN1D(object):
 
             delta_bc = self.update_bc(rnai=knockdown['bc']) * self.dt  # time update beta-catenin
             delta_wnt = self.update_wnt(rnai=knockdown['wnt']) * self.dt  # time update wnt
-            delta_hh = self.update_hh(rnai=knockdown['hh']) * self.dt  # time update hh
+            delta_hh = self.update_hh(rnai=knockdown['hh'],
+                                      kinesin=knockdown['kinesin']) * self.dt  # time update hh
             delta_nrf = self.update_nrf(dynein=knockdown['dynein']) * self.dt  # update NRF
             delta_notum = self.update_notum(rnai=knockdown['notum']) * self.dt  # time update Notum
             delta_erk = self.update_erk(rnai=knockdown['erk']) * self.dt  # time update ERK
@@ -914,7 +917,6 @@ class PlanariaGRN1D(object):
                 axarr[2].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
 
 
-
         axarr[0].set_title("ERK")
         axarr[0].set_ylabel('Concentration [nM]')
         if autoscale is False:
@@ -1213,6 +1215,219 @@ class PlanariaGRN1D(object):
 
                 self.plot(ii, ctag, plot_type='sim', dirsave=dirsave, reso=reso, linew=linew,
                             cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale)
+
+    def hexplot(self, ti, plot_type = 'init',  fname = 'Hexplot_', dirsave = None, reso = 150, linew = 3.0,
+                      cmaps = None, fontsize = 16.0, fsize = (16, 12), clims = None, autoscale = True,
+                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+
+        if cmaps is None:
+            cmaps = self.default_cmaps
+
+        if clims is None:
+            clims = self.default_clims
+
+        # Filesaving:
+        if ti == -1:
+            fstr = fname + '.png'
+
+        else:
+            fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'Hexplot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'Hexplot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
+
+        # Plot an init:
+        if plot_type == 'init':
+
+            tsample = self.tsample_init
+            carray1 = self.molecules_time['Erk'][ti]
+            carray2 = self.molecules_time['β-Cat'][ti]
+            carray3 = self.molecules_time['Notum'][ti]
+            carray4 = self.molecules_time['Hh'][ti]
+            carray5 = self.molecules_time['Wnt'][ti]
+            carray6 = self.molecules_time['NRF'][ti]
+
+        elif plot_type == 'reinit':
+
+            tsample = self.tsample_reinit
+            carray1 = self.molecules_time2['Erk'][ti]
+            carray2 = self.molecules_time2['β-Cat'][ti]
+            carray3 = self.molecules_time2['Notum'][ti]
+            carray4 = self.molecules_time2['Hh'][ti]
+            carray5 = self.molecules_time2['Wnt'][ti]
+            carray6 = self.molecules_time2['NRF'][ti]
+
+        elif plot_type == 'sim':
+            tsample = self.tsample_sim
+            carray1 = self.molecules_sim_time['Erk'][ti]
+            carray2 = self.molecules_sim_time['β-Cat'][ti]
+            carray3 = self.molecules_sim_time['Notum'][ti]
+            carray4 = self.molecules_sim_time['Hh'][ti]
+            carray5 = self.molecules_sim_time['Wnt'][ti]
+            carray6 = self.molecules_sim_time['NRF'][ti]
+
+            xs, cs1 = self.get_plot_segs(carray1)
+            _, cs2 = self.get_plot_segs(carray2)
+            _, cs3 = self.get_plot_segs(carray3)
+            _, cs4 = self.get_plot_segs(carray4)
+            _, cs5 = self.get_plot_segs(carray5)
+            _, cs6 = self.get_plot_segs(carray6)
+
+        else:
+            print("Valid plot types are 'init', 'reinit', and 'sim'.")
+
+        rcParams.update({'font.size': fontsize})
+
+        fig, axarr = plt.subplots(3, 2, sharex=True, figsize=fsize)
+
+        if plot_type == 'init' or plot_type == 'reinit':
+
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew*0.5 # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+                carray3r = ref_data['Notum'][ti]
+                carray4r = ref_data['Hh'][ti]
+                carray5r = ref_data['Wnt'][ti]
+                carray6r = ref_data['NRF'][ti]
+
+                axarr[0,0].plot(self.X * 1e3, carray1r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[1,0].plot(self.X * 1e3, carray2r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[2,0].plot(self.X * 1e3, carray3r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[0, 1].plot(self.X * 1e3, carray4r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[1, 1].plot(self.X * 1e3, carray5r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[2, 1].plot(self.X * 1e3, carray6r, color='Black', linewidth=linewr, linestyle='dashed')
+
+            # main plot data:
+            axarr[0,0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
+            axarr[1,0].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
+            axarr[2,0].plot(self.X*1e3, carray3, color=cmaps['Notum'], linewidth=linew)
+            axarr[0,1].plot(self.X*1e3, carray4, color=cmaps['Hh'], linewidth=linew)
+            axarr[1,1].plot(self.X*1e3, carray5, color=cmaps['Wnt'], linewidth=linew)
+            axarr[2,1].plot(self.X*1e3, carray6, color=cmaps['NRF'], linewidth=linew)
+
+
+
+        elif plot_type == 'sim':
+
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew * 0.5  # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+                carray3r = ref_data['Notum'][ti]
+                carray4r = ref_data['Hh'][ti]
+                carray5r = ref_data['Wnt'][ti]
+                carray6r = ref_data['NRF'][ti]
+
+                xsr, cs1r = self.get_plot_segs(carray1r)
+                _, cs2r = self.get_plot_segs(carray2r)
+                _, cs3r = self.get_plot_segs(carray3r)
+                _, cs4r = self.get_plot_segs(carray4r)
+                _, cs5r = self.get_plot_segs(carray5r)
+                _, cs6r = self.get_plot_segs(carray6r)
+
+                for xi, ci in zip(xsr, cs1r):
+                    axarr[0,0].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs2r):
+                    axarr[1,0].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs3r):
+                    axarr[2,0].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs4r):
+                    axarr[0,1].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs5r):
+                    axarr[1,1].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs6r):
+                    axarr[2,1].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+            # main plot data
+            for xi, ci in zip(xs, cs1):
+                axarr[0, 0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs2):
+                axarr[1, 0].plot(xi, ci, color=cmaps['β-Cat'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs3):
+                axarr[2, 0].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs4):
+                axarr[0, 1].plot(xi, ci, color=cmaps['Hh'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs5):
+                axarr[1, 1].plot(xi, ci, color=cmaps['Wnt'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs6):
+                axarr[2, 1].plot(xi, ci, color=cmaps['NRF'], linewidth=linew)
+
+
+
+        axarr[0, 0].set_title("ERK")
+        axarr[0, 0].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[0,0].set_ylim(clims['Erk'][0], clims['Erk'][1])
+
+        axarr[1,0].set_title("beta-cat")
+        axarr[1,0].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[1,0].set_ylim(clims['β-Cat'][0], clims['β-Cat'][1])
+
+        axarr[2,0].set_title("Notum")
+        axarr[2,0].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[2,0].set_ylim(clims['Notum'][0], clims['Notum'][1])
+
+        axarr[2,0].set_xlabel('Axis Distance [mm]')
+
+        axarr[0, 1].set_title("Hh")
+        axarr[0, 1].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[0,1].set_ylim(clims['Hh'][0], clims['Hh'][1])
+
+        axarr[1,1].set_title("Wnt")
+        axarr[1,1].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[1,1].set_ylim(clims['Wnt'][0], clims['Wnt'][1])
+
+        axarr[2,1].set_title("NRF")
+        axarr[2,1].set_ylabel('Concentration [nM]')
+        if autoscale is False:
+            axarr[2,1].set_ylim(clims['NRF'][0], clims['NRF'][1])
+
+        axarr[2,1].set_xlabel('Axis Distance [mm]')
+
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=axarr[0,0].transAxes)
+
+        # fig.subplots_adjust(hspace=0.15)
+        fig.suptitle('Initialization', x=0.1, y=0.94)
+
+        tt = tsample[ti]
+
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
+        fig.suptitle(tit_string)
+
+        plt.savefig(fname, format='png', dpi=reso)
+        plt.close()
+
+
+
 
 
 
