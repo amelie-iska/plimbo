@@ -35,7 +35,7 @@ from plimbo.auto_params import ParamsManager
 
 class ModelHarness(object):
 
-    def __init__(self, config_filename, paramo, xscale=1.0, harness_type = '1D',
+    def __init__(self, config_filename, paramo = None, xscale=1.0, harness_type = '1D',
                  verbose = False, new_mesh=False, savedir = 'ModelSearch'):
 
         self.xscale = xscale
@@ -82,6 +82,35 @@ class ModelHarness(object):
 
         # extra information to write on plots:
         self.plot_info_msg = None
+
+        # default RNAi testing sequence vector:
+        self.RNAi_vect_default = [
+            {'bc': 0.1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1.0, 'erk': 0.1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1.0, 'erk': 1, 'apc': 0.1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1.0, 'erk': 1, 'apc': 1, 'notum': 0.1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.25,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 0.0, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 0.1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 0.1},
+        ]
+
+        self.RNAi_tags_default = ['RNAi_BC', 'RNAi_ERK', 'RNAi_APC', 'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH',
+                                  'cAMP_0.25x', 'cAMP_5x', 'Dynein', 'Kinesn']
+
+        self.xscales_default = [0.75, 1.5, 3.0]
 
 
     def run_sensitivity(self, factor = 0.1, verbose=True, run_time_init = 36000.0,
@@ -241,10 +270,15 @@ class ModelHarness(object):
             if verbose is True:
                 print('----------------')
 
-    def run_searchRNAi(self, RNAi_series, RNAi_names, factor = 0.8, levels = 1, search_style = 'log',
+    def run_searchRNAi(self, RNAi_series = None, RNAi_names = None, factor = 0.8, levels = 1, search_style = 'log',
                         verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True, ani_type = 'Triplot',
                        animate=False, save_dir='SearchRNAi1', fixed_params = None, plot_type = 'Triplot'):
+
+        if RNAi_series is None or RNAi_names is None:
+
+            RNAi_series = self.RNAi_vect_default
+            RNAi_names = self.RNAi_tags_default
 
         # general saving directory for this procedure:
         self.savedir_searchRNAi = os.path.join(self.savepath, save_dir)
@@ -367,12 +401,15 @@ class ModelHarness(object):
                 if verbose is True:
                     print('----------------')
 
-    def run_scale(self, run_params, xscales, verbose=True,
+    def run_scale(self, params = None, xscales = None, verbose=True,
                        run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
                        animate=False, save_dir='scale1', plot_type = 'Triplot',
                        ani_type = 'Triplot'
                        ):
+
+        if xscales is None:
+            xscales = self.xscales_default
 
         # general saving directory for this procedure:
         self.savedir_scale = os.path.join(self.savepath, save_dir)
@@ -396,7 +433,7 @@ class ModelHarness(object):
             data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
 
             # create a model using the specific parameters from the params manager for this run at this scale:
-            self.model.model_init(self.config_fn, run_params, xscale=xxs,
+            self.model.model_init(self.config_fn, params, xscale=xxs,
                                   verbose=self.verbose, new_mesh=self.new_mesh)
 
             # Run initialization of full model:
@@ -432,12 +469,20 @@ class ModelHarness(object):
             if verbose is True:
                 print('----------------')
 
-    def run_scaleRNAi(self, run_params, xscales, RNAi_series, RNAi_names, verbose=True,
+    def run_scaleRNAi(self, params = None, xscales = None, RNAi_series = None, RNAi_names = None, verbose=True,
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
                        animate=False, save_dir='scaleRNAi1', plot_type = 'Triplot',
                        ani_type = 'Triplot'
                        ):
+
+        if RNAi_series is None or RNAi_names is None:
+
+            RNAi_series = self.RNAi_vect_default
+            RNAi_names = self.RNAi_tags_default
+
+        if xscales is None:
+            xscales = self.xscale_default
 
         # general saving directory for this procedure:
         self.savedir_scaleRNAi = os.path.join(self.savepath, save_dir)
@@ -465,7 +510,7 @@ class ModelHarness(object):
             data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
 
             # create a model using the specific parameters from the params manager for this run at this scale:
-            self.model.model_init(self.config_fn, run_params, xscale=xxs,
+            self.model.model_init(self.config_fn, params, xscale=xxs,
                                   verbose=self.verbose, new_mesh=self.new_mesh)
 
             # Run initialization of full model:
@@ -510,7 +555,7 @@ class ModelHarness(object):
                     print('Runing RNAi Sequence ', rnai_n)
 
                 # Reinitialize the model again:
-                self.model.model_init(self.config_fn, run_params, xscale=xxs,
+                self.model.model_init(self.config_fn, params, xscale=xxs,
                                       verbose=self.verbose, new_mesh=self.new_mesh)
 
                 # Run initialization phase of full model:
@@ -548,11 +593,16 @@ class ModelHarness(object):
                 if verbose is True:
                     print('----------------')
 
-    def run_simRNAi(self, run_params, RNAi_series, RNAi_names, verbose=True, run_time_init = 36000.0,
-                 run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50, run_time_reinit = 12,
-                 reset_clims = True, plot_type = 'Triplot', ani_type = 'Triplot',
-                    animate = False, plot = True, save_dir = 'SimRNAi_1'):
+    def run_simRNAi(self, params = None, RNAi_series = None, RNAi_names = None, verbose=True,
+                    run_time_init = 36000.0, run_time_sim = 36000.0, run_time_step = 60,
+                    run_time_sample = 50, run_time_reinit = 12, reset_clims = True,
+                    plot_type = 'Triplot', ani_type = 'Triplot', animate = False,
+                    plot = True, save_dir = 'SimRNAi_1'):
 
+        if RNAi_series is None or RNAi_names is None:
+
+            RNAi_series = self.RNAi_vect_default
+            RNAi_names = self.RNAi_tags_default
 
         # general saving directory for this procedure:
         self.savedir_simRNAi = os.path.join(self.savepath, save_dir)
@@ -577,7 +627,7 @@ class ModelHarness(object):
         data_dict_sims = OrderedDict() # storage of sims for each molecules of a model itterantion
 
         # create a model using the specific parameters from the params manager for this run:
-        self.model.model_init(self.config_fn, run_params, xscale=self.xscale,
+        self.model.model_init(self.config_fn, params, xscale=self.xscale,
                               verbose=self.verbose, new_mesh=self.new_mesh)
 
         # Run initialization of full model:
@@ -622,7 +672,7 @@ class ModelHarness(object):
                 print('Runing RNAi Sequence ', rnai_n)
 
             # Reinitialize the model again:
-            self.model.model_init(self.config_fn, run_params, xscale=self.xscale,
+            self.model.model_init(self.config_fn, params, xscale=self.xscale,
                                   verbose=self.verbose, new_mesh=self.new_mesh)
 
             # Run initialization phase of full model:
