@@ -38,6 +38,8 @@ from betse.science.phase.phaseenum import SimPhaseKind
 from betse.science.math import toolbox as tb
 # from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 
+from sklearn.cluster import DBSCAN
+
 
 class PlanariaGRN2D(object):
     """
@@ -565,7 +567,57 @@ class PlanariaGRN2D(object):
             # cell-centre average magnitude
             self.uc_mag = self.cells.mag(self.ucx, self.ucy)
 
+            # identify clusters of indices representing each fragment:
+            self.fragments, self.frag_xy, self.frag_xyr = self.cluster_points(self.cells.cell_i, dmax = 2.0)
+
+            # idenify wounds within each fragment:
+            # FIXME complete this
+
             self.model_has_been_cut = True
+
+
+    def cluster_points(self, cinds, dmax = 2.0):
+        """
+        Identifies clusters of points (e.g. fragment or wounded zones within a fragment)
+
+        cinds: indices to self.cells.cell_centers array, or a subset (typically self.cells.cell_i)
+        dmax: multiplier of self.p.cell_radius (maximum nearest-neighbour distance)
+\
+        """
+
+        all_cell_i = np.asarray(self.cells.cell_i)
+
+        maxd = dmax * self.p.cell_radius # maximum search distance to nearest-neighbours
+
+        cell_centres = self.cells.cell_centres[cinds] # get relevant cloud of x,y points to cluster
+
+        cell_i = all_cell_i[cinds] # get relevant indices for the case we're working with a subset
+
+        clust = DBSCAN(eps=maxd, min_samples=4).fit(cell_centres) # Use scikitlearn to flag clusters
+
+        # organize the data:
+        clusters = OrderedDict()  # dictionary holding indices of clusters
+        cluster_xyr = OrderedDict()  # dictionary of rotated cluster x,y point centers
+        cluster_xy = OrderedDict()  # dictionary of cluster x,y point centers
+
+        for li in clust.labels_:
+            clusters[li] = []
+
+        for ci, li in zip(cell_i, clust.labels_):
+            clusters[li].append(ci)
+
+        for clustn, clusti in clusters.items():
+            pts = cell_centres[clusti]
+
+            ptx = self.xcr[clusti]
+            pty = self.ycr[clusti]
+
+            cluster_xyr[clustn] = (ptx.mean(), pty.mean())
+            cluster_xy[clustn] = (pts[0].mean(), pts[1].mean())
+
+        self.groupc = ['SteelBlue', 'DarkCyan', 'DodgerBlue', 'SeaGreen', 'MidnightBlue', 'DarkGreen', 'Black']
+
+        return clusters, cluster_xy, cluster_xyr
 
     def scale_cells(self, xscale):
         """
@@ -1650,6 +1702,40 @@ class PlanariaGRN2D(object):
         plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
 
+
+    def plot_frags(self, show_plot = False, save_plot = True, reso = 150, group_colors = None):
+
+        if group_colors is None:
+            group_colors = self.groupc  # FIXME we need a warning if there are more fragments than colors
+
+        plt.figure(figsize=(12, 12))
+        ax = plt.subplot(111)
+
+        for clustn, clusti in self.fragments.items():
+            col1 = PolyCollection(self.verts_r[clusti] * 1e3, color=group_colors[clustn], edgecolor=None)
+            ax.add_collection(col1)
+            xi, yi = self.frag_xyr[clustn]
+            plt.text(xi * 1e3, yi * 1e3, 'frag_' + str(clustn), color='white',
+                     fontsize=18, fontweight='bold',
+                     horizontalalignment='center', verticalalignment='center')
+
+        plt.axis('equal')
+
+        if show_plot:
+
+            plt.show()
+
+        if save_plot:
+
+            fstr = 'IdentifiedCutFragments.png'
+            dirstr = os.path.join(self.p.sim_export_dirname)
+            fname = os.path.join(dirstr, fstr)
+
+            os.makedirs(dirstr, exist_ok=True)
+
+            plt.savefig(fname, format='png', dpi=reso, transparent=True)
+            plt.close()
+
     def animate_triplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                         ref_data=None, extra_text = None):
@@ -1729,4 +1815,7 @@ class PlanariaGRN2D(object):
         #     lambda: self.c_cAMP_time, lambda value: self.__setattr__('c_cAMP_time', value))
         #
         # self.molecules_time = DynamicValueDict(molecules)
+
+
+
 
