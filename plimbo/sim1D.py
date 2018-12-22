@@ -100,6 +100,16 @@ class PlanariaGRN1D(object):
                 'n_notum_nrf': 2.5,
                 'D_notum': 2.5e-11,
 
+                # Markov model parameters:
+                'C1': 0.65, # ERK constant to modulate head formation
+                'K1': 0.025,
+
+                'C2': 75.0, # Beta-catenin concentration to modulate tail formation
+                'K2': 4.0,
+                'Beta_HB': 1.0e-3, # head tissue decay time constant
+                'Beta_TB': 1.0e-3 # tail tissue decay time constant
+
+
             })
 
         else:
@@ -257,6 +267,41 @@ class PlanariaGRN1D(object):
 
         # Short x-axis:
         self.Xs = np.dot(self.Mx, self.X)
+
+        # Markov model parameters:
+        self.C1 = self.pdict['C1'] # ERK constant to modulate head formation
+        self.K1 = self.pdict['K1']
+        self.C2 = self.pdict['C2']  # Beta-catenin concentration to modulate tail formation
+        self.K2 = self.pdict['K2']
+        self.beta_HB = self.pdict['Beta_HB']  # head tissue decay time constant
+        self.beta_TB = self.pdict['Beta_TB']  # tail tissue decay time constant
+        self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
+        self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
+
+        # initialize Markov model probabilities:
+        self.Head = np.zeros(self.cdl) # head
+        self.Tail = np.zeros(self.cdl) # tail
+        self.Blast = np.ones(self.cdl) # blastema or stem cells
+
+    def run_markov(self):
+        """
+        Updates the Markov model in time
+
+        :return:
+
+        """
+        self.mms = 1.0e-2 # time scaling constant for the Markov model
+        # update transition constants based on new value of ERK and beta-Cat:
+        self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
+        self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
+
+        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
+        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
+
+        # Update probabilities in time:
+        self.Head += delta_H*self.dt*self.mms
+        self.Tail += delta_T*self.dt*self.mms
+        self.Blast = 1.0 - self.Head - self.Tail
 
     def load_transport_field(self):
 
@@ -587,6 +632,10 @@ class PlanariaGRN1D(object):
         self.c_APC_time = []
         self.c_cAMP_time = []
 
+        self.Head_time = []
+        self.Tail_time = []
+        self.Blast_time = []
+
         self.delta_ERK_time = []
 
     def clear_cache_reinit(self):
@@ -600,6 +649,10 @@ class PlanariaGRN1D(object):
         self.c_APC_time2 = []
         self.c_cAMP_time2 = []
 
+        self.Head_time2 = []
+        self.Tail_time2 = []
+        self.Blast_time2 = []
+
         self.delta_ERK_time2 = []
 
     def clear_cache_sim(self):
@@ -612,6 +665,10 @@ class PlanariaGRN1D(object):
         self.c_Notum_sim_time = []
         self.c_APC_sim_time = []
         self.c_cAMP_sim_time = []
+
+        self.Head_sim_time = []
+        self.Tail_sim_time = []
+        self.Blast_sim_time = []
 
         self.delta_ERK_sim_time = []
 
@@ -642,6 +699,9 @@ class PlanariaGRN1D(object):
             self.c_APC += delta_apc  # time update APC
             self.c_cAMP += delta_camp  # time update cAMP
 
+            # update the Markov model:
+            self.run_markov()
+
             if tt in self.tsample:
 
                 if self.runtype == 'init':
@@ -654,6 +714,10 @@ class PlanariaGRN1D(object):
                     self.c_ERK_time.append(self.c_ERK * 1)
                     self.c_APC_time.append(self.c_APC * 1)
                     self.c_cAMP_time.append(self.c_cAMP * 1)
+
+                    self.Head_time.append(self.Head*1)
+                    self.Tail_time.append(self.Tail*1)
+                    self.Blast_time.append(self.Blast*1)
 
                     self.delta_ERK_time.append(delta_erk.mean() * 1)
 
@@ -668,6 +732,10 @@ class PlanariaGRN1D(object):
                     self.c_APC_time2.append(self.c_APC * 1)
                     self.c_cAMP_time2.append(self.c_cAMP * 1)
 
+                    self.Head_time2.append(self.Head*1)
+                    self.Tail_time2.append(self.Tail*1)
+                    self.Blast_time2.append(self.Blast*1)
+
                     self.delta_ERK_time2.append(delta_erk.mean() * 1)
 
 
@@ -681,6 +749,10 @@ class PlanariaGRN1D(object):
                     self.c_ERK_sim_time.append(self.c_ERK * 1)
                     self.c_APC_sim_time.append(self.c_APC * 1)
                     self.c_cAMP_sim_time.append(self.c_cAMP * 1)
+
+                    self.Head_sim_time.append(self.Head*1)
+                    self.Tail_sim_time.append(self.Tail*1)
+                    self.Blast_sim_time.append(self.Blast*1)
 
                     self.delta_ERK_sim_time.append(delta_erk.mean() * 1)
 
@@ -1477,6 +1549,151 @@ class PlanariaGRN1D(object):
             fig.text(txt_x, txt_y, extra_text, transform=axarr[0,0].transAxes)
 
         # fig.subplots_adjust(hspace=0.15)
+        fig.suptitle('Initialization', x=0.1, y=0.94)
+
+        tt = tsample[ti]
+
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
+        fig.suptitle(tit_string)
+
+        plt.savefig(fname, format='png', dpi=reso)
+        plt.close()
+
+
+    def markovplot(self, ti, plot_type = 'init',  fname = 'Markov_', dirsave = None, reso = 150, linew = 3.0,
+                      cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
+                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+
+        if cmaps is None:
+            cmaps = self.default_cmaps
+
+        # Filesaving:
+        if ti == -1:
+            fstr = fname + '.png'
+
+        else:
+            fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'MarkovPlot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'MarkovPlot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
+
+        # Plot an init:
+        if plot_type == 'init':
+
+            tsample = self.tsample_init
+            carray1 = self.Head_time[ti]
+            carray2 = self.Tail_time[ti]
+            carray3 = self.Blast_time[ti]
+
+        elif plot_type == 'reinit':
+
+            tsample = self.tsample_reinit
+            carray1 = self.Head_time2[ti]
+            carray2 = self.Tail_time2[ti]
+            carray3 = self.Blast_time2[ti]
+
+        elif plot_type == 'sim':
+            tsample = self.tsample_sim
+            carray1 = self.Head_sim_time[ti]
+            carray2 = self.Tail_sim_time[ti]
+            carray3 = self.Blast_sim_time[ti]
+
+            xs, cs1 = self.get_plot_segs(carray1)
+            _, cs2 = self.get_plot_segs(carray2)
+            _, cs3 = self.get_plot_segs(carray3)
+
+        else:
+            print("Valid plot types are 'init', 'reinit', and 'sim'.")
+
+        rcParams.update({'font.size': fontsize})
+
+        fig, axarr = plt.subplots(3, sharex=True, figsize=fsize)
+
+        if plot_type == 'init' or plot_type == 'reinit':
+
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew*0.5 # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+                carray3r = ref_data['Notum'][ti]
+
+                axarr[0].plot(self.X * 1e3, carray1r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[1].plot(self.X * 1e3, carray2r, color='Black', linewidth=linewr, linestyle='dashed')
+                axarr[2].plot(self.X * 1e3, carray3r, color='Black', linewidth=linewr, linestyle='dashed')
+
+            # main plot data:
+            axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
+            axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
+            axarr[2].plot(self.X*1e3, carray3, color=cmaps['Notum'], linewidth=linew)
+
+
+
+        elif plot_type == 'sim':
+
+            if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
+
+                linewr = linew * 0.5  # make the reference line a bit thinner
+
+                carray1r = ref_data['Erk'][ti]
+                carray2r = ref_data['β-Cat'][ti]
+                carray3r = ref_data['Notum'][ti]
+
+                xsr, cs1r = self.get_plot_segs(carray1r)
+                _, cs2r = self.get_plot_segs(carray2r)
+                _, cs3r = self.get_plot_segs(carray3r)
+
+                for xi, ci in zip(xsr, cs1r):
+                    axarr[0].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs2r):
+                    axarr[1].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+                for xi, ci in zip(xsr, cs3r):
+                    axarr[2].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
+
+            # main plot data
+            for xi, ci in zip(xs, cs1):
+                axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs2):
+                axarr[1].plot(xi, ci, color=cmaps['β-Cat'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs3):
+                axarr[2].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
+
+
+        axarr[0].set_title("pHead")
+        axarr[0].set_ylabel('Probability')
+        if autoscale is False:
+            axarr[0].set_ylim(0, 1)
+
+        axarr[1].set_title("pTail")
+        axarr[1].set_ylabel('Probability')
+        if autoscale is False:
+            axarr[1].set_ylim(0, 1)
+
+        axarr[2].set_title("pBlastema")
+        axarr[2].set_ylabel('Probability')
+        if autoscale is False:
+            axarr[2].set_ylim(0, 1)
+
+        axarr[2].set_xlabel('Axis Distance [mm]')
+
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=axarr[0].transAxes)
+
+        fig.subplots_adjust(hspace=0.15)
         fig.suptitle('Initialization', x=0.1, y=0.94)
 
         tt = tsample[ti]
