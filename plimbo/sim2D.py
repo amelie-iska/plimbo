@@ -279,6 +279,10 @@ class PlanariaGRN2D(object):
         self.Tail = np.zeros(self.cdl) # tail
         self.Blast = np.ones(self.cdl) # blastema or stem cells
 
+        # list of colors to plot fragments:
+        self.groupc = ['SteelBlue', 'DarkCyan', 'DodgerBlue', 'SeaGreen', 'MidnightBlue', 'DarkGreen', 'Black',
+                       'red', 'orange', 'yellow', 'green', 'violet']
+
     def run_markov(self):
         """
         Updates the Markov model in time
@@ -501,6 +505,27 @@ class PlanariaGRN2D(object):
             removal_flags = np.zeros(len(self.cells.cell_i))
             removal_flags[self.target_inds_cell] = 1
 
+            # get the corresponding flags to nearest neighbours
+            target_inds_nn, _, _ = tb.flatten(self.cells.cell_to_nn_full[self.target_inds_cell])
+
+            # create mask to mark wound edges of remaining cluster ------------------------------------
+            target_inds_nn_unique = np.unique(target_inds_nn)
+
+            hurt_cells = np.zeros(len(self.cells.cell_i))
+
+            for i, inds in enumerate(self.cells.cell_to_nn_full):  # for all the nn inds to a cell...
+                inds_array = np.asarray(inds)
+                inds_in_target = np.intersect1d(inds_array, target_inds_nn_unique)
+
+                if len(inds_in_target):
+                    hurt_cells[i] = 1  # flag the cell as a "hurt" cell
+
+            hurt_inds = (hurt_cells == 1).nonzero()
+            self.hurt_mask = np.zeros(self.cdl)
+            self.hurt_mask[hurt_inds] = 1.0
+
+            #----------------------------------------------------------------------------------------------
+
             for i, flag in enumerate(removal_flags):
                 if flag == 0:
                     new_cell_centres.append(self.cells.cell_centres[i])
@@ -545,7 +570,7 @@ class PlanariaGRN2D(object):
             # assign updated cells object to a simulation object for plotting
             self.cells_s = copy.deepcopy(self.cells)
 
-            # Cut model variable arrays to new dimenstions:
+            # Cut model variable arrays to new dimensions:
             self.c_BC = np.delete(self.c_BC, self.target_inds_cell)
             self.c_ERK = np.delete(self.c_ERK, self.target_inds_cell)
             self.c_HH = np.delete(self.c_HH, self.target_inds_cell)
@@ -559,19 +584,55 @@ class PlanariaGRN2D(object):
             self.ux = np.delete(self.ux, self.target_inds_mem)
             self.uy = np.delete(self.uy, self.target_inds_mem)
 
+            # remove cells from the "hurt mask"
+            self.hurt_mask = np.delete(self.hurt_mask, self.target_inds_cell)
+
             # magnitude of updated transport field
             self.u_mag = self.cells.mag(self.ux, self.uy)
 
             # Get the average transport field at the cell centres:
             self.ucx, self.ucy = self.cells.average_vector(self.ux, self.uy)
+
             # cell-centre average magnitude
             self.uc_mag = self.cells.mag(self.ucx, self.ucy)
 
-            # identify clusters of indices representing each fragment:
+            # identify indices targets for wounded cells in the new model.
+            match_inds = (self.hurt_mask == 1.0).nonzero()[0]
+            target_inds_wound = match_inds
+
+            # we want a few cell layers around the wound, so assign these:
+            next_inds_wound = []
+
+            for i, indy in enumerate(self.cells.cell_nn_i[:, 0]):
+
+                if indy in target_inds_wound:
+                    next_inds_wound.append(self.cells.cell_nn_i[i, 1])
+
+            self.target_inds_wound = np.asarray(next_inds_wound)
+
+            # update the hurt_mask to reflect thicker cell layers around wounds:
+            self.hurt_mask[self.target_inds_wound] = 1
+
+                    # identify clusters of indices representing each fragment:
             self.fragments, self.frag_xy, self.frag_xyr = self.cluster_points(self.cells.cell_i, dmax = 2.0)
 
             # idenify wounds within each fragment:
-            # FIXME complete this
+            self.wounds, self.wound_xy, self.wound_xyr = self.cluster_points(self.target_inds_wound, dmax=2.0)
+
+            # Organize wounds into fragments:
+            self.frags_and_wounds = OrderedDict()
+
+            for fragi in self.fragments.keys():
+                self.frags_and_wounds[fragi] = OrderedDict()
+
+            for fragn, fragi in self.fragments.items():
+
+                for woundn, woundi in self.wounds.items():
+
+                    intersecto = np.intersect1d(woundi, fragi)
+
+                    if len(intersecto):
+                        self.frags_and_wounds[fragn][woundn] = intersecto
 
             self.model_has_been_cut = True
 
@@ -607,15 +668,13 @@ class PlanariaGRN2D(object):
             clusters[li].append(ci)
 
         for clustn, clusti in clusters.items():
-            pts = cell_centres[clusti]
+            pts = self.cells.cell_centres[clusti]
 
             ptx = self.xcr[clusti]
             pty = self.ycr[clusti]
 
             cluster_xyr[clustn] = (ptx.mean(), pty.mean())
             cluster_xy[clustn] = (pts[0].mean(), pts[1].mean())
-
-        self.groupc = ['SteelBlue', 'DarkCyan', 'DodgerBlue', 'SeaGreen', 'MidnightBlue', 'DarkGreen', 'Black']
 
         return clusters, cluster_xy, cluster_xyr
 
