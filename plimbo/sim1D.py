@@ -107,7 +107,12 @@ class PlanariaGRN1D(object):
                 'C2': 75.0, # Beta-catenin concentration to modulate tail formation
                 'K2': 4.0,
                 'Beta_HB': 1.0e-3, # head tissue decay time constant
-                'Beta_TB': 1.0e-3 # tail tissue decay time constant
+                'Beta_TB': 1.0e-3, # tail tissue decay time constant
+
+                'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
+                'hdac_decay': 5.0e-6,  # decay constant for hdac remodeling molecule
+                'D_hdac': 1.0e-13, # diffusion constant for hdac remodeling molecule
+                'hdac_o': 3.0  # initial concentration of hdac remodeling molecule
 
 
             })
@@ -152,6 +157,21 @@ class PlanariaGRN1D(object):
         self.cut_points = np.array([0.002, 0.004, 0.006, 0.008]) * self.x_scale
         self.cut_inds, _ = self.find_nearest(self.X, self.cut_points)
         self.get_seg_inds()
+
+        # get indices surrounding each cut line:
+        target_inds_wound = set()
+        for i, j in self.seg_inds:
+            if i > 0:
+                target_inds_wound.add(i)
+                target_inds_wound.add(i - 1)
+                target_inds_wound.add(i + 1)
+
+            if j < self.cdl:
+                target_inds_wound.add(j)
+                target_inds_wound.add(j - 1)
+                target_inds_wound.add(j + 1)
+
+        self.target_inds_wound = np.asarray(list(target_inds_wound))
 
         # build matrices
         self.build_matrices()
@@ -278,10 +298,18 @@ class PlanariaGRN1D(object):
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 
+        self.max_remod = self.pdict['max_remod']  # maximum rate of tissue remodelling
+
         # initialize Markov model probabilities:
         self.Head = np.zeros(self.cdl) # head
         self.Tail = np.zeros(self.cdl) # tail
         self.Blast = np.ones(self.cdl) # blastema or stem cells
+
+        # initialize remodeling molecule concentration:
+        self.hdac =  np.zeros(self.cdl)
+        self.hdac_decay = self.pdict['hdac_decay']
+        self.D_hdac = self.pdict['D_hdac']
+        self.hdac_o = self.pdict['hdac_o']
 
     def run_markov(self):
         """
@@ -290,7 +318,17 @@ class PlanariaGRN1D(object):
         :return:
 
         """
-        self.mms = 1.0e-2 # time scaling constant for the Markov model
+
+        # update the remodelling-allowance molecule, hdac:
+        # gradient and midpoint mean concentration:
+        g_hdac, _ = self.get_gradient(self.hdac, self.runtype)
+
+        flux = -g_hdac*self.D_hdac
+        # divergence of the flux
+        div_flux = self.get_div(flux, self.runtype)
+
+        self.hdac += (-div_flux -self.hdac_decay*self.hdac)*self.dt
+
         # update transition constants based on new value of ERK and beta-Cat:
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
@@ -299,8 +337,9 @@ class PlanariaGRN1D(object):
         delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
 
         # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.mms
-        self.Tail += delta_T*self.dt*self.mms
+        self.Head += delta_H*self.dt*self.max_remod*self.hdac
+        self.Tail += delta_T*self.dt*self.max_remod*self.hdac
+
         self.Blast = 1.0 - self.Head - self.Tail
 
     def load_transport_field(self):
@@ -636,7 +675,12 @@ class PlanariaGRN1D(object):
         self.Tail_time = []
         self.Blast_time = []
 
+        self.hdac_time = []
+
         self.delta_ERK_time = []
+
+        # initialize remodeling molecule concentration to entire model:
+        self.hdac =  self.hdac_o*np.ones(self.cdl)
 
     def clear_cache_reinit(self):
 
@@ -648,6 +692,8 @@ class PlanariaGRN1D(object):
         self.c_Notum_time2 = []
         self.c_APC_time2 = []
         self.c_cAMP_time2 = []
+
+        self.hdac_time2 = []
 
         self.Head_time2 = []
         self.Tail_time2 = []
@@ -666,11 +712,17 @@ class PlanariaGRN1D(object):
         self.c_APC_sim_time = []
         self.c_cAMP_sim_time = []
 
+        self.hdac_sim_time = []
+
         self.Head_sim_time = []
         self.Tail_sim_time = []
         self.Blast_sim_time = []
 
         self.delta_ERK_sim_time = []
+
+        # initialize remodeling molecule concentration to wound edges only:
+        self.hdac =  np.zeros(self.cdl)
+        self.hdac[self.target_inds_wound] = self.hdac_o
 
     def run_loop(self,
                  knockdown=None):
@@ -715,6 +767,8 @@ class PlanariaGRN1D(object):
                     self.c_APC_time.append(self.c_APC * 1)
                     self.c_cAMP_time.append(self.c_cAMP * 1)
 
+                    self.hdac_time.append(self.hdac*1)
+
                     self.Head_time.append(self.Head*1)
                     self.Tail_time.append(self.Tail*1)
                     self.Blast_time.append(self.Blast*1)
@@ -736,6 +790,8 @@ class PlanariaGRN1D(object):
                     self.Tail_time2.append(self.Tail*1)
                     self.Blast_time2.append(self.Blast*1)
 
+                    self.hdac_time2.append(self.hdac * 1)
+
                     self.delta_ERK_time2.append(delta_erk.mean() * 1)
 
 
@@ -749,6 +805,8 @@ class PlanariaGRN1D(object):
                     self.c_ERK_sim_time.append(self.c_ERK * 1)
                     self.c_APC_sim_time.append(self.c_APC * 1)
                     self.c_cAMP_sim_time.append(self.c_cAMP * 1)
+
+                    self.hdac_sim_time.append(self.hdac * 1)
 
                     self.Head_sim_time.append(self.Head*1)
                     self.Tail_sim_time.append(self.Tail*1)

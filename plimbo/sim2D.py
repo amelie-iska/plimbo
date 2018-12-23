@@ -118,7 +118,12 @@ class PlanariaGRN2D(object):
                 'C2': 75.0,  # Beta-catenin concentration to modulate tail formation
                 'K2': 4.0,
                 'Beta_HB': 1.0e-3,  # head tissue decay time constant
-                'Beta_TB': 1.0e-3  # tail tissue decay time constant
+                'Beta_TB': 1.0e-3,  # tail tissue decay time constant
+
+                'max_remod': 1.0e-2, # maximum rate at which tissue remodelling occurs
+                'hdac_decay': 5.0e-6,  # decay constant for hdac remodeling molecule
+                'D_hdac': 1.0e-13,  # diffusion constant for hdac remodeling molecule
+                'hdac_o': 3.0  # initial concentration of hdac remodeling molecule
 
             })
 
@@ -271,8 +276,15 @@ class PlanariaGRN2D(object):
         self.K2 = pdict['K2']
         self.beta_HB = pdict['Beta_HB']  # head tissue decay time constant
         self.beta_TB = pdict['Beta_TB']  # tail tissue decay time constant
+        self.max_remod = pdict['max_remod']  # maximum rate of tissue remodelling
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
+
+        # initialize remodeling molecule concentration:
+        self.hdac =  np.zeros(self.cdl)
+        self.hdac_decay = pdict['hdac_decay']
+        self.D_hdac = pdict['D_hdac']
+        self.hdac_o = pdict['hdac_o']
 
         # initialize Markov model probabilities:
         self.Head = np.zeros(self.cdl) # head
@@ -289,7 +301,19 @@ class PlanariaGRN2D(object):
 
         :return:
         """
-        self.mms = 1.0e-4
+
+        # update the remodelling-allowance molecule, hdac:
+        # gradient of concentration:
+        _, g_hdacx, g_hdacy = self.cells.gradient(self.hdac)
+
+        fx = -g_hdacx*self.D_hdac
+        fy = -g_hdacy*self.D_hdac
+
+        # divergence of the flux
+        div_flux = self.cells.div(fx, fy, cbound=True)
+
+        self.hdac += (-div_flux -self.hdac_decay*self.hdac)*self.dt
+
         # update transition constants based on new value of ERK and beta-Cat:
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
@@ -298,8 +322,8 @@ class PlanariaGRN2D(object):
         delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
 
         # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.mms
-        self.Tail += delta_T*self.dt*self.mms
+        self.Head += delta_H*self.dt*self.max_remod*(self.hdac/(1 + self.hdac))
+        self.Tail += delta_T*self.dt*self.max_remod*(self.hdac/(1 + self.hdac))
         self.Blast = 1.0 - self.Head - self.Tail
 
 
@@ -579,6 +603,11 @@ class PlanariaGRN2D(object):
             self.c_NRF = np.delete(self.c_NRF, self.target_inds_cell)
             self.c_APC = np.delete(self.c_APC, self.target_inds_cell)
             self.c_cAMP = np.delete(self.c_cAMP, self.target_inds_cell)
+
+            self.Head = np.delete(self.Head, self.target_inds_cell)
+            self.Tail = np.delete(self.Tail, self.target_inds_cell)
+            self.Blast = np.delete(self.Blast, self.target_inds_cell)
+            self.hdac = np.delete(self.hdac, self.target_inds_cell)
 
             self.NerveDensity = np.delete(self.NerveDensity, self.target_inds_cell)
             self.ux = np.delete(self.ux, self.target_inds_mem)
@@ -937,7 +966,12 @@ class PlanariaGRN2D(object):
         self.Tail_time = []
         self.Blast_time = []
 
+        self.hdac_time = []
+
         self.delta_ERK_time = []
+
+        # initialize remodeling molecule concentration to entire model:
+        self.hdac =  self.hdac_o*np.ones(self.cdl)
 
     def clear_cache_reinit(self):
 
@@ -953,6 +987,8 @@ class PlanariaGRN2D(object):
         self.Head_time2 = []
         self.Tail_time2 = []
         self.Blast_time2 = []
+
+        self.hdac_time2 = []
 
         self.delta_ERK_time2 = []
 
@@ -971,7 +1007,13 @@ class PlanariaGRN2D(object):
         self.Tail_sim_time = []
         self.Blast_sim_time = []
 
+        self.hdac_sim_time = []
+
         self.delta_ERK_sim_time = []
+
+        # initialize remodeling molecule concentration to wound edges only:
+        self.hdac =  np.zeros(self.cdl)
+        self.hdac[self.target_inds_wound] = self.hdac_o
 
     def run_loop(self, knockdown = None):
 
@@ -1019,6 +1061,8 @@ class PlanariaGRN2D(object):
                     self.Tail_time.append(self.Tail*1)
                     self.Blast_time.append(self.Blast*1)
 
+                    self.hdac_time.append(self.hdac*1)
+
                     self.delta_ERK_time.append(delta_erk.mean() * 1)
 
                 elif self.runtype == 'reinit':
@@ -1035,6 +1079,8 @@ class PlanariaGRN2D(object):
                     self.Head_time2.append(self.Head*1)
                     self.Tail_time2.append(self.Tail*1)
                     self.Blast_time2.append(self.Blast*1)
+
+                    self.hdac_time2.append(self.hdac*1)
 
                     self.delta_ERK_time2.append(delta_erk.mean() * 1)
 
@@ -1053,6 +1099,8 @@ class PlanariaGRN2D(object):
                     self.Head_sim_time.append(self.Head*1)
                     self.Tail_sim_time.append(self.Tail*1)
                     self.Blast_sim_time.append(self.Blast*1)
+
+                    self.hdac_sim_time.append(self.hdac*1)
 
                     self.delta_ERK_sim_time.append(delta_erk.mean() * 1)
 
@@ -1104,9 +1152,6 @@ class PlanariaGRN2D(object):
             del_test = (-div_flux + rtest - dtest * self.c_Test)
 
             self.c_Test += del_test * self.dt
-
-            if tt in self.tsample:
-                self.c_Test_time.append(self.c_Test * 1)
 
         self.tot_conc_time = np.asarray(
             [(ci * self.cells.cell_vol).sum() for ci in self.c_Test_time]
@@ -1226,11 +1271,11 @@ class PlanariaGRN2D(object):
         self.time = np.linspace(self.tmin, self.tmax, self.nt)
         self.tsample = self.time[0:-1:self.tsamp]
 
-        self.clear_cache_sim()
-        self.runtype = 'sim'
-
         # Remove cells at user-specified cutlines and update all array indices:
         self.cut_cells()
+
+        self.clear_cache_sim()
+        self.runtype = 'sim'
 
         self.run_loop(knockdown=knockdown)
 
@@ -1874,6 +1919,129 @@ class PlanariaGRN2D(object):
         #     lambda: self.c_cAMP_time, lambda value: self.__setattr__('c_cAMP_time', value))
         #
         # self.molecules_time = DynamicValueDict(molecules)
+
+    def markovplot(self, ti, plot_type='init', autoscale=True, fname = 'Markov', dirsave=None, reso=150,
+                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
+                ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+
+        if clims is None:
+            clims = self.default_clims
+
+        if cmaps is None:
+            cmaps = self.default_cmaps
+
+
+        #Filesaving:
+        if ti == -1:
+            fstr = fname + '.png'
+
+        else:
+            fstr = fname + str(ti) + '.png'
+
+        if dirsave is None and plot_type != 'sim':
+            dirstr = os.path.join(self.p.init_export_dirname, 'MarkovPlot')
+        elif dirsave is None and plot_type == 'sim':
+            dirstr = os.path.join(self.p.sim_export_dirname, 'MarkovPlot')
+        else:
+            dirstr = dirsave
+
+        fname = os.path.join(dirstr, fstr)
+
+        os.makedirs(dirstr, exist_ok=True)
+
+        # Plot an init:
+        if plot_type == 'init':
+
+            tsample = self.tsample_init
+            self.assign_easy_x(self.cells_i)
+            carray1 = self.Head_time[ti]
+            carray2 = self.Tail_time[ti]
+            # carray3 = self.Blast_time[ti]
+            carray3 = self.hdac_time[ti]
+
+        elif plot_type == 'reinit':
+
+            tsample = self.tsample_reinit
+
+            self.assign_easy_x(self.cells_i)
+            carray1 = self.Head_time2[ti]
+            carray2 = self.Tail_time2[ti]
+            # carray3 = self.Blast_time2[ti]
+
+            carray3 = self.hdac_time2[ti]
+
+        elif plot_type == 'sim':
+            tsample = self.tsample_sim
+
+            self.assign_easy_x(self.cells_s)
+            carray1 = self.Head_sim_time[ti]
+            carray2 = self.Tail_sim_time[ti]
+            # carray3 = self.Blast_sim_time[ti]
+
+            carray3 = self.hdac_sim_time[ti]
+
+        else:
+            print("Valid plot types are 'init', 'reinit', and 'sim'.")
+
+        rcParams.update({'font.size': fontsize})
+
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=fsize)
+
+        ax1.xaxis.set_ticklabels([])
+        ax1.yaxis.set_ticklabels([])
+        ax2.xaxis.set_ticklabels([])
+        ax2.yaxis.set_ticklabels([])
+        ax3.xaxis.set_ticklabels([])
+        ax3.yaxis.set_ticklabels([])
+
+        col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
+        if autoscale is False:
+            col1.set_clim(0.0, 1.0)
+        col1.set_array(carray1)
+
+
+
+        col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
+        if autoscale is False:
+            col2.set_clim(0.0, 1.0)
+        col2.set_array(carray2)
+
+
+        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
+        if autoscale is False:
+            col3.set_clim(0.0, 1.0)
+        col3.set_array(carray3)
+
+
+        ax1.add_collection(col1)
+
+        ax1.set_title('pHead')
+        ax1.axis('tight')
+        ax1.axis('off')
+
+        ax2.add_collection(col2)
+        ax2.set_title('pTail')
+        ax2.axis('tight')
+        ax2.axis('off')
+
+        ax3.add_collection(col3)
+        ax3.set_title('pBlastema')
+        ax3.axis('tight')
+        ax3.axis('off')
+
+        tt = tsample[ti]
+
+        tdays = np.round(tt / (3600), 1)
+        tit_string = str(tdays) + ' Hours'
+        fig.suptitle(tit_string, x=0.5, y=0.1)
+
+        if extra_text is not None:
+            fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)
+
+        fig.subplots_adjust(wspace=0.0)
+
+        plt.savefig(fname, format='png', dpi=reso,  transparent = True)
+        plt.close()
 
 
 
