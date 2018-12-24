@@ -321,11 +321,45 @@ class PlanariaGRN2D(object):
         delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
         delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
 
+        if self.runtype == 'sim':
+            # remod_term = (self.hdac/(1 + self.hdac))
+            remod_term = self.hdac
+
+        else:
+            remod_term = 1.0
+
+
         # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.max_remod*(self.hdac/(1 + self.hdac))
-        self.Tail += delta_T*self.dt*self.max_remod*(self.hdac/(1 + self.hdac))
+        self.Head += delta_H*self.dt*self.max_remod*remod_term
+        self.Tail += delta_T*self.dt*self.max_remod*remod_term
         self.Blast = 1.0 - self.Head - self.Tail
 
+    def run_crude_markov(self):
+
+        if self.runtype == 'sim':
+
+            for wound_n, wound_i in self.wounds.items():
+
+                # get concentration of molecules at the wound:
+                cw_ERK = self.c_ERK[wound_i].mean()
+                cw_BC = self.c_BC[wound_i].mean()
+                hdacw = self.hdac[wound_i].mean()
+
+                # update transition constants based on new value of ERK and beta-Cat:
+                self.alpha_BH = 1/(1 + np.exp(-(cw_ERK - self.C1)/self.K1)) # init transition constant blastema to head
+                self.alpha_BT = 1/(1 + np.exp(-(cw_BC - self.C2)/self.K2)) # init transition constant blastema to tail
+
+                delta_H = self.alpha_BH - self.pTail[wound_n]*self.alpha_BH - self.pHead[wound_n]*(self.beta_HB +
+                                                                                                 self.alpha_BH)
+                delta_T = self.alpha_BT - self.pHead[wound_n]*self.alpha_BT - self.pTail[wound_n]*(self.beta_TB +
+                                                                                                 self.alpha_BT)
+
+                # Update probabilities in time:
+                # self.pHead[wound_n] += delta_H*self.dt*self.max_remod*(hdacw/(1 + hdacw))
+                # self.pTail[wound_n] += delta_T*self.dt*self.max_remod*(hdacw/(1 + hdacw))
+                self.pHead[wound_n] += delta_H*self.dt*self.max_remod*hdacw
+                self.pTail[wound_n] += delta_T*self.dt*self.max_remod*hdacw
+                self.pBlast[wound_n] = 1.0 - self.pHead[wound_n] - self.pTail[wound_n]
 
     def load_transport_field(self):
         """
@@ -359,8 +393,8 @@ class PlanariaGRN2D(object):
         ux = (ux / u_mag) * mean_nerve
         uy = (uy / u_mag) * mean_nerve
 
-        #         ux = (ux/u_mag)
-        #         uy = (uy/u_mag)
+        # ux = (ux/u_mag)
+        # uy = (uy/u_mag)
 
         # make the field divergence-free with respect to individual
         # control cells of the mesh (produces a smoother field):
@@ -663,8 +697,18 @@ class PlanariaGRN2D(object):
                     if len(intersecto):
                         self.frags_and_wounds[fragn][woundn] = intersecto
 
-            self.model_has_been_cut = True
+            # establish averaged probability regions for each wound:
+            self.pHead = OrderedDict()
+            self.pTail = OrderedDict()
+            self.pBlast = OrderedDict()
 
+            for wound_n, wound_i in self.wounds.items():
+
+                self.pHead[wound_n] = 0.0
+                self.pTail[wound_n] = 0.0
+                self.pBlast[wound_n] = 1.0
+
+            self.model_has_been_cut = True
 
     def cluster_points(self, cinds, dmax = 2.0):
         """
@@ -1043,6 +1087,8 @@ class PlanariaGRN2D(object):
 
             # update the Markov model:
             self.run_markov()
+
+            self.run_crude_markov()
 
             if tt in self.tsample:
 
@@ -1891,41 +1937,9 @@ class PlanariaGRN2D(object):
                 self.plot(ii, ctag, plot_type='sim', autoscale=autoscale, dirsave=dirsave, reso=reso,
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
 
-
-#Wastelands:
-#--------------------------------------------
-        # molecules['β-Cat'] = DynamicValue(
-        #     lambda: self.c_BC_time, lambda value: self.__setattr__('c_BC_time', value))
-        #
-        # molecules['Erk'] = DynamicValue(
-        #     lambda: self.c_ERK_time, lambda value: self.__setattr__('c_ERK_time', value))
-        #
-        # molecules['Wnt'] = DynamicValue(
-        #     lambda: self.c_WNT_time, lambda value: self.__setattr__('c_WNT_time', value))
-        #
-        # molecules['Hh'] = DynamicValue(
-        #     lambda: self.c_HH_time, lambda value: self.__setattr__('c_HH_time', value))
-        #
-        # molecules['NRF'] = DynamicValue(
-        #     lambda: self.c_NRF_time, lambda value: self.__setattr__('c_NRF_time', value))
-        #
-        # molecules['Notum'] = DynamicValue(
-        #     lambda: self.c_Notum_time, lambda value: self.__setattr__('c_Notum_time', value))
-        #
-        # molecules['APC'] = DynamicValue(
-        #     lambda: self.c_APC_time, lambda value: self.__setattr__('c_APC_time', value))
-        #
-        # molecules['cAMP'] = DynamicValue(
-        #     lambda: self.c_cAMP_time, lambda value: self.__setattr__('c_cAMP_time', value))
-        #
-        # self.molecules_time = DynamicValueDict(molecules)
-
     def markovplot(self, ti, plot_type='init', autoscale=True, fname = 'Markov', dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                 ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
-
-        if clims is None:
-            clims = self.default_clims
 
         if cmaps is None:
             cmaps = self.default_cmaps
@@ -1956,8 +1970,8 @@ class PlanariaGRN2D(object):
             self.assign_easy_x(self.cells_i)
             carray1 = self.Head_time[ti]
             carray2 = self.Tail_time[ti]
-            # carray3 = self.Blast_time[ti]
-            carray3 = self.hdac_time[ti]
+            carray3 = self.Blast_time[ti]
+            # carray3 = self.hdac_time[ti]
 
         elif plot_type == 'reinit':
 
@@ -1966,9 +1980,9 @@ class PlanariaGRN2D(object):
             self.assign_easy_x(self.cells_i)
             carray1 = self.Head_time2[ti]
             carray2 = self.Tail_time2[ti]
-            # carray3 = self.Blast_time2[ti]
+            carray3 = self.Blast_time2[ti]
 
-            carray3 = self.hdac_time2[ti]
+            # carray3 = self.hdac_time2[ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -1976,9 +1990,9 @@ class PlanariaGRN2D(object):
             self.assign_easy_x(self.cells_s)
             carray1 = self.Head_sim_time[ti]
             carray2 = self.Tail_sim_time[ti]
-            # carray3 = self.Blast_sim_time[ti]
+            carray3 = self.Blast_sim_time[ti]
 
-            carray3 = self.hdac_sim_time[ti]
+            # carray3 = self.hdac_sim_time[ti]
 
         else:
             print("Valid plot types are 'init', 'reinit', and 'sim'.")
@@ -1987,18 +2001,20 @@ class PlanariaGRN2D(object):
 
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=fsize)
 
+        if axisoff is True:
+
+            ax1.yaxis.set_ticklabels([])
+            ax2.yaxis.set_ticklabels([])
+            ax3.yaxis.set_ticklabels([])
+
         ax1.xaxis.set_ticklabels([])
-        ax1.yaxis.set_ticklabels([])
         ax2.xaxis.set_ticklabels([])
-        ax2.yaxis.set_ticklabels([])
         ax3.xaxis.set_ticklabels([])
-        ax3.yaxis.set_ticklabels([])
 
         col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
         if autoscale is False:
             col1.set_clim(0.0, 1.0)
         col1.set_array(carray1)
-
 
 
         col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
@@ -2017,17 +2033,19 @@ class PlanariaGRN2D(object):
 
         ax1.set_title('pHead')
         ax1.axis('tight')
-        ax1.axis('off')
 
         ax2.add_collection(col2)
         ax2.set_title('pTail')
         ax2.axis('tight')
-        ax2.axis('off')
 
         ax3.add_collection(col3)
         ax3.set_title('pBlastema')
         ax3.axis('tight')
-        ax3.axis('off')
+
+        if axisoff is True:
+            ax1.axis('off')
+            ax2.axis('off')
+            ax3.axis('off')
 
         tt = tsample[ti]
 
