@@ -25,6 +25,7 @@ import csv
 from betse.lib.pickle import pickles
 # from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 from betse.science.parameters import Parameters
+from betse.science.math import toolbox as tb
 
 
 class PlanariaGRN1D(object):
@@ -110,9 +111,10 @@ class PlanariaGRN1D(object):
                 'Beta_TB': 1.0e-3, # tail tissue decay time constant
 
                 'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
-                'hdac_decay': 5.0e-6,  # decay constant for hdac remodeling molecule
+                'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
                 'D_hdac': 1.0e-13, # diffusion constant for hdac remodeling molecule
-                'hdac_o': 3.0  # initial concentration of hdac remodeling molecule
+                'hdac_to': 60.0*3600,  # time at which hdac stops growing
+                'hdac_ts': 24.0*3600 # time period over which hdac stops growing
 
 
             })
@@ -307,11 +309,12 @@ class PlanariaGRN1D(object):
 
         # initialize remodeling molecule concentration:
         self.hdac =  np.zeros(self.cdl)
-        self.hdac_decay = self.pdict['hdac_decay']
+        self.hdac_growth = self.pdict['hdac_growth']
         self.D_hdac = self.pdict['D_hdac']
-        self.hdac_o = self.pdict['hdac_o']
+        self.hdac_to = self.pdict['hdac_to']
+        self.hdac_ts = self.pdict['hdac_ts']
 
-    def run_markov(self):
+    def run_markov(self, ti):
         """
         Updates the Markov model in time
 
@@ -327,7 +330,19 @@ class PlanariaGRN1D(object):
         # divergence of the flux
         div_flux = self.get_div(flux, self.runtype)
 
-        self.hdac += (-div_flux -self.hdac_decay*self.hdac)*self.dt
+        # growth characteristics for mode masked to certain areas, depending on run type:
+        gmod = np.ones(self.cdl)
+        gpulse = 1.0
+
+        if self.runtype == 'sim': # limit growth to wounds for a timed process:
+            gmod = np.zeros(self.cdl)
+            gmod[self.target_inds_wound] = 1.0
+            gpulse = 1.0 - tb.step(ti, self.hdac_to, self.hdac_ts)
+
+        elif self.runtype == 'reinit':
+            gpulse = 0.0 # inhibit grwoth of hdac
+
+        self.hdac += (-div_flux + gmod*gpulse*self.hdac_growth -self.hdac_growth*self.hdac)*self.dt
 
         # update transition constants based on new value of ERK and beta-Cat:
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
@@ -679,9 +694,6 @@ class PlanariaGRN1D(object):
 
         self.delta_ERK_time = []
 
-        # initialize remodeling molecule concentration to entire model:
-        self.hdac =  self.hdac_o*np.ones(self.cdl)
-
     def clear_cache_reinit(self):
 
         self.c_BC_time2 = []
@@ -720,10 +732,6 @@ class PlanariaGRN1D(object):
 
         self.delta_ERK_sim_time = []
 
-        # initialize remodeling molecule concentration to wound edges only:
-        self.hdac =  np.zeros(self.cdl)
-        self.hdac[self.target_inds_wound] = self.hdac_o
-
     def run_loop(self,
                  knockdown=None):
 
@@ -752,7 +760,7 @@ class PlanariaGRN1D(object):
             self.c_cAMP += delta_camp  # time update cAMP
 
             # update the Markov model:
-            self.run_markov()
+            self.run_markov(tt)
 
             if tt in self.tsample:
 

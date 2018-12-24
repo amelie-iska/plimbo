@@ -121,9 +121,10 @@ class PlanariaGRN2D(object):
                 'Beta_TB': 1.0e-3,  # tail tissue decay time constant
 
                 'max_remod': 1.0e-2, # maximum rate at which tissue remodelling occurs
-                'hdac_decay': 5.0e-6,  # decay constant for hdac remodeling molecule
+                'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
                 'D_hdac': 1.0e-13,  # diffusion constant for hdac remodeling molecule
-                'hdac_o': 3.0  # initial concentration of hdac remodeling molecule
+                'hdac_to': 60.0*3600,   # time at which hdac stops growing
+                'hdac_ts': 24.0*3600  # time period over which hdac stops growing
 
             })
 
@@ -282,9 +283,10 @@ class PlanariaGRN2D(object):
 
         # initialize remodeling molecule concentration:
         self.hdac =  np.zeros(self.cdl)
-        self.hdac_decay = pdict['hdac_decay']
+        self.hdac_growth = pdict['hdac_growth']
         self.D_hdac = pdict['D_hdac']
-        self.hdac_o = pdict['hdac_o']
+        self.hdac_to = pdict['hdac_to']
+        self.hdac_ts = pdict['hdac_ts']
 
         # initialize Markov model probabilities:
         self.Head = np.zeros(self.cdl) # head
@@ -295,7 +297,7 @@ class PlanariaGRN2D(object):
         self.groupc = ['SteelBlue', 'DarkCyan', 'DodgerBlue', 'SeaGreen', 'MidnightBlue', 'DarkGreen', 'Black',
                        'red', 'orange', 'yellow', 'green', 'violet']
 
-    def run_markov(self):
+    def run_markov(self, ti):
         """
         Updates the Markov model in time
 
@@ -312,7 +314,19 @@ class PlanariaGRN2D(object):
         # divergence of the flux
         div_flux = self.cells.div(fx, fy, cbound=True)
 
-        self.hdac += (-div_flux -self.hdac_decay*self.hdac)*self.dt
+        # growth characteristics for mode masked to certain areas, depending on run type:
+        gmod = np.ones(self.cdl)
+        gpulse = 1.0
+
+        if self.runtype == 'sim': # limit growth to wounds for a timed process:
+            gmod = np.zeros(self.cdl)
+            gmod[self.target_inds_wound] = 1.0
+            gpulse = 1.0 - tb.step(ti, self.hdac_to, self.hdac_ts)
+
+        elif self.runtype == 'reinit':
+            gpulse = 0.0 # inhibit grwoth of hdac
+
+        self.hdac += (-div_flux + gmod*gpulse*self.hdac_growth -self.hdac_growth*self.hdac)*self.dt
 
         # update transition constants based on new value of ERK and beta-Cat:
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
@@ -334,32 +348,32 @@ class PlanariaGRN2D(object):
         self.Tail += delta_T*self.dt*self.max_remod*remod_term
         self.Blast = 1.0 - self.Head - self.Tail
 
-    def run_crude_markov(self):
-
-        if self.runtype == 'sim':
-
-            for wound_n, wound_i in self.wounds.items():
-
-                # get concentration of molecules at the wound:
-                cw_ERK = self.c_ERK[wound_i].mean()
-                cw_BC = self.c_BC[wound_i].mean()
-                hdacw = self.hdac[wound_i].mean()
-
-                # update transition constants based on new value of ERK and beta-Cat:
-                self.alpha_BH = 1/(1 + np.exp(-(cw_ERK - self.C1)/self.K1)) # init transition constant blastema to head
-                self.alpha_BT = 1/(1 + np.exp(-(cw_BC - self.C2)/self.K2)) # init transition constant blastema to tail
-
-                delta_H = self.alpha_BH - self.pTail[wound_n]*self.alpha_BH - self.pHead[wound_n]*(self.beta_HB +
-                                                                                                 self.alpha_BH)
-                delta_T = self.alpha_BT - self.pHead[wound_n]*self.alpha_BT - self.pTail[wound_n]*(self.beta_TB +
-                                                                                                 self.alpha_BT)
-
-                # Update probabilities in time:
-                # self.pHead[wound_n] += delta_H*self.dt*self.max_remod*(hdacw/(1 + hdacw))
-                # self.pTail[wound_n] += delta_T*self.dt*self.max_remod*(hdacw/(1 + hdacw))
-                self.pHead[wound_n] += delta_H*self.dt*self.max_remod*hdacw
-                self.pTail[wound_n] += delta_T*self.dt*self.max_remod*hdacw
-                self.pBlast[wound_n] = 1.0 - self.pHead[wound_n] - self.pTail[wound_n]
+    # def run_crude_markov(self):
+    #
+    #     if self.runtype == 'sim':
+    #
+    #         for wound_n, wound_i in self.wounds.items():
+    #
+    #             # get concentration of molecules at the wound:
+    #             cw_ERK = self.c_ERK[wound_i].mean()
+    #             cw_BC = self.c_BC[wound_i].mean()
+    #             hdacw = self.hdac[wound_i].mean()
+    #
+    #             # update transition constants based on new value of ERK and beta-Cat:
+    #             self.alpha_BH = 1/(1 + np.exp(-(cw_ERK - self.C1)/self.K1)) # init transition constant blastema to head
+    #             self.alpha_BT = 1/(1 + np.exp(-(cw_BC - self.C2)/self.K2)) # init transition constant blastema to tail
+    #
+    #             delta_H = self.alpha_BH - self.pTail[wound_n]*self.alpha_BH - self.pHead[wound_n]*(self.beta_HB +
+    #                                                                                              self.alpha_BH)
+    #             delta_T = self.alpha_BT - self.pHead[wound_n]*self.alpha_BT - self.pTail[wound_n]*(self.beta_TB +
+    #                                                                                              self.alpha_BT)
+    #
+    #             # Update probabilities in time:
+    #             # self.pHead[wound_n] += delta_H*self.dt*self.max_remod*(hdacw/(1 + hdacw))
+    #             # self.pTail[wound_n] += delta_T*self.dt*self.max_remod*(hdacw/(1 + hdacw))
+    #             self.pHead[wound_n] += delta_H*self.dt*self.max_remod*hdacw
+    #             self.pTail[wound_n] += delta_T*self.dt*self.max_remod*hdacw
+    #             self.pBlast[wound_n] = 1.0 - self.pHead[wound_n] - self.pTail[wound_n]
 
     def load_transport_field(self):
         """
@@ -686,7 +700,8 @@ class PlanariaGRN2D(object):
             self.frags_and_wounds = OrderedDict()
 
             for fragi in self.fragments.keys():
-                self.frags_and_wounds[fragi] = OrderedDict()
+                # self.frags_and_wounds[fragi] = OrderedDict()
+                self.frags_and_wounds[fragi] = []
 
             for fragn, fragi in self.fragments.items():
 
@@ -695,18 +710,19 @@ class PlanariaGRN2D(object):
                     intersecto = np.intersect1d(woundi, fragi)
 
                     if len(intersecto):
-                        self.frags_and_wounds[fragn][woundn] = intersecto
+                        # self.frags_and_wounds[fragn][woundn] = intersecto
+                        self.frags_and_wounds[fragn].append(intersecto)
 
-            # establish averaged probability regions for each wound:
-            self.pHead = OrderedDict()
-            self.pTail = OrderedDict()
-            self.pBlast = OrderedDict()
-
-            for wound_n, wound_i in self.wounds.items():
-
-                self.pHead[wound_n] = 0.0
-                self.pTail[wound_n] = 0.0
-                self.pBlast[wound_n] = 1.0
+            # # establish averaged probability regions for each wound:
+            # self.pHead = OrderedDict()
+            # self.pTail = OrderedDict()
+            # self.pBlast = OrderedDict()
+            #
+            # for wound_n, wound_i in self.wounds.items():
+            #
+            #     self.pHead[wound_n] = 0.0
+            #     self.pTail[wound_n] = 0.0
+            #     self.pBlast[wound_n] = 1.0
 
             self.model_has_been_cut = True
 
@@ -1014,9 +1030,6 @@ class PlanariaGRN2D(object):
 
         self.delta_ERK_time = []
 
-        # initialize remodeling molecule concentration to entire model:
-        self.hdac =  self.hdac_o*np.ones(self.cdl)
-
     def clear_cache_reinit(self):
 
         self.c_BC_time2 = []
@@ -1055,10 +1068,6 @@ class PlanariaGRN2D(object):
 
         self.delta_ERK_sim_time = []
 
-        # initialize remodeling molecule concentration to wound edges only:
-        self.hdac =  np.zeros(self.cdl)
-        self.hdac[self.target_inds_wound] = self.hdac_o
-
     def run_loop(self, knockdown = None):
 
         if knockdown is None:
@@ -1086,9 +1095,7 @@ class PlanariaGRN2D(object):
             self.c_cAMP += delta_camp  # time update cAMP
 
             # update the Markov model:
-            self.run_markov()
-
-            self.run_crude_markov()
+            self.run_markov(tt)
 
             if tt in self.tsample:
 
