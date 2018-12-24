@@ -713,17 +713,6 @@ class PlanariaGRN2D(object):
                         # self.frags_and_wounds[fragn][woundn] = intersecto
                         self.frags_and_wounds[fragn].append(intersecto)
 
-            # # establish averaged probability regions for each wound:
-            # self.pHead = OrderedDict()
-            # self.pTail = OrderedDict()
-            # self.pBlast = OrderedDict()
-            #
-            # for wound_n, wound_i in self.wounds.items():
-            #
-            #     self.pHead[wound_n] = 0.0
-            #     self.pTail[wound_n] = 0.0
-            #     self.pBlast[wound_n] = 1.0
-
             self.model_has_been_cut = True
 
     def cluster_points(self, cinds, dmax = 2.0):
@@ -1361,6 +1350,128 @@ class PlanariaGRN2D(object):
 
         if self.verbose:
             print("Successfully completed sim of 2D model!")
+
+    # Post-processing functions--------------------------------
+    def get_tops(self, cinds):
+        """
+        Collects the top 33% of the sample and averages it.
+        :param cinds:
+        :return:
+        """
+
+        top33 = int(len(cinds) / 3)
+
+        sort_H = np.sort(self.Head[cinds])[::-1]
+        sort_T = np.sort(self.Tail[cinds])[::-1]
+        sort_B = np.sort(self.Blast[cinds])[::-1]
+
+        pH = sort_H[:top33].mean()
+        pT = sort_T[:top33].mean()
+        pB = sort_B[:top33].mean()
+
+        return pH, pT, pB
+
+    def process_markov(self, head_i = 0, tail_i = 4):
+        """
+        Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
+        :param head_i: user-specified framgent representing head
+        :param tail_i: user-specified fragment representing tail
+
+        """
+
+
+        head_frag = head_i
+        tail_frag = tail_i
+
+        frag_probs = OrderedDict()
+        for fragn in self.fragments.keys():
+            frag_probs[fragn] = OrderedDict()
+
+        for fragn, wounds_arr in self.frags_and_wounds.items():
+
+            wound_num = len(wounds_arr)
+
+            if wound_num == 1 and fragn == head_frag:
+
+                frag_probs[fragn]['pHa'] = 1.0
+                frag_probs[fragn]['pTa'] = 0.0
+                frag_probs[fragn]['pBa'] = 0.0
+
+                pHb, pTb, _ = self.get_tops(wounds_arr[0])
+
+                # we are subtracting off pHb*pTb because with the 2D model there is the possibility of
+                # having a head and a tail at the same wound. Here we also recalculate absent head/tail:
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+            elif wound_num == 1 and fragn == tail_frag:
+
+                frag_probs[fragn]['pHa'] = 0.0
+                frag_probs[fragn]['pTa'] = 1.0
+                frag_probs[fragn]['pBa'] = 0.0
+
+                pHb, pTb, _ = self.get_tops(wounds_arr[0])
+
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+            elif wound_num == 2:
+
+                pHa, pTa, _ = self.get_tops(wounds_arr[0])
+                pHb, pTb, _ = self.get_tops(wounds_arr[1])
+
+                pBa = 1 - pHa - pTa + pHa * pTa
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHa'] = pHa
+                frag_probs[fragn]['pTa'] = pTa
+                frag_probs[fragn]['pBa'] = pBa
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+        morph_probs = OrderedDict()
+        for fragn in self.fragments.keys():
+            morph_probs[fragn] = OrderedDict()
+
+        for fragn, prob_dict in frag_probs.items():
+
+            check_len = len(prob_dict.values())
+
+            if check_len == 6:
+                pHa = prob_dict['pHa']
+                pTa = prob_dict['pTa']
+                pBa = prob_dict['pBa']
+
+                pHb = prob_dict['pHb']
+                pTb = prob_dict['pTb']
+                pBb = prob_dict['pBb']
+
+                p2T = pTa * pTb
+                p0H = (pTa * pBb + pTb * pBa)
+                p1H = (pHa * pTb + pHb * pTa)
+                p0T = (pHa * pBb + pHb * pBa)
+                p2H = pHa * pHb
+
+                morph_probs[fragn]['2T'] = p2T
+                morph_probs[fragn]['0H'] = p0H
+                morph_probs[fragn]['1H'] = p1H
+                morph_probs[fragn]['0T'] = p0T
+                morph_probs[fragn]['2H'] = p2H
+
+        # probability of head/tail/fail outcomes at each wound:
+        self.frag_probs = frag_probs
+
+        # probability of heteromorphoses in each fragment:
+        self.morph_probs = morph_probs
+
 
     # Plotting functions---------------------------------------
 
