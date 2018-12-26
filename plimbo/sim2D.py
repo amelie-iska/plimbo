@@ -1567,12 +1567,15 @@ class PlanariaGRN2D(object):
 
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=fsize)
 
+        if axisoff is True:
+
+            ax1.yaxis.set_ticklabels([])
+            ax2.yaxis.set_ticklabels([])
+            ax3.yaxis.set_ticklabels([])
+
         ax1.xaxis.set_ticklabels([])
-        ax1.yaxis.set_ticklabels([])
         ax2.xaxis.set_ticklabels([])
-        ax2.yaxis.set_ticklabels([])
         ax3.xaxis.set_ticklabels([])
-        ax3.yaxis.set_ticklabels([])
 
         col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
         if autoscale is False:
@@ -1597,17 +1600,19 @@ class PlanariaGRN2D(object):
 
         ax1.set_title('Erk')
         ax1.axis('tight')
-        ax1.axis('off')
 
         ax2.add_collection(col2)
         ax2.set_title('β-Cat')
         ax2.axis('tight')
-        ax2.axis('off')
 
         ax3.add_collection(col3)
         ax3.set_title('Notum')
         ax3.axis('tight')
-        ax3.axis('off')
+
+        if axisoff:
+            ax1.axis('off')
+            ax2.axis('off')
+            ax3.axis('off')
 
         tt = tsample[ti]
 
@@ -1855,10 +1860,12 @@ class PlanariaGRN2D(object):
 
         fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=fsize)
 
+        if axisoff is True:
+            ax1.yaxis.set_ticklabels([])
+            ax2.yaxis.set_ticklabels([])
+
         ax1.xaxis.set_ticklabels([])
-        ax1.yaxis.set_ticklabels([])
         ax2.xaxis.set_ticklabels([])
-        ax2.yaxis.set_ticklabels([])
 
         col1 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Erk'], linewidth=0.0)
         col1.set_array(carray1)
@@ -1875,21 +1882,22 @@ class PlanariaGRN2D(object):
         ax1.add_collection(col1)
         ax1.axis('tight')
         ax1.set_title('Erk')
-        ax1.axis('off')
+
+        if axisoff:
+            ax1.axis('off')
 
         ax2.add_collection(col2)
         ax2.axis('tight')
         ax2.set_title('β-Cat')
-        ax2.axis('off')
+
+        if axisoff:
+            ax2.axis('off')
 
         tt = tsample[ti]
 
         tdays = np.round(tt / (3600), 1)
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string, x=0.5, y=0.1)
-
-        if axisoff is True:
-            plt.axis('off')
 
         if extra_text is not None:
             fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)

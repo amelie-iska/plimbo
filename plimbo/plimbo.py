@@ -45,7 +45,7 @@ class PlimboRunner(object):
 
     def simRNAi(self, RNAi_vect = None, RNAi_tags = None, params = None, run_time_init = 36000.0,
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0,
-                run_time_reinit = 12.0,  xscale = 1.0, verbose = True, new_mesh = True,
+                run_time_reinit = 12.0,  xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SimRNAi_1', reset_clims = True, animate = False, plot = True,
                 plot_type = 'Triplot', ani_type = 'Triplot', save_harness = True, harness_type='1D'):
 
@@ -67,7 +67,7 @@ class PlimboRunner(object):
 
 
         # run a single set of parameters with RNAi testing sequence:
-        master.run_simRNAi(params = params, RNAi_series = RNAi_vect,
+        master.run_simRNAi(RNAi_series = RNAi_vect,
                            RNAi_names = RNAi_tags, verbose=verbose,
                            run_time_init = run_time_init,
                            run_time_sim = run_time_sim,
@@ -90,7 +90,7 @@ class PlimboRunner(object):
 
     def sensitivity(self, params=None, run_time_init=36000.0, factor = 0.25,
                 run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
-                 xscale=1.0, verbose=True, new_mesh=True, ani_type = 'Triplot',
+                 xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                 save_dir='Sensitivity_1', reset_clims=True, animate=False, plot=True,
                 plot_type='Triplot', save_harness=True, harness_type='1D'):
 
@@ -121,7 +121,7 @@ class PlimboRunner(object):
 
     def search(self, params=None, run_time_init=36000.0, factor=0.25, levels = 1, search_style = 'log',
                     run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
-                    xscale=1.0, verbose=True, new_mesh=True, save_dir='Search_1',
+                    xscale=1.0, verbose=True, new_mesh=False, save_dir='Search_1',
                     reset_clims=True, animate=False, plot=True, ani_type = 'Triplot',
                     plot_type='Triplot', save_harness=True, harness_type='1D'):
 
@@ -151,7 +151,7 @@ class PlimboRunner(object):
 
     def scaleRNAi(self, params=None, xscales = None,  RNAi_vect = None, RNAi_tags = None,
                   run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
-               run_time_reinit=12.0, xscale=1.0, verbose=True, new_mesh=True, ani_type = 'Triplot',
+               run_time_reinit=12.0, xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                save_dir='ScaleRNAi_1', reset_clims=True, animate=False, plot=True,
                plot_type='Triplot', save_harness=True, harness_type='1D'):
 
@@ -172,7 +172,7 @@ class PlimboRunner(object):
 
 
         # run a single set of parameters, scaling the model to various factors, with RNAi testing:
-        master.run_scaleRNAi(run_params = params, xscales = xscales, RNAi_series = RNAi_vect, RNAi_names = RNAi_tags,
+        master.run_scaleRNAi(xscales = xscales, RNAi_series = RNAi_vect, RNAi_names = RNAi_tags,
                                verbose=verbose, run_time_reinit=run_time_reinit, run_time_init=run_time_init,
                                run_time_sim=run_time_sim, run_time_step=run_time_step,
                              run_time_sample=run_time_sample, reset_clims=reset_clims, ani_type = ani_type,
@@ -185,8 +185,8 @@ class PlimboRunner(object):
 
     def searchRNAi(self, params=None, RNAi_vect = None, RNAi_tags = None, run_time_init = 36000.0,
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, search_style = 'log',
-                   factor = 0.8, levels = 1, run_time_reinit = 12.0, xscale = 1.0, verbose = True, new_mesh = True,
-                save_dir = 'SimRNAi_1', reset_clims = True, animate = False, plot = True, ani_type = 'Triplot',
+                   factor = 0.8, levels = 1, run_time_reinit = 12.0, xscale = 1.0, verbose = True, new_mesh = False,
+                save_dir = 'SearchRNAi_1', reset_clims = True, animate = False, plot = True, ani_type = 'Triplot',
                 plot_type = 'Triplot', save_harness = True, harness_type='1D'):
 
         # Create an instance of the model harness:
