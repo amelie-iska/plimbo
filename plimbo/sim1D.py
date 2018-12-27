@@ -295,7 +295,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         # divergence of the flux
         div_flux = self.get_div(flux, self.runtype)
 
-        # change of bc:  #FIXME: BC produced on nerves or everywhere??
+        # change of bc:
         del_bc = (-div_flux + rnai * self.r_bc * self.NerveDensity -
                   self.d_bc * self.c_BC - self.d_bc_deg * term_apc * self.c_BC * term_camp)
 

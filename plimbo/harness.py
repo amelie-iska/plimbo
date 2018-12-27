@@ -123,7 +123,7 @@ class ModelHarness(object):
     def run_sensitivity(self, factor = 0.1, verbose=True, run_time_init = 36000.0,
                         run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50,
                         reset_clims = True, animate = False, plot = True, plot_type = 'Triplot',
-                        save_dir = 'Sensitivity1', ani_type = 'Triplot', save_all = False):
+                        save_dir = 'Sensitivity1', ani_type = 'Triplot', save_all = False, data_output = True):
 
         # general saving directory for this procedure:
         self.savedir_sensitivity = os.path.join(self.savepath, save_dir)
@@ -207,6 +207,10 @@ class ModelHarness(object):
                 print("Run", ii + 1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if data_output:
+            self.output_delta_table(substance='Erk', run_type='init', save_dir=self.savedir_sensitivity)
+            self.output_summary_table(substance='Erk', run_type='init', save_dir=self.savedir_sensitivity)
+
         if save_all:
             fsave = os.path.join(self.savedir_sensitivity, "Master.gz")
             self.save(fsave)
@@ -215,7 +219,7 @@ class ModelHarness(object):
     def run_search(self, factor = 0.8, levels = 1, search_style = 'log', verbose=True,
                    run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60, run_time_sample=50,
                    reset_clims=True, plot=True, animate = False, save_dir = 'Search1', save_all = False,
-                   fixed_params = None, plot_type = 'Triplot', ani_type = 'Triplot'):
+                   fixed_params = None, plot_type = 'Triplot', ani_type = 'Triplot', data_output = True):
 
         # general saving directory for this procedure:
         self.savedir_search = os.path.join(self.savepath, save_dir)
@@ -299,6 +303,10 @@ class ModelHarness(object):
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if data_output:
+            self.output_delta_table(substance='Erk', run_type='init', save_dir=self.savedir_search)
+            self.output_summary_table(substance='Erk', run_type='init', save_dir=self.savedir_search)
+
         if save_all:
             fsave = os.path.join(self.savedir_search, "Master.plimbo")
             self.save(fsave)
@@ -306,7 +314,8 @@ class ModelHarness(object):
     def run_searchRNAi(self, RNAi_series = None, RNAi_names = None, factor = 0.8, levels = 1, search_style = 'log',
                         verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0, save_all = False,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True, ani_type = 'Triplot',
-                       animate=False, save_dir='SearchRNAi1', fixed_params = None, plot_type = 'Triplot'):
+                       animate=False, save_dir='SearchRNAi1', fixed_params = None, plot_type = 'Triplot',
+                       data_output = True):
 
         if RNAi_series is None or RNAi_names is None:
 
@@ -442,6 +451,10 @@ class ModelHarness(object):
                 print('***************************************************')
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
+
+        if data_output:
+            self.output_delta_table(substance='Erk', run_type='init', save_dir=self.savedir_searchRNAi)
+            self.output_summary_table(substance='Erk', run_type='init', save_dir=self.savedir_searchRNAi)
 
         if save_all:
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
@@ -1067,470 +1080,6 @@ class ModelHarness(object):
                                   cmaps=None, clims=None, autoscale=False,
                                           ref_data = ref_data, extra_text = extra_text)
 
-
-
-
-    # def lineplot_1D(self, conc, fname, runtype='init'):
-    #
-    #     if runtype == 'init':
-    #         plt.figure()
-    #         plt.plot(self.X * 1e3, conc, '-r', linewidth=2.0)
-    #         plt.xlabel('Distance [mm]')
-    #         plt.ylabel('Concentration [mM/L]')
-    #         plt.savefig(fname, format='png', dpi=300)
-    #         plt.close()
-    #
-    #     if runtype == 'sim':
-    #
-    #         coo = conc
-    #         xoo = self.X * 1e3
-    #
-    #         sim_coo = []
-    #         sim_xoo = []
-    #
-    #         for a, b in self.seg_inds:
-    #             sim_coo.append(coo[a:b])
-    #             sim_xoo.append(xoo[a:b])
-    #
-    #         sim_coo = np.asarray(sim_coo)
-    #         sim_xoo = np.asarray(sim_xoo)
-    #
-    #         plt.figure()
-    #
-    #         for xi, ci in zip(sim_xoo, sim_coo):
-    #             plt.plot(xi, ci, color='red', linewidth=2.0)
-    #
-    #         plt.xlabel('Distance [mm]')
-    #         plt.ylabel('Concentration [mM/L]')
-    #         plt.savefig(fname, format='png', dpi=300)
-    #         plt.close()
-    #
-    # def plot_indy(self, ii, dataname):
-    #     """
-    #
-    #     Plot an individual parameters run.
-    #
-    #     """
-    #
-    #     ci = self.outputs[0][dataname]
-    #     cj = self.outputs[ii][dataname]
-    #
-    #     impath = os.path.join(self.savepath, dataname)
-    #     os.makedirs(impath, exist_ok=True)
-    #
-    #     fnme = dataname + str(ii) + '.png'
-    #
-    #     impath_c_init = os.path.join(impath, fnme)
-    #
-    #     # calculate percent changes to input variables in this run
-    #     percent_delta_input = 100 * ((self.p.params_M[ii, :] -
-    #                                   self.p.params_M[0, :]) / self.p.params_M[0, :])
-    #
-    #     index_delta = (percent_delta_input != 0.0).nonzero()[0]
-    #
-    #     delta_i = np.round(percent_delta_input[index_delta], 1)
-    #     name_i = self.p.param_labels[index_delta]
-    #
-    #     me = np.round((1 / len(self.Xscale)) * (100 * ((cj - ci) / ci)).sum(), 2)
-    #
-    #     msg_o = 'ΔOutput ' + '  ' + str(me) + '%'
-    #
-    #     if ii > 0:
-    #
-    #         plt.figure()
-    #         ax = plt.subplot(111)
-    #         plt.plot(self.Xscale * 1e3, cj, '-r', linewidth=2.0, label='Altered')
-    #         plt.plot(self.Xscale * 1e3, ci, '--b', linewidth=1.0, label='Original')
-    #         plt.xlabel('Scaled Distance')
-    #         plt.ylabel('Concentration [mM/L]')
-    #
-    #         # add text to plot describing which parameters were changed in this run,
-    #         # and by how much:
-    #         if len(delta_i):
-    #
-    #             for si, (ni, di) in enumerate(zip(name_i, delta_i)):
-    #                 msg_i = 'Δ' + ni + '  ' + str(di) + '%'
-    #
-    #                 plt.text(0.02, 0.95 - (si / 15), msg_i, transform=ax.transAxes)
-    #
-    #                 #                 Add text describing how output changes for this run:
-    #         plt.text(0.02, 0.95 - (len(delta_i) / 15), msg_o,
-    #                  transform=ax.transAxes)
-    #
-    #         plt.savefig(impath_c_init, format='png', dpi=300)
-    #         plt.close()
-    #
-    # # Plot Results
-    # def plot_data(self, dataname):
-    #
-    #     change_input_msgs, change_output_msg, _, _ = self.work_changes(dataname)
-    #
-    #     for ii in range(self.p.N_runs):
-    #
-    #         ci = self.outputs[0][dataname]
-    #         cj = self.outputs[ii][dataname]
-    #
-    #         impath = os.path.join(self.savepath, dataname)
-    #         os.makedirs(impath, exist_ok=True)
-    #
-    #         fnme = dataname + str(ii) + '.png'
-    #
-    #         impath_c_init = os.path.join(impath, fnme)
-    #
-    #         if ii > 0:
-    #
-    #             plt.figure()
-    #             ax = plt.subplot(111)
-    #             plt.plot(self.Xs * 1e3, cj, '-r', linewidth=2.0, label='Altered')
-    #             plt.plot(self.Xs * 1e3, ci, '--b', linewidth=1.0, label='Original')
-    #             plt.xlabel('Scaled Distance')
-    #             plt.ylabel('Concentration [mM/L]')
-    #
-    #             # add text to plot describing which parameters were changed in this run,
-    #             # and by how much:
-    #             for si, msgi in enumerate(change_input_msgs[ii]):
-    #                 plt.text(0.02, 0.95 - (si / 15), msgi, transform=ax.transAxes)
-    #
-    #             # Add text describing how output changes for this run:
-    #             plt.text(0.02, 0.95 - (len(change_input_msgs[ii]) / 15), change_output_msg[ii],
-    #                      transform=ax.transAxes)
-    #
-    #             plt.savefig(impath_c_init, format='png', dpi=300)
-    #             plt.close()
-    #
-    # def output_delta_table(self, dataname):
-    #
-    #     _, _, self.change_input, self.change_output = self.work_changes(dataname)
-    #
-    #     hdr = ''
-    #
-    #     for plab in self.p.param_labels:
-    #         hdr += '% Δ' + plab + ','
-    #     hdr += '% ΔOutput'
-    #
-    #     writeM = np.column_stack((self.change_input[1:], self.change_output[1:]))
-    #
-    #     fnme = dataname + '_analysis.csv'
-    #
-    #     fpath = os.path.join(self.savepath, fnme)
-    #
-    #     np.savetxt(fpath, writeM, delimiter=',', header=hdr)
-    #
-    # def output_summary_table(self, dataname):
-    #
-    #     _, _, self.change_input, self.change_output = self.work_changes(dataname)
-    #
-    #     a, b = self.change_input[1:].shape
-    #
-    #     if a == b:
-    #         diag_vals = np.diag(self.change_input[1:])
-    #
-    #         hdr = 'Parameter, %Δ Parameter, %Δ Output'
-    #
-    #         writeM = np.column_stack((self.p.param_labels, diag_vals, self.change_output[1:]))
-    #
-    #         fnme = dataname + '_sensitiviy_analysis.csv'
-    #
-    #         fpath = os.path.join(self.savepath, fnme)
-    #
-    #         np.savetxt(fpath, writeM, fmt='%s', delimiter=',', header=hdr)
-    #
-    #     head = ''
-    #     for pi in self.p.param_labels:
-    #         head += pi + ','
-    #
-    #     fpath2 = os.path.join(self.savepath, 'param_values.csv')
-    #     np.savetxt(fpath2, self.p.params_M, delimiter=',', header=head)
-    #
-    # def work_changes(self, dataname):
-    #
-    #     msg_inputs = []
-    #     msg_outputs = []
-    #
-    #     tab_inputs = []
-    #     tab_outputs = []
-    #
-    #     for ii in range(self.p.N_runs):
-    #
-    #         msg_in = []
-    #
-    #         ci = self.outputs[0][dataname]
-    #         cj = self.outputs[ii][dataname]
-    #
-    #         # calculate percent changes to input variables in this run
-    #         percent_delta_input = 100 * ((self.p.params_M[ii, :] -
-    #                                       self.p.params_M[0, :]) / self.p.params_M[0, :])
-    #
-    #         index_delta = (percent_delta_input != 0.0).nonzero()[0]
-    #
-    #         delta_i = np.round(percent_delta_input[index_delta], 1)
-    #         name_i = self.p.param_labels[index_delta]
-    #
-    #         for si, (ni, di) in enumerate(zip(name_i, delta_i)):
-    #             msg = 'Δ' + ni + '  ' + str(di) + '%'
-    #
-    #             msg_in.append(msg)
-    #
-    #         me = np.round((1 / len(self.X)) * (100 * ((cj - ci) / ci)).sum(), 2)
-    #
-    #         msg_o = 'ΔOutput ' + '  ' + str(me) + '%'
-    #
-    #         msg_outputs.append(msg_o)
-    #
-    #         msg_inputs.append(msg_in)
-    #
-    #         tab_outputs.append(me * 1)
-    #         tab_inputs.append(percent_delta_input * 1)
-    #
-    #     tab_inputs = np.asarray(tab_inputs)
-    #     tab_outputs = np.asarray(tab_outputs)
-    #
-    #     return msg_inputs, msg_outputs, tab_inputs, tab_outputs
-    #
-    # def render_output(self, makeplots=True):
-    #
-    #     for tag in self.datatags:  # Save plots of each concentration to disk
-    #
-    #         if makeplots:
-    #             self.plot_data(tag)
-    #
-    #         # Save spreadsheet of model changes for parameter changes:
-    #         self.output_delta_table(tag)
-    #
-    #         self.output_summary_table(tag)
-
-
-
-
-    # def lineplot_1D(self, conc, fname, runtype='init'):
-    #
-    #     if runtype == 'init':
-    #         plt.figure()
-    #         plt.plot(self.X * 1e3, conc, '-r', linewidth=2.0)
-    #         plt.xlabel('Distance [mm]')
-    #         plt.ylabel('Concentration [mM/L]')
-    #         plt.savefig(fname, format='png', dpi=300)
-    #         plt.close()
-    #
-    #     if runtype == 'sim':
-    #
-    #         coo = conc
-    #         xoo = self.X * 1e3
-    #
-    #         sim_coo = []
-    #         sim_xoo = []
-    #
-    #         for a, b in self.seg_inds:
-    #             sim_coo.append(coo[a:b])
-    #             sim_xoo.append(xoo[a:b])
-    #
-    #         sim_coo = np.asarray(sim_coo)
-    #         sim_xoo = np.asarray(sim_xoo)
-    #
-    #         plt.figure()
-    #
-    #         for xi, ci in zip(sim_xoo, sim_coo):
-    #             plt.plot(xi, ci, color='red', linewidth=2.0)
-    #
-    #         plt.xlabel('Distance [mm]')
-    #         plt.ylabel('Concentration [mM/L]')
-    #         plt.savefig(fname, format='png', dpi=300)
-    #         plt.close()
-    #
-    # def plot_indy(self, ii, dataname):
-    #     """
-    #
-    #     Plot an individual parameters run.
-    #
-    #     """
-    #
-    #     ci = self.outputs[0][dataname]
-    #     cj = self.outputs[ii][dataname]
-    #
-    #     impath = os.path.join(self.savepath, dataname)
-    #     os.makedirs(impath, exist_ok=True)
-    #
-    #     fnme = dataname + str(ii) + '.png'
-    #
-    #     impath_c_init = os.path.join(impath, fnme)
-    #
-    #     # calculate percent changes to input variables in this run
-    #     percent_delta_input = 100 * ((self.p.params_M[ii, :] -
-    #                                   self.p.params_M[0, :]) / self.p.params_M[0, :])
-    #
-    #     index_delta = (percent_delta_input != 0.0).nonzero()[0]
-    #
-    #     delta_i = np.round(percent_delta_input[index_delta], 1)
-    #     name_i = self.p.param_labels[index_delta]
-    #
-    #     me = np.round((1 / len(self.Xscale)) * (100 * ((cj - ci) / ci)).sum(), 2)
-    #
-    #     msg_o = 'ΔOutput ' + '  ' + str(me) + '%'
-    #
-    #     if ii > 0:
-    #
-    #         plt.figure()
-    #         ax = plt.subplot(111)
-    #         plt.plot(self.Xscale * 1e3, cj, '-r', linewidth=2.0, label='Altered')
-    #         plt.plot(self.Xscale * 1e3, ci, '--b', linewidth=1.0, label='Original')
-    #         plt.xlabel('Scaled Distance')
-    #         plt.ylabel('Concentration [mM/L]')
-    #
-    #         # add text to plot describing which parameters were changed in this run,
-    #         # and by how much:
-    #         if len(delta_i):
-    #
-    #             for si, (ni, di) in enumerate(zip(name_i, delta_i)):
-    #                 msg_i = 'Δ' + ni + '  ' + str(di) + '%'
-    #
-    #                 plt.text(0.02, 0.95 - (si / 15), msg_i, transform=ax.transAxes)
-    #
-    #                 #                 Add text describing how output changes for this run:
-    #         plt.text(0.02, 0.95 - (len(delta_i) / 15), msg_o,
-    #                  transform=ax.transAxes)
-    #
-    #         plt.savefig(impath_c_init, format='png', dpi=300)
-    #         plt.close()
-    #
-    # # Plot Results
-    # def plot_data(self, dataname):
-    #
-    #     change_input_msgs, change_output_msg, _, _ = self.work_changes(dataname)
-    #
-    #     for ii in range(self.p.N_runs):
-    #
-    #         ci = self.outputs[0][dataname]
-    #         cj = self.outputs[ii][dataname]
-    #
-    #         impath = os.path.join(self.savepath, dataname)
-    #         os.makedirs(impath, exist_ok=True)
-    #
-    #         fnme = dataname + str(ii) + '.png'
-    #
-    #         impath_c_init = os.path.join(impath, fnme)
-    #
-    #         if ii > 0:
-    #
-    #             plt.figure()
-    #             ax = plt.subplot(111)
-    #             plt.plot(self.Xs * 1e3, cj, '-r', linewidth=2.0, label='Altered')
-    #             plt.plot(self.Xs * 1e3, ci, '--b', linewidth=1.0, label='Original')
-    #             plt.xlabel('Scaled Distance')
-    #             plt.ylabel('Concentration [mM/L]')
-    #
-    #             # add text to plot describing which parameters were changed in this run,
-    #             # and by how much:
-    #             for si, msgi in enumerate(change_input_msgs[ii]):
-    #                 plt.text(0.02, 0.95 - (si / 15), msgi, transform=ax.transAxes)
-    #
-    #             # Add text describing how output changes for this run:
-    #             plt.text(0.02, 0.95 - (len(change_input_msgs[ii]) / 15), change_output_msg[ii],
-    #                      transform=ax.transAxes)
-    #
-    #             plt.savefig(impath_c_init, format='png', dpi=300)
-    #             plt.close()
-    #
-    # def output_delta_table(self, dataname):
-    #
-    #     _, _, self.change_input, self.change_output = self.work_changes(dataname)
-    #
-    #     hdr = ''
-    #
-    #     for plab in self.p.param_labels:
-    #         hdr += '% Δ' + plab + ','
-    #     hdr += '% ΔOutput'
-    #
-    #     writeM = np.column_stack((self.change_input[1:], self.change_output[1:]))
-    #
-    #     fnme = dataname + '_analysis.csv'
-    #
-    #     fpath = os.path.join(self.savepath, fnme)
-    #
-    #     np.savetxt(fpath, writeM, delimiter=',', header=hdr)
-    #
-    # def output_summary_table(self, dataname):
-    #
-    #     _, _, self.change_input, self.change_output = self.work_changes(dataname)
-    #
-    #     a, b = self.change_input[1:].shape
-    #
-    #     if a == b:
-    #         diag_vals = np.diag(self.change_input[1:])
-    #
-    #         hdr = 'Parameter, %Δ Parameter, %Δ Output'
-    #
-    #         writeM = np.column_stack((self.p.param_labels, diag_vals, self.change_output[1:]))
-    #
-    #         fnme = dataname + '_sensitiviy_analysis.csv'
-    #
-    #         fpath = os.path.join(self.savepath, fnme)
-    #
-    #         np.savetxt(fpath, writeM, fmt='%s', delimiter=',', header=hdr)
-    #
-    #     head = ''
-    #     for pi in self.p.param_labels:
-    #         head += pi + ','
-    #
-    #     fpath2 = os.path.join(self.savepath, 'param_values.csv')
-    #     np.savetxt(fpath2, self.p.params_M, delimiter=',', header=head)
-    #
-    # def work_changes(self, dataname):
-    #
-    #     msg_inputs = []
-    #     msg_outputs = []
-    #
-    #     tab_inputs = []
-    #     tab_outputs = []
-    #
-    #     for ii in range(self.p.N_runs):
-    #
-    #         msg_in = []
-    #
-    #         ci = self.outputs[0][dataname]
-    #         cj = self.outputs[ii][dataname]
-    #
-    #         # calculate percent changes to input variables in this run
-    #         percent_delta_input = 100 * ((self.p.params_M[ii, :] -
-    #                                       self.p.params_M[0, :]) / self.p.params_M[0, :])
-    #
-    #         index_delta = (percent_delta_input != 0.0).nonzero()[0]
-    #
-    #         delta_i = np.round(percent_delta_input[index_delta], 1)
-    #         name_i = self.p.param_labels[index_delta]
-    #
-    #         for si, (ni, di) in enumerate(zip(name_i, delta_i)):
-    #             msg = 'Δ' + ni + '  ' + str(di) + '%'
-    #
-    #             msg_in.append(msg)
-    #
-    #         me = np.round((1 / len(self.X)) * (100 * ((cj - ci) / ci)).sum(), 2)
-    #
-    #         msg_o = 'ΔOutput ' + '  ' + str(me) + '%'
-    #
-    #         msg_outputs.append(msg_o)
-    #
-    #         msg_inputs.append(msg_in)
-    #
-    #         tab_outputs.append(me * 1)
-    #         tab_inputs.append(percent_delta_input * 1)
-    #
-    #     tab_inputs = np.asarray(tab_inputs)
-    #     tab_outputs = np.asarray(tab_outputs)
-    #
-    #     return msg_inputs, msg_outputs, tab_inputs, tab_outputs
-    #
-    # def render_output(self, makeplots=True):
-    #
-    #     for tag in self.datatags:  # Save plots of each concentration to disk
-    #
-    #         if makeplots:
-    #             self.plot_data(tag)
-    #
-    #         # Save spreadsheet of model changes for parameter changes:
-    #         self.output_delta_table(tag)
-    #
-    #         self.output_summary_table(tag)
-
     def write_plot_msg(self, ii):
 
         if self.has_autoparams:
@@ -1555,100 +1104,125 @@ class ModelHarness(object):
 
             self.plot_info_msg = param_changes_msg
 
-        # message about change to output of the model (FIXME: need to think about how to do this...)
-        # mo_error = np.round((1/self.model.cdl)*(100*((self.model.molecules_time - self.ref_data)/self.ref_data)).sum(), 2)
-        #
-        # msg_o = 'ΔOutput ' + '  ' + str(mo_error) + '%'
 
-    # def output_delta_table(self, dataname):
-    #
-    #     _, _, self.change_input, self.change_output = self.work_changes(dataname)
-    #
-    #     hdr = ''
-    #
-    #     for plab in self.pm.param_labels:
-    #         hdr += '% Δ' + plab + ','
-    #     hdr += '% ΔOutput'
-    #
-    #     writeM = np.column_stack((self.change_input[1:], self.change_output[1:]))
-    #
-    #     fnme = dataname + '_analysis.csv'
-    #
-    #     fpath = os.path.join(self.savepath, fnme)
-    #
-    #     np.savetxt(fpath, writeM, delimiter=',', header=hdr)
-    #
-    # def output_summary_table(self, dataname):
-    #
-    #     _, _, self.change_input, self.change_output = self.work_changes(dataname)
-    #
-    #     a, b = self.change_input[1:].shape
-    #
-    #     if a == b:
-    #         diag_vals = np.diag(self.change_input[1:])
-    #
-    #         hdr = 'Parameter, %Δ Parameter, %Δ Output'
-    #
-    #         writeM = np.column_stack((self.pm.param_labels, diag_vals, self.change_output[1:]))
-    #
-    #         fnme = dataname + '_sensitiviy_analysis.csv'
-    #
-    #         fpath = os.path.join(self.savepath, fnme)
-    #
-    #         np.savetxt(fpath, writeM, fmt='%s', delimiter=',', header=hdr)
-    #
-    #     head = ''
-    #     for pi in self.pm.param_labels:
-    #         head += pi + ','
-    #
-    #     fpath2 = os.path.join(self.savepath, 'param_values.csv')
-    #     np.savetxt(fpath2, self.pm.params_M, delimiter=',', header=head)
+    def work_all_output(self, save_dir = 'DataOutput', ii =-1, run_type = 'init',
+                        substance = 'Erk', ref_data = None):
 
-    # def work_changes(self, dataname):
-    #
-    #     msg_inputs = []
-    #     msg_outputs = []
-    #
-    #     tab_inputs = []
-    #     tab_outputs = []
-    #
-    #     for mols_init, mols_sim in self.outputs:
-    #
-    #         msg_in = []
-    #
-    #         # master.outputs[0][1]['base']['Erk'][-1]
-    #
-    #         ci = mols_init['base'][dataname][-1]
-    #         # cj = self.[dataname][-1]
-    #
-    #         # calculate percent changes to input variables in this run
-    #         percent_delta_input = 100 * ((self.pm.params_M[ii, :] -
-    #                                       self.pm.params_M[0, :]) / self.pm.params_M[0, :])
-    #
-    #         index_delta = (percent_delta_input != 0.0).nonzero()[0]
-    #
-    #         delta_i = np.round(percent_delta_input[index_delta], 1)
-    #         name_i = self.pm.param_labels[index_delta]
-    #
-    #         for si, (ni, di) in enumerate(zip(name_i, delta_i)):
-    #             msg = 'Δ' + ni + '  ' + str(di) + '%'
-    #
-    #             msg_in.append(msg)
-    #
-    #         me = np.round((1 /self.model.cdl) * (100 * ((cj - ci) / ci)).sum(), 2)
-    #
-    #         msg_o = 'ΔOutput ' + '  ' + str(me) + '%'
-    #
-    #         msg_outputs.append(msg_o)
-    #
-    #         msg_inputs.append(msg_in)
-    #
-    #         tab_outputs.append(me * 1)
-    #         tab_inputs.append(percent_delta_input * 1)
-    #
-    #     tab_inputs = np.asarray(tab_inputs)
-    #     tab_outputs = np.asarray(tab_outputs)
-    #
-    #     return msg_inputs, msg_outputs, tab_inputs, tab_outputs
+        tab_inputs = []
+        tab_outputs = []
+
+        master = self
+
+        if len(master.outputs):
+
+            if run_type == 'init':
+
+                for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
+
+                    for init_i, tagi in zip(inits_dict.values(), master.datatags):
+
+                        master.model.molecules_time = init_i
+
+                        # if ri > 0:
+                        out_diff = master.model.work_data(ti =ii, run_type = 'init',
+                                                          substance = 'Erk', ref_data = ref_data)
+
+                        tab_outputs.append(out_diff * 1)
+
+                        if self.has_autoparams:
+                            # calculate percent changes to input variables in this run:
+                            percent_delta_input = 100 * ((self.pm.params_M[ri, :] -
+                                                          self.pm.params_M[0, :]) / self.pm.params_M[0, :])
+
+                        else:
+                            percent_delta_input = 0.0
+
+                        tab_inputs.append(percent_delta_input * 1)
+
+            elif run_type == 'sim':
+
+                for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
+
+                    for sim_i, tagi in zip(sims_dict.values(), master.datatags):
+
+                        master.model.molecules_sim_time = sim_i
+
+                        # if ri > 0:
+                        out_diff = master.model.work_data(ti=ii, run_type='sim',
+                                                          substance='Erk', ref_data=ref_data)
+
+                        tab_outputs.append(out_diff * 1)
+
+                        if self.has_autoparams:
+                            # calculate percent changes to input variables in this run
+                            percent_delta_input = 100 * ((self.pm.params_M[ri, :] -
+                                                          self.pm.params_M[0, :]) / self.pm.params_M[0, :])
+
+                        else:
+                            percent_delta_input = 0.0
+
+                        tab_inputs.append(percent_delta_input * 1)
+
+            else:
+
+                print("Output type option must be 'init' or 'sim'.")
+
+        else:
+
+            print('No outputs to work.')
+
+        tab_inputs = np.asarray(tab_inputs)
+        tab_outputs = np.asarray(tab_outputs)
+
+        return tab_inputs, tab_outputs
+
+
+    def output_delta_table(self, loadpath = None, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
+
+        change_input, change_output = self.work_all_output(substance = substance,
+                                                                     run_type = run_type,
+                                                                     ref_data = self.ref_data)
+
+        hdr = ''
+
+        for plab in self.pm.param_labels:
+            hdr += '% Δ' + plab + ','
+        hdr += '% ΔOutput'
+
+        writeM = np.column_stack((change_input[1:], change_output[1:]))
+
+        fnme = substance + '_analysis.csv'
+
+        fpath = os.path.join(save_dir, fnme)
+
+        np.savetxt(fpath, writeM, delimiter=',', header=hdr)
+
+    def output_summary_table(self, loadpath = None, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
+
+        change_input, change_output = self.work_all_output(substance=substance,
+                                                                     run_type = run_type,
+                                                                     ref_data = self.ref_data)
+
+        a, b = change_input[1:].shape
+
+        if a == b:
+            diag_vals = np.diag(change_input[1:])
+
+            hdr = 'Parameter, %Δ Parameter, %Δ Output'
+
+            writeM = np.column_stack((self.pm.param_labels, diag_vals, change_output[1:]))
+
+            fnme = substance + '_sensitiviy_analysis.csv'
+
+            fpath = os.path.join(save_dir, fnme)
+
+            np.savetxt(fpath, writeM, fmt='%s', delimiter=',', header=hdr)
+
+        head = ''
+        for pi in self.pm.param_labels:
+            head += pi + ','
+
+        fpath2 = os.path.join(save_dir, 'param_values.csv')
+        np.savetxt(fpath2, self.pm.params_M, delimiter=',', header=head)
 
 

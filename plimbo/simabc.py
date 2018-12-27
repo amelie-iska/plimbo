@@ -47,10 +47,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         if pdict is None: # default parameters
             self.pdict = OrderedDict({  # Dimensional scaling:
 
-                # Flow shape parameters
-                'K_u': 0.5,
-                'n_u': 0.5,
-
                 # Small general diffusion factor:
                 'Do': 1.0e-11,
 
@@ -610,9 +606,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.run_loop(knockdown=knockdown)
         self.tsample_reinit = self.tsample
 
-        # FIXME we don't need BC_time2 (etc) and 3 molecules_time
-        # FIXME we should name molecules_reinit_time, molecules_init_time, etc
-
         # write the final molecule time arrays to the master dictionary:
         self.molecules_time2['β-Cat'] = self.c_BC_time2
         self.molecules_time2['Erk'] = self.c_ERK_time2
@@ -693,6 +686,26 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         master = pickles.load(fname)
 
         return master
+
+    # Workup functions-----------------------------------------
+    def work_data(self, ti =-1, run_type = 'init', substance = 'Erk', ref_data = None):
+
+        if ref_data is not None:
+            # Plot an init:
+            if run_type == 'init':
+                ref = ref_data[0][substance][ti]
+                carray = self.molecules_time[substance][ti]
+
+            elif run_type == 'sim':
+                ref = ref_data[1][substance][ti]
+                carray = self.molecules_sim_time[substance][ti]
+
+            diff = ((carray - ref)/ref).mean()*100 # percent difference initial to final
+
+        else:
+            diff = None
+
+        return diff
 
     # Plotting functions---------------------------------------
 

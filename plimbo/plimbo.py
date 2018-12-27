@@ -83,6 +83,8 @@ class PlimboRunner(object):
                            save_dir = save_dir,
                            ani_type=ani_type)
 
+        self.master = master
+
 
     def sensitivity(self, params=None, run_time_init=36000.0, factor = 0.25,
                 run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
@@ -112,6 +114,8 @@ class PlimboRunner(object):
                         run_time_sample = run_time_sample, reset_clims = reset_clims, ani_type = ani_type,
                         animate = animate, plot = plot, save_dir = save_dir, plot_type = plot_type)
 
+        self.master = master
+
 
     def search(self, params=None, run_time_init=36000.0, factor=0.25, levels = 1, search_style = 'log',
                     run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
@@ -139,6 +143,8 @@ class PlimboRunner(object):
                            run_time_init=run_time_init, run_time_sim=run_time_sim, run_time_step=run_time_step,
                           run_time_sample=run_time_sample, reset_clims=reset_clims, plot=plot, plot_type = plot_type,
                           animate = animate,  ani_type = ani_type, save_dir = save_dir, save_all = save_harness)
+
+        self.master = master
 
 
     def scaleRNAi(self, params=None, xscales = None,  RNAi_vect = None, RNAi_tags = None,
@@ -171,6 +177,8 @@ class PlimboRunner(object):
                                plot=plot, animate=animate, save_dir=save_dir, plot_type = plot_type
                                )
 
+        self.master = master
+
 
     def searchRNAi(self, params=None, RNAi_vect = None, RNAi_tags = None, run_time_init = 36000.0,
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, search_style = 'log',
@@ -201,35 +209,61 @@ class PlimboRunner(object):
                                   reset_clims=reset_clims, plot=plot, plot_type = plot_type, ani_type = ani_type,
                                animate=animate, save_dir=save_dir, fixed_params = None)
 
-    def after_plot(self, loadpath, save_dir = 'Plots', plot_type = 'Triplot', output_type = 'sim',
-                   autoscale = False, clims=None, cmaps=None):
+        self.master = master
 
-        if self.verbose:
+    def after_plot(self, loadpath, save_dir = 'Plots', plot_type = 'Triplot', output_type = 'sim',
+                   autoscale = False, clims=None, cmaps=None, verbose = True):
+
+        if verbose:
             print("Plotting simulation...")
 
         # declare an instance of the harness object:
-        master = ModelHarness(self.fn_config)
+        master = ModelHarness(self.fn_config, verbose = verbose)
 
         master.plot_all_output(loadpath, save_dir = save_dir, plot_type=plot_type, output_type=output_type,
                                autoscale = autoscale, clims = clims, cmaps = cmaps)
 
-        if self.verbose:
+        if verbose:
             print("Plotting completed.")
 
     def after_ani(self, loadpath, save_dir = 'Animations', ani_type = 'Triplot', output_type = 'sim',
-                  autoscale=False, clims=None, cmaps=None):
+                  autoscale=False, clims=None, cmaps=None, verbose = True):
 
-        if self.verbose:
+        if verbose:
             print("Animating simulation...")
 
         # declare an instance of the harness object:
-        master = ModelHarness(self.fn_config)
+        master = ModelHarness(self.fn_config, verbose = verbose)
 
         master.ani_all_output(loadpath, save_dir = save_dir, ani_type=ani_type, output_type=output_type,
                               autoscale=autoscale, clims=clims, cmaps=cmaps)
 
-        if self.verbose:
+        if verbose:
             print("Animations completed.")
+
+    def after_data(self, loadpath, substance ='Erk', save_dir = 'OutputData',
+                   output_type = 'init', verbose = True):
+
+        if verbose:
+            print("Creating summary table exports for simulations...")
+
+            # declare an instance of the harness object:
+        master = ModelHarness(self.fn_config, verbose=verbose)
+
+        load_fname = os.path.join(loadpath, "Master.gz")
+        master = master.load(load_fname)
+
+        savedir = os.path.join(master.savepath, save_dir)
+        os.makedirs(savedir, exist_ok=True)
+
+        master.output_delta_table(substance=substance,
+                                  run_type=output_type, save_dir=savedir)
+
+        master.output_summary_table(substance=substance,
+                                  run_type=output_type, save_dir=savedir)
+
+        if verbose:
+            print("Exported summary data tables.")
 
 
 
