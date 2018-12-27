@@ -74,6 +74,8 @@ class ModelHarness(object):
         # Generate a parameters manager object for the harness:
         self.pm = ParamsManager(self.paramo)
 
+        self.has_autoparams = False
+
         # initialize outputs array to null:
         self.outputs = []
 
@@ -85,6 +87,7 @@ class ModelHarness(object):
 
         # extra information to write on plots:
         self.plot_info_msg = None
+
 
         # default RNAi testing sequence vector:
         self.RNAi_vect_default = [
@@ -116,10 +119,11 @@ class ModelHarness(object):
         self.xscales_default = [0.75, 1.5, 3.0]
 
 
+
     def run_sensitivity(self, factor = 0.1, verbose=True, run_time_init = 36000.0,
                         run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50,
                         reset_clims = True, animate = False, plot = True, plot_type = 'Triplot',
-                        save_dir = 'Sensitivity1', ani_type = 'Triplot'):
+                        save_dir = 'Sensitivity1', ani_type = 'Triplot', save_all = False):
 
         # general saving directory for this procedure:
         self.savedir_sensitivity = os.path.join(self.savepath, save_dir)
@@ -133,6 +137,7 @@ class ModelHarness(object):
         self.datatags.append('base')
 
         self.pm.create_sensitivity_matrix(factor=factor)  # Generate sensitivity matrix from default parameters
+        self.has_autoparams = True
 
         self.outputs = []  # Storage array for all data created in each itteration of the model
 
@@ -196,15 +201,20 @@ class ModelHarness(object):
                 if verbose is True:
                     print('----------------')
 
+
             except:
                 print('***************************************************')
                 print("Run", ii + 1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if save_all:
+            fsave = os.path.join(self.savedir_sensitivity, "Master.gz")
+            self.save(fsave)
+
 
     def run_search(self, factor = 0.8, levels = 1, search_style = 'log', verbose=True,
                    run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60, run_time_sample=50,
-                   reset_clims=True, plot=True, animate = False, save_dir = 'Search1',
+                   reset_clims=True, plot=True, animate = False, save_dir = 'Search1', save_all = False,
                    fixed_params = None, plot_type = 'Triplot', ani_type = 'Triplot'):
 
         # general saving directory for this procedure:
@@ -220,6 +230,7 @@ class ModelHarness(object):
 
         # Create the parameters matrix:
         self.pm.create_search_matrix(factor=factor, levels=levels, style=search_style)
+        self.has_autoparams = True
 
         self.outputs = []  # Storage array for all last timestep outputs
 
@@ -288,8 +299,12 @@ class ModelHarness(object):
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if save_all:
+            fsave = os.path.join(self.savedir_search, "Master.plimbo")
+            self.save(fsave)
+
     def run_searchRNAi(self, RNAi_series = None, RNAi_names = None, factor = 0.8, levels = 1, search_style = 'log',
-                        verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
+                        verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0, save_all = False,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True, ani_type = 'Triplot',
                        animate=False, save_dir='SearchRNAi1', fixed_params = None, plot_type = 'Triplot'):
 
@@ -315,6 +330,7 @@ class ModelHarness(object):
 
         # Create the parameters matrix:
         self.pm.create_search_matrix(factor=factor, levels = levels, style = search_style)
+        self.has_autoparams = True
 
         self.outputs = []  # Storage array for all last timestep outputs
 
@@ -427,11 +443,15 @@ class ModelHarness(object):
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if save_all:
+            fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
+            self.save(fsave)
+
     def run_scale(self, xscales = None, verbose=True,
                        run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
                        animate=False, save_dir='scale1', plot_type = 'Triplot',
-                       ani_type = 'Triplot'
+                       ani_type = 'Triplot', save_all = False,
                        ):
 
         if xscales is None:
@@ -503,10 +523,14 @@ class ModelHarness(object):
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if save_all:
+            fsave = os.path.join(self.savedir_scale, "Master.gz")
+            self.save(fsave)
+
     def run_scaleRNAi(self, xscales = None, RNAi_series = None, RNAi_names = None, verbose=True,
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
-                       animate=False, save_dir='scaleRNAi1', plot_type = 'Triplot',
+                       animate=False, save_dir='scaleRNAi1', plot_type = 'Triplot', save_all = False,
                        ani_type = 'Triplot'
                        ):
 
@@ -635,10 +659,14 @@ class ModelHarness(object):
                 print("Run", ii +1 , "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if save_all:
+            fsave = os.path.join(self.savedir_scaleRNAi, "Master.gz")
+            self.save(fsave)
+
     def run_simRNAi(self, RNAi_series = None, RNAi_names = None, verbose=True,
                     run_time_init = 36000.0, run_time_sim = 36000.0, run_time_step = 60,
                     run_time_sample = 50, run_time_reinit = 12, reset_clims = True,
-                    plot_type = 'Triplot', ani_type = 'Triplot', animate = False,
+                    plot_type = 'Triplot', ani_type = 'Triplot', animate = False, save_all = False,
                     plot = True, save_dir = 'SimRNAi_1'):
 
         if RNAi_series is None or RNAi_names is None:
@@ -754,75 +782,95 @@ class ModelHarness(object):
                 print('----------------')
 
 
-
         self.outputs.append([data_dict_inits, data_dict_sims])
 
-    def plot_all_output(self, harness_type=None, plot_type='Triplot', output_type='sim',
-                        ref_data = None, extra_text = None):
+        if save_all:
 
-        if harness_type is None:
-            harness_type = ''
-            plotdirmain = self.savepath
+            fsave = os.path.join(self.savedir_simRNAi, "Master.gz")
+            self.save(fsave)
 
-        else:
-            plotdirmain = self.subfolders_dict[harness_type]
 
-        if self.verbose is True:
-            print('Plotting ', harness_type, '...')
+    def save(self, fname):
 
-        # Reinitialize the model again:
-        self.model.model_init(self.config_fn, self.paramo, xscale=self.xscale,
-                              verbose=False, new_mesh=False)
+        if self.verbose:
+            print("Saving harness results to file...")
 
-        if self.harness_type == '2D' and output_type == 'sim':
-            self.model.cut_cells()
+        pickles.save(self, filename=fname, is_overwritable=True)
 
-        if len(self.outputs):
+    def load(self, fname):
+
+        if self.verbose:
+            print("Loaded saved harness...")
+
+        master = pickles.load(fname)
+
+        return master
+
+    def plot_all_output(self, loadpath, save_dir = 'Plots', plot_type='Triplot', output_type='sim',
+                        autoscale = False, clims = None, cmaps = None):
+
+        load_fname = os.path.join(loadpath, "Master.gz")
+        master = self.load(load_fname)
+
+        dirname = os.path.join(loadpath, save_dir)
+
+        if output_type == 'init':
+            ref_data = master.ref_data[0]
+        elif output_type == 'sim':
+            ref_data = master.ref_data[1]
+
+        if len(master.outputs):
 
             if output_type == 'init':
 
-                for ri, (inits_dict, sims_dict) in enumerate(self.outputs):
+                for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
 
-                    for init_i, tagi in zip(inits_dict.values(), self.datatags):
+                    for init_i, tagi in zip(inits_dict.values(), master.datatags):
 
                         if self.verbose is True:
                             print('Plotting init of', tagi, 'for run ', ri, '...')
 
                         fni = plot_type + '_' + tagi + '_init_' + str(ri)
 
-                        self.model.molecules_time = init_i
+                        master.model.molecules_time = init_i
+
+                        if ri > 0:
+                            master.write_plot_msg(ri)
 
                         if plot_type == 'Triplot':
-                            self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
-                                               cmaps=None, clims=None, autoscale=False,
-                                               ref_data = ref_data, extra_text = extra_text)
+                            master.model.triplot(-1, plot_type='init', fname=fni, dirsave=dirname,
+                                               cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                               ref_data = ref_data, extra_text = master.plot_info_msg)
 
                         elif plot_type == 'Biplot':
-                            self.model.biplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
-                                               cmaps=None, clims=None, autoscale=False,
-                                              ref_data = ref_data, extra_text = extra_text)
+                            master.model.biplot(-1, plot_type='init', fname=fni, dirsave=dirname,
+                                               cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                              ref_data = ref_data, extra_text = master.plot_info_msg)
 
             elif output_type == 'sim':
 
-                for ri, (inits_dict, sims_dict) in enumerate(self.outputs):
+                for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
 
-                    for sim_i, tagi in zip(sims_dict.values(), self.datatags):
+                    if ri > 0:
+                        master.write_plot_msg(ri)
+
+                    for sim_i, tagi in zip(sims_dict.values(), master.datatags):
 
                         if self.verbose is True:
                             print('Plotting sim of', tagi, 'for run ', ri, '...')
 
                         fns = plot_type + '_' + tagi + '_sim_' + str(ri)
-                        self.model.molecules_sim_time = sim_i
+                        master.model.molecules_sim_time = sim_i
 
                         if plot_type == 'Triplot':
-                            self.model.triplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
-                                               cmaps=None, clims=None, autoscale=False,
-                                               ref_data = ref_data, extra_text = extra_text)
+                            master.model.triplot(-1, plot_type='sim', fname=fns, dirsave=dirname,
+                                               cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                               ref_data = ref_data, extra_text = master.plot_info_msg)
 
                         elif plot_type == 'Biplot':
-                            self.model.biplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
-                                              cmaps=None, clims=None, autoscale=False,
-                                              ref_data = ref_data, extra_text = extra_text)
+                            master.model.biplot(-1, plot_type='sim', fname=fns, dirsave=dirname,
+                                              cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                              ref_data = ref_data, extra_text = master.plot_info_msg)
 
             else:
 
@@ -832,75 +880,75 @@ class ModelHarness(object):
 
             print('No outputs to plot.')
 
-    def ani_all_output(self, harness_type=None, ani_type='Triplot', output_type='sim',
-                       ref_data = None, extra_text = None):
+    def ani_all_output(self, loadpath, save_dir = 'Animations', ani_type='Triplot', output_type='sim',
+                       autoscale = False, cmaps = None, clims = None):
 
-        if harness_type is None:
-            harness_type = ''
-            plotdirmain = self.savepath
+        load_fname = os.path.join(loadpath, "Master.gz")
+        master = self.load(load_fname)
 
-        else:
-            plotdirmain = self.subfolders_dict[harness_type]
+        dirname = os.path.join(loadpath, save_dir)
 
-        if self.verbose is True:
-            print('Plotting ', harness_type, '...')
+        if output_type == 'init':
+            ref_data = master.ref_data[0]
+        elif output_type == 'sim':
+            ref_data = master.ref_data[1]
 
-        # Reinitialize the model again:
-        self.model.model_init(self.config_fn, self.paramo, xscale=self.xscale,
-                              verbose=False, new_mesh=False)
 
-        if self.harness_type == '2D' and output_type == 'sim':
-            self.model.cut_cells()
-
-        if len(self.outputs):
+        if len(master.outputs):
 
             if output_type == 'init':
 
-                for ri, (inits_dict, sims_dict) in enumerate(self.outputs):
+                for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
 
-                    for init_i, tagi in zip(inits_dict.values(), self.datatags):
+                    for init_i, tagi in zip(inits_dict.values(), master.datatags):
 
                         if self.verbose is True:
                             print('Animating init of', tagi, 'for run ', ri, '...')
 
                         dni = ani_type + '_' + tagi + '_init'+ str(ri)
-                        plotdiri = os.path.join(plotdirmain, dni)
+                        plotdiri = os.path.join(dirname, dni)
 
-                        self.model.molecules_time = init_i
+                        master.model.molecules_time = init_i
+
+                        if ri > 0:
+                            master.write_plot_msg(ri)
 
                         if ani_type == 'Triplot':
                             self.model.animate_triplot(ani_type='init', dirsave=plotdiri,
-                                               cmaps=None, clims=None, autoscale=False,
-                                                       ref_data = ref_data, extra_text = extra_text)
+                                               cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                                       ref_data = ref_data, extra_text = master.plot_info_msg)
 
                         elif ani_type == 'Biplot':
                             self.model.animate_biplot(ani_type='init', dirsave=plotdiri,
-                                              cmaps=None, clims=None, autoscale=False,
-                                                      ref_data = ref_data, extra_text = extra_text)
+                                              cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                                      ref_data = ref_data, extra_text = master.plot_info_msg)
 
             elif output_type == 'sim':
 
-                for ri, (inits_dict, sims_dict) in enumerate(self.outputs):
+                for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
 
-                    for sim_i, tagi in zip(sims_dict.values(), self.datatags):
+                    for sim_i, tagi in zip(sims_dict.values(), master.datatags):
 
                         if self.verbose is True:
                             print('Plotting sim of', tagi, 'for run ', ri, '...')
 
                         dns = ani_type + '_' + tagi + '_sim' + str(ri)
-                        plotdirs =os.path.join(plotdirmain, dns)
+                        plotdirs =os.path.join(dirname, dns)
 
-                        self.model.molecules_sim_time = sim_i
+                        master.model.molecules_sim_time = sim_i
+
+                        if ri > 0:
+                            master.write_plot_msg(ri)
 
                         if ani_type == 'Triplot':
-                            self.model.animate_triplot(ani_type='sim', dirsave=plotdirs,
-                                               cmaps=None, clims=None, autoscale=False,
-                                                       ref_data = ref_data, extra_text = extra_text)
+                            master.model.animate_triplot(ani_type='sim', dirsave=plotdirs,
+                                               cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                                       ref_data = ref_data, extra_text = master.plot_info_msg)
 
                         elif ani_type == 'Biplot':
-                            self.model.animate_biplot(ani_type='sim', dirsave=plotdirs,
-                                              cmaps=None, clims=None, autoscale=False,
-                                                      ref_data = ref_data, extra_text = extra_text)
+                            master.model.animate_biplot(ani_type='sim', dirsave=plotdirs,
+                                              cmaps=cmaps, clims=clims, autoscale=autoscale,
+                                                      ref_data = ref_data, extra_text = master.plot_info_msg)
 
             else:
 
@@ -1485,25 +1533,27 @@ class ModelHarness(object):
 
     def write_plot_msg(self, ii):
 
-        # calculate percent changes to input variables in this run
-        percent_delta_input = 100 * ((self.pm.params_M[ii, :] -
-                                      self.pm.params_M[0, :]) / self.pm.params_M[0, :])
+        if self.has_autoparams:
 
-        index_delta = (percent_delta_input != 0.0).nonzero()[0]
+            # calculate percent changes to input variables in this run
+            percent_delta_input = 100 * ((self.pm.params_M[ii, :] -
+                                          self.pm.params_M[0, :]) / self.pm.params_M[0, :])
 
-        delta_i = np.round(percent_delta_input[index_delta], 1)
-        name_i = self.pm.param_labels[index_delta]
+            index_delta = (percent_delta_input != 0.0).nonzero()[0]
 
-        # add text to plot describing which parameters were changed in this run,
-        # and by how much:
-        param_changes_msg = ''
-        if len(delta_i):
+            delta_i = np.round(percent_delta_input[index_delta], 1)
+            name_i = self.pm.param_labels[index_delta]
 
-            for si, (ni, di) in enumerate(zip(name_i, delta_i)):
-                msg_i = 'Δ' + ni + '  ' + str(di) + '%\n'
-                param_changes_msg += msg_i
+            # add text to plot describing which parameters were changed in this run,
+            # and by how much:
+            param_changes_msg = ''
+            if len(delta_i):
 
-        self.plot_info_msg = param_changes_msg
+                for si, (ni, di) in enumerate(zip(name_i, delta_i)):
+                    msg_i = 'Δ' + ni + '  ' + str(di) + '%\n'
+                    param_changes_msg += msg_i
+
+            self.plot_info_msg = param_changes_msg
 
         # message about change to output of the model (FIXME: need to think about how to do this...)
         # mo_error = np.round((1/self.model.cdl)*(100*((self.model.molecules_time - self.ref_data)/self.ref_data)).sum(), 2)
