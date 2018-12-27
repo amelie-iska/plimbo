@@ -208,8 +208,8 @@ class ModelHarness(object):
                 print('***************************************************')
 
         if data_output:
-            self.output_delta_table(substance='Erk', run_type='init', save_dir=self.savedir_sensitivity)
-            self.output_summary_table(substance='Erk', run_type='init', save_dir=self.savedir_sensitivity)
+            self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_sensitivity)
+            self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_sensitivity)
 
         if save_all:
             fsave = os.path.join(self.savedir_sensitivity, "Master.gz")
@@ -304,8 +304,8 @@ class ModelHarness(object):
                 print('***************************************************')
 
         if data_output:
-            self.output_delta_table(substance='Erk', run_type='init', save_dir=self.savedir_search)
-            self.output_summary_table(substance='Erk', run_type='init', save_dir=self.savedir_search)
+            self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_search)
+            self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_search)
 
         if save_all:
             fsave = os.path.join(self.savedir_search, "Master.plimbo")
@@ -453,8 +453,8 @@ class ModelHarness(object):
                 print('***************************************************')
 
         if data_output:
-            self.output_delta_table(substance='Erk', run_type='init', save_dir=self.savedir_searchRNAi)
-            self.output_summary_table(substance='Erk', run_type='init', save_dir=self.savedir_searchRNAi)
+            self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
+            self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
 
         if save_all:
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
@@ -820,7 +820,8 @@ class ModelHarness(object):
         return master
 
     def plot_all_output(self, loadpath, save_dir = 'Plots', plot_type='Triplot', output_type='sim',
-                        autoscale = False, clims = None, cmaps = None):
+                        autoscale = False, clims = None, cmaps = None,
+                        c1='Erk', c2='β-Cat', c3='Notum'):
 
         load_fname = os.path.join(loadpath, "Master.gz")
         master = self.load(load_fname)
@@ -894,7 +895,8 @@ class ModelHarness(object):
             print('No outputs to plot.')
 
     def ani_all_output(self, loadpath, save_dir = 'Animations', ani_type='Triplot', output_type='sim',
-                       autoscale = False, cmaps = None, clims = None):
+                       autoscale = False, cmaps = None, clims = None,
+                       c1='Erk', c2='β-Cat', c3='Notum'):
 
         load_fname = os.path.join(loadpath, "Master.gz")
         master = self.load(load_fname)
@@ -972,7 +974,8 @@ class ModelHarness(object):
             print('No outputs to animate.')
 
     def plot_single(self, tagi, ri, harness_type=None, plot_type='Triplot', output_type='sim',
-                    ref_data = None, extra_text = None):
+                    ref_data = None, extra_text = None,
+                    c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum'):
         """
 
         :param tagi: datatag for the plot
@@ -1000,7 +1003,8 @@ class ModelHarness(object):
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
                                    cmaps=None, clims=None, autoscale=False,
-                                   ref_data = ref_data, extra_text = extra_text)
+                                   ref_data = ref_data, extra_text = extra_text,
+                                   c1=c1, c2=c2, c3=c3)
 
             elif plot_type == 'Biplot':
                 self.model.biplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
@@ -1035,7 +1039,8 @@ class ModelHarness(object):
                                   ref_data = ref_data, extra_text = extra_text)
 
     def ani_single(self, tagi, ri, harness_type=None, ani_type='Triplot', output_type='sim',
-                   ref_data = None, extra_text = None):
+                   ref_data = None, extra_text = None,
+                   c1='Erk', c2='β-Cat', c3='Notum'):
 
         if harness_type is None:
             harness_type = ''
@@ -1125,7 +1130,7 @@ class ModelHarness(object):
 
                         # if ri > 0:
                         out_diff = master.model.work_data(ti =ii, run_type = 'init',
-                                                          substance = 'Erk', ref_data = ref_data)
+                                                          substance = substance, ref_data = ref_data)
 
                         tab_outputs.append(out_diff * 1)
 
@@ -1149,7 +1154,7 @@ class ModelHarness(object):
 
                         # if ri > 0:
                         out_diff = master.model.work_data(ti=ii, run_type='sim',
-                                                          substance='Erk', ref_data=ref_data)
+                                                          substance=substance, ref_data=ref_data)
 
                         tab_outputs.append(out_diff * 1)
 
@@ -1177,7 +1182,7 @@ class ModelHarness(object):
         return tab_inputs, tab_outputs
 
 
-    def output_delta_table(self, loadpath = None, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
+    def output_delta_table(self, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
 
         change_input, change_output = self.work_all_output(substance = substance,
                                                                      run_type = run_type,
@@ -1197,7 +1202,7 @@ class ModelHarness(object):
 
         np.savetxt(fpath, writeM, delimiter=',', header=hdr)
 
-    def output_summary_table(self, loadpath = None, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
+    def output_summary_table(self, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
 
         change_input, change_output = self.work_all_output(substance=substance,
                                                                      run_type = run_type,

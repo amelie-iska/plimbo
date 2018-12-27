@@ -916,6 +916,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_clims['Notum'] = (0, 1.0)
         mol_clims['APC'] = (0, 1.0)
         mol_clims['cAMP'] = (0, 1.0)
+        mol_clims['Head'] = (0, 1.0)
+        mol_clims['Tail'] = (0, 1.0)
 
         self.default_clims = mol_clims
 
@@ -929,10 +931,13 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_cmaps['Notum'] = cm.PiYG_r
         mol_cmaps['APC'] = cm.Spectral
         mol_cmaps['cAMP'] = cm.Spectral
+        mol_cmaps['Head'] = cm.RdBu_r
+        mol_cmaps['Tail'] = cm.RdBu
 
         self.default_cmaps = mol_cmaps
 
-    def triplot(self, ti, plot_type='init', autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
+    def triplot(self, ti, c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum', plot_type='init',
+                autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                 ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 

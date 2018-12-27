@@ -148,7 +148,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             print("Initializing parameters and variables...")
 
         # tags for easy reference to concentrations of the model:
-        self.conc_tags = ['β-Cat', 'Erk', 'Wnt', 'Hh', 'NRF', 'Notum', 'APC', 'cAMP']
+        self.conc_tags = ['β-Cat', 'Erk', 'Wnt', 'Hh', 'NRF', 'Notum', 'APC', 'cAMP', 'Head', 'Tail']
 
         # Initialize the master molecules handlers to null values to avoid plot/animation issues:
         self.molecules_time = OrderedDict()
@@ -561,6 +561,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.molecules_time['Notum'] = self.c_Notum_time
         self.molecules_time['APC'] = self.c_APC_time
         self.molecules_time['cAMP'] = self.c_cAMP_time
+        self.molecules_time['Head'] = self.Head_time
+        self.molecules_time['Tail'] = self.Tail_time
 
         if reset_clims:
             # Reset default clims to levels at the end of the initialization phase:
@@ -575,6 +577,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             mol_clims['Notum'] = [0, 1.0]
             mol_clims['APC'] = [0, 1.0]
             mol_clims['cAMP'] = [0, 1.0]
+            mol_clims['Head'] = [0.0, 1.0]
+            mol_clims['Tail'] = [0.0, 1.0]
 
             self.default_clims = mol_clims
 
@@ -615,6 +619,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.molecules_time2['Notum'] = self.c_Notum_time2
         self.molecules_time2['APC'] = self.c_APC_time2
         self.molecules_time2['cAMP'] = self.c_cAMP_time2
+        self.molecules_time2['Head'] = self.Head_time2
+        self.molecules_time2['Tail'] = self.Tail_time2
 
         if self.verbose:
             print("Successfully completed reinit of model!")
@@ -656,6 +662,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.molecules_sim_time['Notum'] = self.c_Notum_sim_time
         self.molecules_sim_time['APC'] = self.c_APC_sim_time
         self.molecules_sim_time['cAMP'] = self.c_cAMP_sim_time
+        self.molecules_sim_time['Head'] = self.Head_sim_time
+        self.molecules_sim_time['Tail'] = self.Tail_sim_time
 
         if reset_clims:
             # Reset default clims to levels at the end of the initialization phase:
@@ -670,6 +678,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             mol_clims['Notum'] = [0, 1.0]
             mol_clims['APC'] = [0, 1.0]
             mol_clims['cAMP'] = [0, 1.0]
+            mol_clims['Head'] = [0.0, 1.0]
+            mol_clims['Tail'] = [0.0, 1.0]
 
             self.default_clims = mol_clims
 
@@ -715,7 +725,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def triplot(self, ti, plot_type = 'init',  fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
+    def triplot(self, ti, c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum', plot_type = 'init',
+                fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                       ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
