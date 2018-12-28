@@ -93,11 +93,11 @@ class ModelHarness(object):
         self.RNAi_vect_default = [
             {'bc': 0.1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1.0, 'erk': 0.1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 0.1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1.0, 'erk': 1, 'apc': 0.1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 1, 'apc': 0.1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1.0, 'erk': 1, 'apc': 1, 'notum': 0.1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 0.1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
@@ -105,7 +105,7 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.25,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 0.0, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 0.1, 'kinesin': 1},
@@ -114,7 +114,7 @@ class ModelHarness(object):
         ]
 
         self.RNAi_tags_default = ['RNAi_BC', 'RNAi_ERK', 'RNAi_APC', 'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH',
-                                  'cAMP_0.25x', 'cAMP_5x', 'Dynein', 'Kinesn']
+                                  'cAMP_0.25x', 'cAMP_5x', 'Dynein', 'Kinesin']
 
         self.xscales_default = [0.75, 1.5, 3.0]
 
@@ -140,6 +140,7 @@ class ModelHarness(object):
         self.has_autoparams = True
 
         self.outputs = []  # Storage array for all data created in each itteration of the model
+        self.heteromorphoses = [] # Storage array for heteromorph probabilities
 
         for ii, params_list in enumerate(self.pm.params_M):  # Step through the parameters matrix
 
@@ -147,6 +148,7 @@ class ModelHarness(object):
 
                 data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
                 data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
 
                 if verbose is True:
                     print('Run ', ii + 1, " of ", self.pm.N_runs)
@@ -183,6 +185,11 @@ class ModelHarness(object):
                 data_dict_sims['base'] = self.model.molecules_sim_time.copy()
 
                 self.outputs.append([data_dict_inits, data_dict_sims])
+
+                self.model.process_markov(head_i=0, tail_i=4)
+                data_dict_prob['base'] = self.model.morph_probs.copy()
+
+                self.heteromorphoses.append(data_dict_prob)
 
                 if plot:
 
@@ -237,6 +244,7 @@ class ModelHarness(object):
         self.has_autoparams = True
 
         self.outputs = []  # Storage array for all last timestep outputs
+        self.heteromorphoses = [] # Storage array for heteromorph probabilities
 
         for ii, params_list in enumerate(self.pm.params_M):  # Step through the parameters matrix
 
@@ -247,6 +255,7 @@ class ModelHarness(object):
 
                 data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
                 data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
 
                 # convert the array to a dictionary:
                 run_params = OrderedDict(zip(self.pm.param_labels, params_list))
@@ -281,6 +290,10 @@ class ModelHarness(object):
                 data_dict_sims['base'] = self.model.molecules_sim_time.copy()
 
                 self.outputs.append([data_dict_inits, data_dict_sims])
+
+                self.model.process_markov(head_i=0, tail_i=4)
+                data_dict_prob['base'] = self.model.morph_probs.copy()
+                self.heteromorphoses.append(data_dict_prob)
 
                 if plot:
                     self.plot_single('base', ii, harness_type='search', plot_type=plot_type, output_type='init',
@@ -342,6 +355,7 @@ class ModelHarness(object):
         self.has_autoparams = True
 
         self.outputs = []  # Storage array for all last timestep outputs
+        self.heteromorphoses = [] # Storage array for heteromorph probabilities
 
         for ii, params_list in enumerate(self.pm.params_M):  # Step through the parameters matrix
 
@@ -352,6 +366,7 @@ class ModelHarness(object):
 
                 data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
                 data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
 
                 # convert the array to a dictionary:
                 run_params = OrderedDict(zip(self.pm.param_labels, params_list))
@@ -385,7 +400,8 @@ class ModelHarness(object):
                 data_dict_inits['base'] = self.model.molecules_time.copy()
                 data_dict_sims['base'] = self.model.molecules_sim_time.copy()
 
-                self.outputs.append([data_dict_inits, data_dict_sims])
+                self.model.process_markov(head_i=0, tail_i=4)
+                data_dict_prob['base'] = self.model.morph_probs.copy()
 
                 if plot:
                     self.plot_single('base', ii, harness_type='searchRNAi', plot_type=plot_type,
@@ -435,6 +451,9 @@ class ModelHarness(object):
                     data_dict_inits[rnai_n] = self.model.molecules_time.copy()
                     data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
+                    self.model.process_markov(head_i=0, tail_i=4)
+                    data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+
                     if plot:
                         self.plot_single(rnai_n, ii, harness_type='searchRNAi', plot_type=plot_type,
                                          output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
@@ -446,11 +465,15 @@ class ModelHarness(object):
                     if verbose is True:
                         print('----------------')
 
+                self.outputs.append([data_dict_inits, data_dict_sims])
+                self.heteromorphoses.append(data_dict_prob)
+
             except:
 
                 print('***************************************************')
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
+
 
         if data_output:
             self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
@@ -482,6 +505,7 @@ class ModelHarness(object):
         self.datatags.append('base')
 
         self.outputs = []  # Storage array for all last timestep outputs
+        self.heteromorphoses = [] # Storage array for heteromorph probabilities
 
         for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
 
@@ -492,6 +516,7 @@ class ModelHarness(object):
 
                 data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
                 data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
 
                 # create a model using the specific parameters from the params manager for this run at this scale:
                 self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
@@ -514,6 +539,10 @@ class ModelHarness(object):
                 data_dict_sims['base'] = self.model.molecules_sim_time.copy()
 
                 self.outputs.append([data_dict_inits, data_dict_sims])
+
+                self.model.process_markov(head_i=0, tail_i=4)
+                data_dict_prob['base'] = self.model.morph_probs.copy()
+                self.heteromorphoses.append(data_dict_prob)
 
                 if plot:
                     self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
@@ -571,6 +600,7 @@ class ModelHarness(object):
             self.datatags.append(rnai_n)
 
         self.outputs = []  # Storage array for all last timestep outputs
+        self.heteromorphoses = [] # Storage array for heteromorph probabilities
 
         for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
 
@@ -581,6 +611,7 @@ class ModelHarness(object):
 
                 data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
                 data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
 
                 # create a model using the specific parameters from the params manager for this run at this scale:
                 self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
@@ -605,7 +636,8 @@ class ModelHarness(object):
                 # Set reference data set to the main model curves::
                 self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
 
-                self.outputs.append([data_dict_inits, data_dict_sims])
+                self.model.process_markov(head_i=0, tail_i=4)
+                data_dict_prob['base'] = self.model.morph_probs.copy()
 
                 if plot:
                     self.plot_single('base', ii, harness_type='scaleRNAi', plot_type=plot_type,
@@ -655,6 +687,9 @@ class ModelHarness(object):
                     data_dict_inits[rnai_n] = self.model.molecules_time.copy()
                     data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
+                    self.model.process_markov(head_i=0, tail_i=4)
+                    data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+
                     if plot:
                         self.plot_single(rnai_n, ii, harness_type='scaleRNAi', plot_type=plot_type,
                                          output_type='sim', ref_data=self.ref_data[1])
@@ -666,11 +701,16 @@ class ModelHarness(object):
                     if verbose is True:
                         print('----------------')
 
+                self.outputs.append([data_dict_inits, data_dict_sims])
+                self.heteromorphoses.append(data_dict_prob)
+
             except:
 
                 print('***************************************************')
                 print("Run", ii +1 , "has become unstable and been terminated.")
                 print('***************************************************')
+
+
 
         if save_all:
             fsave = os.path.join(self.savedir_scaleRNAi, "Master.gz")
@@ -705,9 +745,11 @@ class ModelHarness(object):
             self.datatags.append(data_tag)
 
         self.outputs = []  # Storage array for outputs of each model itteration
+        self.heteromorphoses = [] # Storage array for heteromorph probabilities
 
         data_dict_inits = OrderedDict() # storage of inits for each molecules of a model itterantion
         data_dict_sims = OrderedDict() # storage of sims for each molecules of a model itterantion
+        data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
 
         # create a model using the specific parameters from the params manager for this run:
         self.model.model_init(self.config_fn, self.paramo, xscale=self.xscale,
@@ -733,6 +775,9 @@ class ModelHarness(object):
 
         # Set reference data set to the main model curves::
         self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
+
+        self.model.process_markov(head_i=0, tail_i=4)
+        data_dict_prob['base'] = self.model.morph_probs.copy()
 
         if plot:
             self.plot_single('base', 0, harness_type='simRNAi', plot_type=plot_type,
@@ -782,6 +827,9 @@ class ModelHarness(object):
             data_dict_inits[rnai_n] = self.model.molecules_time.copy()
             data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
+            self.model.process_markov(head_i=0, tail_i=4)
+            data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+
             if plot:
                 self.plot_single(rnai_n, 0, harness_type='simRNAi', plot_type=plot_type,
                                  output_type='sim', ref_data=self.ref_data[1])
@@ -796,6 +844,7 @@ class ModelHarness(object):
 
 
         self.outputs.append([data_dict_inits, data_dict_sims])
+        self.heteromorphoses.append(data_dict_prob)
 
         if save_all:
 
@@ -820,8 +869,7 @@ class ModelHarness(object):
         return master
 
     def plot_all_output(self, loadpath, save_dir = 'Plots', plot_type='Triplot', output_type='sim',
-                        autoscale = False, clims = None, cmaps = None,
-                        c1='Erk', c2='β-Cat', c3='Notum'):
+                        autoscale = False, clims = None, cmaps = None):
 
         load_fname = os.path.join(loadpath, "Master.gz")
         master = self.load(load_fname)
@@ -861,6 +909,11 @@ class ModelHarness(object):
                                                cmaps=cmaps, clims=clims, autoscale=autoscale,
                                               ref_data = ref_data, extra_text = master.plot_info_msg)
 
+                        elif plot_type == 'Markovplot':
+                            master.model.markovplot(-1, plot_type='init', fname=fni, dirsave=dirname,
+                                                  cmaps=None, clims=None, autoscale=False,
+                                                  ref_data=ref_data, extra_text=master.plot_info_msg)
+
             elif output_type == 'sim':
 
                 for ri, (inits_dict, sims_dict) in enumerate(master.outputs):
@@ -886,6 +939,11 @@ class ModelHarness(object):
                                               cmaps=cmaps, clims=clims, autoscale=autoscale,
                                               ref_data = ref_data, extra_text = master.plot_info_msg)
 
+                        elif plot_type == 'Markovplot':
+                            master.model.markovplot(-1, plot_type='sim', fname=fns, dirsave=dirname,
+                                                  cmaps=None, clims=None, autoscale=False,
+                                                  ref_data=ref_data, extra_text=master.plot_info_msg)
+
             else:
 
                 print("Output type option must be 'init' or 'sim'.")
@@ -895,8 +953,7 @@ class ModelHarness(object):
             print('No outputs to plot.')
 
     def ani_all_output(self, loadpath, save_dir = 'Animations', ani_type='Triplot', output_type='sim',
-                       autoscale = False, cmaps = None, clims = None,
-                       c1='Erk', c2='β-Cat', c3='Notum'):
+                       autoscale = False, cmaps = None, clims = None):
 
         load_fname = os.path.join(loadpath, "Master.gz")
         master = self.load(load_fname)
@@ -974,8 +1031,7 @@ class ModelHarness(object):
             print('No outputs to animate.')
 
     def plot_single(self, tagi, ri, harness_type=None, plot_type='Triplot', output_type='sim',
-                    ref_data = None, extra_text = None,
-                    c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum'):
+                    ref_data = None, extra_text = None):
         """
 
         :param tagi: datatag for the plot
@@ -1003,8 +1059,7 @@ class ModelHarness(object):
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
                                    cmaps=None, clims=None, autoscale=False,
-                                   ref_data = ref_data, extra_text = extra_text,
-                                   c1=c1, c2=c2, c3=c3)
+                                   ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Biplot':
                 self.model.biplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
@@ -1015,6 +1070,11 @@ class ModelHarness(object):
                 self.model.hexplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
                                    cmaps=None, clims=None, autoscale=False,
                                   ref_data = ref_data, extra_text = extra_text)
+
+            elif plot_type == 'Markovplot':
+                self.model.markovplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain,
+                                   cmaps=None, clims=None, autoscale=False,
+                                   ref_data = ref_data, extra_text = extra_text)
 
         elif output_type == 'sim':
 
@@ -1038,9 +1098,13 @@ class ModelHarness(object):
                                   cmaps=None, clims=None, autoscale=False,
                                   ref_data = ref_data, extra_text = extra_text)
 
+            elif plot_type == 'Markovplot':
+                self.model.markovplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain,
+                                   cmaps=None, clims=None, autoscale=False,
+                                   ref_data = ref_data, extra_text = extra_text)
+
     def ani_single(self, tagi, ri, harness_type=None, ani_type='Triplot', output_type='sim',
-                   ref_data = None, extra_text = None,
-                   c1='Erk', c2='β-Cat', c3='Notum'):
+                   ref_data = None, extra_text = None):
 
         if harness_type is None:
             harness_type = ''

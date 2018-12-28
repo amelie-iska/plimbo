@@ -799,7 +799,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         return pH, pT, pB
 
-    def process_markov(self, head_i = 0, tail_i = 4):
+    def process_markov(self, head_i = 0, tail_i = 4): #FIXME allow for specification of two heads, e.g head_i = [0,4]
         """
         Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
         :param head_i: user-specified framgent representing head
@@ -936,7 +936,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         self.default_cmaps = mol_cmaps
 
-    def triplot(self, ti, c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum', plot_type='init',
+    def triplot(self, ti, plot_type='init',
                 autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
                 clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                 ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
@@ -1526,31 +1526,26 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
             tsample = self.tsample_init
             self.assign_easy_x(self.cells_i)
-            carray1 = self.Head_time[ti]
-            carray2 = self.Tail_time[ti]
-            carray3 = self.Blast_time[ti]
-            # carray3 = self.hdac_time[ti]
+            carray1 = self.molecules_time['Erk'][ti]
+            carray2 = self.molecules_time['Head'][ti]
+            carray3 = self.molecules_time['Tail'][ti]
 
         elif plot_type == 'reinit':
 
             tsample = self.tsample_reinit
 
             self.assign_easy_x(self.cells_i)
-            carray1 = self.Head_time2[ti]
-            carray2 = self.Tail_time2[ti]
-            carray3 = self.Blast_time2[ti]
-
-            # carray3 = self.hdac_time2[ti]
+            carray1 = self.molecules_time2['Erk'][ti]
+            carray2 = self.molecules_time2['Head'][ti]
+            carray3 = self.molecules_time2['Tail'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
 
             self.assign_easy_x(self.cells_s)
-            carray1 = self.Head_sim_time[ti]
-            carray2 = self.Tail_sim_time[ti]
-            carray3 = self.Blast_sim_time[ti]
-
-            # carray3 = self.hdac_sim_time[ti]
+            carray1 = self.molecules_sim_time['Erk'][ti]
+            carray2 = self.molecules_sim_time['Head'][ti]
+            carray3 = self.molecules_sim_time['Tail'][ti]
 
         else:
             print("Valid plot types are 'init', 'reinit', and 'sim'.")
@@ -1575,13 +1570,13 @@ class PlanariaGRN2D(PlanariaGRNABC):
         col1.set_array(carray1)
 
 
-        col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['β-Cat'], linewidth=0.0)
+        col2 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Head'], linewidth=0.0)
         if autoscale is False:
             col2.set_clim(0.0, 1.0)
         col2.set_array(carray2)
 
 
-        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
+        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Tail'], linewidth=0.0)
         if autoscale is False:
             col3.set_clim(0.0, 1.0)
         col3.set_array(carray3)
@@ -1589,15 +1584,15 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         ax1.add_collection(col1)
 
-        ax1.set_title('pHead')
+        ax1.set_title('ERK')
         ax1.axis('tight')
 
         ax2.add_collection(col2)
-        ax2.set_title('pTail')
+        ax2.set_title('pHead')
         ax2.axis('tight')
 
         ax3.add_collection(col3)
-        ax3.set_title('pBlastema')
+        ax3.set_title('pTail')
         ax3.axis('tight')
 
         if axisoff is True:

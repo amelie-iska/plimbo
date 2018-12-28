@@ -100,18 +100,18 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'D_notum': 2.5e-11,
 
                 # Markov model parameters:
-                'C1': 0.65, # ERK constant to modulate head formation
-                'K1': 0.025,
+                'C1': 0.50, # ERK constant to modulate head formation
+                'K1': 0.05,
 
                 'C2': 75.0, # Beta-catenin concentration to modulate tail formation
                 'K2': 4.0,
-                'Beta_HB': 1.0e-3, # head tissue decay time constant
-                'Beta_TB': 1.0e-3, # tail tissue decay time constant
+                'Beta_HB': 5.0e-3, # head tissue decay time constant
+                'Beta_TB': 5.0e-3, # tail tissue decay time constant
 
                 'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
                 'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
-                'D_hdac': 1.0e-13, # diffusion constant for hdac remodeling molecule
-                'hdac_to': 60.0*3600,  # time at which hdac stops growing
+                'D_hdac': 1.0e-11, # diffusion constant for hdac remodeling molecule
+                'hdac_to': 36.0*3600,  # time at which hdac stops growing
                 'hdac_ts': 24.0*3600 # time period over which hdac stops growing
 
 
@@ -717,6 +717,15 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
         return diff
 
+    # Markov processing functions------------------------------
+    @abstractmethod
+    def get_tops(self, cinds):
+        pass
+
+    @abstractmethod
+    def process_markov(self, head_i=0, tail_i=4):
+        pass
+
     # Plotting functions---------------------------------------
 
     @abstractmethod
@@ -725,7 +734,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def triplot(self, ti, c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum', plot_type = 'init',
+    def triplot(self, ti,
                 fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                       ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):

@@ -27,6 +27,7 @@ from betse.lib.pickle import pickles
 from betse.science.parameters import Parameters
 from betse.science.math import toolbox as tb
 from plimbo.simabc import PlanariaGRNABC
+from sklearn.cluster import DBSCAN
 
 
 class PlanariaGRN1D(PlanariaGRNABC):
@@ -109,7 +110,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
             gpulse = 1.0 - tb.step(ti, self.hdac_to, self.hdac_ts)
 
         elif self.runtype == 'reinit':
-            gpulse = 0.0 # inhibit grwoth of hdac
+            gpulse = 0.0 # inhibit growth of hdac
 
         self.hdac += (-div_flux + gmod*gpulse*self.hdac_growth -self.hdac_growth*self.hdac)*self.dt
 
@@ -120,9 +121,15 @@ class PlanariaGRN1D(PlanariaGRNABC):
         delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
         delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
 
+        if self.runtype == 'sim':
+            remod_term = self.hdac
+
+        else:
+            remod_term = 1.0
+
         # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.max_remod*self.hdac
-        self.Tail += delta_T*self.dt*self.max_remod*self.hdac
+        self.Head += delta_H*self.dt*self.max_remod
+        self.Tail += delta_T*self.dt*self.max_remod
 
         self.Blast = 1.0 - self.Head - self.Tail
 
@@ -263,7 +270,83 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
     def cut_cells(self):
 
-        pass
+        if self.model_has_been_cut is False:
+
+            Xcut = np.delete(self.X, self.cut_inds)
+            Ycut = np.zeros(Xcut.shape)
+
+            self.XY = np.column_stack((Xcut, Ycut))
+
+            self.new_cdl = len(self.XY)
+
+            self.all_inds = np.linspace(0, self.new_cdl - 1, self.new_cdl, dtype=np.int)
+
+            hurt_mask = np.zeros(self.cdl)
+            hurt_mask[self.target_inds_wound] = 1.0
+            hurt_mask = np.delete(hurt_mask, self.cut_inds)
+            self.hurt_inds = (hurt_mask == 1.0).nonzero()[0]
+
+                    # identify clusters of indices representing each fragment:
+            self.fragments, self.frag_xy = self.cluster_points(self.all_inds, dmax = 2.0)
+
+            # organize the data:
+            wounds = OrderedDict()  # dictionary holding indices of clusters
+            wounds_xy = OrderedDict()  # dictionary of cluster x,y point centers
+
+            for ii, wndi in enumerate(self.hurt_inds):
+                wounds[ii] = wndi
+                wounds_xy[ii] = self.XY[wndi]
+
+            # Organize wounds into fragments:
+            self.frags_and_wounds = OrderedDict()
+
+            for fragi in self.fragments.keys():
+                self.frags_and_wounds[fragi] = []
+
+            for fragn, fragi in self.fragments.items():
+
+                for woundn, woundi in wounds.items():
+
+                    intersecto = np.intersect1d(woundi, fragi)
+
+                    if len(intersecto):
+                        self.frags_and_wounds[fragn].append(intersecto)
+
+            self.model_has_been_cut = True
+
+    def cluster_points(self, cinds, dmax=2.0, min_samples = 2):
+        """
+        Identifies clusters of points (e.g. fragment or wounded zones within a fragment)
+
+        cinds: indices to self.cells.cell_centers array, or a subset (typically self.cells.cell_i)
+        dmax: multiplier of self.p.cell_radius (maximum nearest-neighbour distance)
+\
+        """
+
+        maxd = dmax * self.p.cell_radius  # maximum search distance to nearest-neighbours
+
+        cell_centres = self.XY[cinds]  # get relevant cloud of x,y points to cluster
+
+        cell_i = self.all_inds[cinds]  # get relevant indices for the case we're working with a subset
+
+        clust = DBSCAN(eps=maxd, min_samples=min_samples).fit(cell_centres)  # Use scikitlearn to flag clusters
+
+        # organize the data:
+        clusters = OrderedDict()  # dictionary holding indices of clusters
+        cluster_xy = OrderedDict()  # dictionary of cluster x,y point centers
+
+        for li in clust.labels_:
+            clusters[li] = []
+
+        for ci, li in zip(cell_i, clust.labels_):
+            clusters[li].append(ci)
+
+        for clustn, clusti in clusters.items():
+            pts = self.XY[clusti]
+
+            cluster_xy[clustn] = (pts[0].mean(), pts[1].mean())
+
+        return clusters, cluster_xy
 
     def scale_cells(self, x_scale):
 
@@ -450,6 +533,125 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return del_cAMP
 
+    # Markov Model processing functions------------------------
+    def get_tops(self, cinds):
+        """
+        Collects the sample at the wound indices and averages it.
+        :param cinds:
+        :return:
+        """
+
+        Headx = np.delete(self.Head, self.cut_inds)
+        Tailx = np.delete(self.Tail, self.cut_inds)
+        Blastx = np.delete(self.Blast, self.cut_inds)
+
+        pH = Headx[cinds].mean()
+        pT = Tailx[cinds].mean()
+        pB = Blastx[cinds].mean()
+
+        return pH, pT, pB
+
+    def process_markov(self, head_i = 0, tail_i = 4): #FIXME allow for specification of two heads, e.g head_i = [0,4]
+        """
+        Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
+        :param head_i: user-specified framgent representing head
+        :param tail_i: user-specified fragment representing tail
+
+        """
+
+
+        head_frag = head_i
+        tail_frag = tail_i
+
+        frag_probs = OrderedDict()
+        for fragn in self.fragments.keys():
+            frag_probs[fragn] = OrderedDict()
+
+        for fragn, wounds_arr in self.frags_and_wounds.items():
+
+            wound_num = len(wounds_arr)
+
+            if wound_num == 1 and fragn == head_frag:
+
+                frag_probs[fragn]['pHa'] = 1.0
+                frag_probs[fragn]['pTa'] = 0.0
+                frag_probs[fragn]['pBa'] = 0.0
+
+                pHb, pTb, _ = self.get_tops(wounds_arr[0])
+
+                # we are subtracting off pHb*pTb because with the 2D model there is the possibility of
+                # having a head and a tail at the same wound. Here we also recalculate absent head/tail:
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+            elif wound_num == 1 and fragn == tail_frag:
+
+                frag_probs[fragn]['pHa'] = 0.0
+                frag_probs[fragn]['pTa'] = 1.0
+                frag_probs[fragn]['pBa'] = 0.0
+
+                pHb, pTb, _ = self.get_tops(wounds_arr[0])
+
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+            elif wound_num == 2:
+
+                pHa, pTa, _ = self.get_tops(wounds_arr[0])
+                pHb, pTb, _ = self.get_tops(wounds_arr[1])
+
+                pBa = 1 - pHa - pTa + pHa * pTa
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHa'] = pHa
+                frag_probs[fragn]['pTa'] = pTa
+                frag_probs[fragn]['pBa'] = pBa
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+        morph_probs = OrderedDict()
+        for fragn in self.fragments.keys():
+            morph_probs[fragn] = OrderedDict()
+
+        for fragn, prob_dict in frag_probs.items():
+
+            check_len = len(prob_dict.values())
+
+            if check_len == 6:
+                pHa = prob_dict['pHa']
+                pTa = prob_dict['pTa']
+                pBa = prob_dict['pBa']
+
+                pHb = prob_dict['pHb']
+                pTb = prob_dict['pTb']
+                pBb = prob_dict['pBb']
+
+                p2T = pTa * pTb
+                p0H = (pTa * pBb + pTb * pBa)
+                p1H = (pHa * pTb + pHb * pTa)
+                p0T = (pHa * pBb + pHb * pBa)
+                p2H = pHa * pHb
+
+                morph_probs[fragn]['2T'] = p2T
+                morph_probs[fragn]['0H'] = p0H
+                morph_probs[fragn]['1H'] = p1H
+                morph_probs[fragn]['0T'] = p0T
+                morph_probs[fragn]['2H'] = p2H
+
+        # probability of head/tail/fail outcomes at each wound:
+        self.frag_probs = frag_probs
+
+        # probability of heteromorphoses in each fragment:
+        self.morph_probs = morph_probs
+
     # Plotting functions---------------------------------------
 
     def init_plots(self):
@@ -486,7 +688,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         self.default_cmaps = mol_cmaps
 
 
-    def triplot(self, ti, c1 = 'Erk', c2 = 'β-Cat', c3 = 'Notum', plot_type = 'init',
+    def triplot(self, ti, plot_type = 'init',
                 fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                       ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
@@ -1139,22 +1341,22 @@ class PlanariaGRN1D(PlanariaGRNABC):
         if plot_type == 'init':
 
             tsample = self.tsample_init
-            carray1 = self.Head_time[ti]
-            carray2 = self.Tail_time[ti]
-            carray3 = self.Blast_time[ti]
+            carray1 = self.molecules_time['Erk'][ti]
+            carray2 = self.molecules_time['Head'][ti]
+            carray3 = self.molecules_time['Tail'][ti]
 
         elif plot_type == 'reinit':
 
             tsample = self.tsample_reinit
-            carray1 = self.Head_time2[ti]
-            carray2 = self.Tail_time2[ti]
-            carray3 = self.Blast_time2[ti]
+            carray1 = self.molecules_time2['Erk'][ti]
+            carray2 = self.molecules_time2['Head'][ti]
+            carray3 = self.molecules_time2['Tail'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
-            carray1 = self.Head_sim_time[ti]
-            carray2 = self.Tail_sim_time[ti]
-            carray3 = self.Blast_sim_time[ti]
+            carray1 = self.molecules_sim_time['Erk'][ti]
+            carray2 = self.molecules_sim_time['Head'][ti]
+            carray3 = self.molecules_sim_time['Tail'][ti]
 
             xs, cs1 = self.get_plot_segs(carray1)
             _, cs2 = self.get_plot_segs(carray2)
@@ -1169,34 +1371,43 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         if plot_type == 'init' or plot_type == 'reinit':
 
+            # main plot data:
+            axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
+            axarr[1].plot(self.X*1e3, carray2, color=cmaps['Head'], linewidth=linew)
+            axarr[2].plot(self.X*1e3, carray3, color=cmaps['Tail'], linewidth=linew)
+
             if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
 
                 linewr = linew*0.5 # make the reference line a bit thinner
 
                 carray1r = ref_data['Erk'][ti]
-                carray2r = ref_data['β-Cat'][ti]
-                carray3r = ref_data['Notum'][ti]
+                carray2r = ref_data['Head'][ti]
+                carray3r = ref_data['Tail'][ti]
 
                 axarr[0].plot(self.X * 1e3, carray1r, color='Black', linewidth=linewr, linestyle='dashed')
                 axarr[1].plot(self.X * 1e3, carray2r, color='Black', linewidth=linewr, linestyle='dashed')
                 axarr[2].plot(self.X * 1e3, carray3r, color='Black', linewidth=linewr, linestyle='dashed')
 
-            # main plot data:
-            axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
-            axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
-            axarr[2].plot(self.X*1e3, carray3, color=cmaps['Notum'], linewidth=linew)
-
-
 
         elif plot_type == 'sim':
+
+            # main plot data
+            for xi, ci in zip(xs, cs1):
+                axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs2):
+                axarr[1].plot(xi, ci, color=cmaps['Head'], linewidth=linew)
+
+            for xi, ci in zip(xs, cs3):
+                axarr[2].plot(xi, ci, color=cmaps['Tail'], linewidth=linew)
 
             if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
 
                 linewr = linew * 0.5  # make the reference line a bit thinner
 
                 carray1r = ref_data['Erk'][ti]
-                carray2r = ref_data['β-Cat'][ti]
-                carray3r = ref_data['Notum'][ti]
+                carray2r = ref_data['Head'][ti]
+                carray3r = ref_data['Tail'][ti]
 
                 xsr, cs1r = self.get_plot_segs(carray1r)
                 _, cs2r = self.get_plot_segs(carray2r)
@@ -1211,28 +1422,18 @@ class PlanariaGRN1D(PlanariaGRNABC):
                 for xi, ci in zip(xsr, cs3r):
                     axarr[2].plot(xi, ci, color='Black', linewidth=linewr, linestyle='dashed')
 
-            # main plot data
-            for xi, ci in zip(xs, cs1):
-                axarr[0].plot(xi, ci, color=cmaps['Erk'], linewidth=linew)
 
-            for xi, ci in zip(xs, cs2):
-                axarr[1].plot(xi, ci, color=cmaps['β-Cat'], linewidth=linew)
-
-            for xi, ci in zip(xs, cs3):
-                axarr[2].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
-
-
-        axarr[0].set_title("pHead")
-        axarr[0].set_ylabel('Probability')
+        axarr[0].set_title("Erk")
+        axarr[0].set_ylabel('Concentration [nM]')
         if autoscale is False:
             axarr[0].set_ylim(0, 1)
 
-        axarr[1].set_title("pTail")
+        axarr[1].set_title("pHead")
         axarr[1].set_ylabel('Probability')
         if autoscale is False:
             axarr[1].set_ylim(0, 1)
 
-        axarr[2].set_title("pBlastema")
+        axarr[2].set_title("pTail")
         axarr[2].set_ylabel('Probability')
         if autoscale is False:
             axarr[2].set_ylim(0, 1)
