@@ -34,7 +34,7 @@ class PlimboRunner(object):
 
     """
 
-    def __init__(self, fn_config, verbose = True):
+    def __init__(self, fn_config, verbose = True, head_frags = None, tail_frags = None):
         """
 
         :param fn_config: BETSE config file for model creation and file saving information
@@ -42,6 +42,16 @@ class PlimboRunner(object):
 
         self.fn_config = fn_config # assign path to BETSE config file
         self.verbose = verbose
+
+        # specify fragments that are heads or tails for the Markov simulation:
+        if head_frags is None:
+            self.head_frags = [0]
+        else:
+            self.head_frags = head_frags
+        if tail_frags is None:
+            self.tail_frags = [4]
+        else:
+            self.tail_frags = tail_frags
 
 
     def simRNAi(self, RNAi_vect = None, RNAi_tags = None, params = None, run_time_init = 36000.0,
@@ -56,12 +66,14 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo = params, xscale = xscale, harness_type = '1D',
-                                  verbose = verbose, new_mesh=new_mesh, savedir = 'Harness1D')
+                                  verbose = verbose, new_mesh=new_mesh, savedir = 'Harness1D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo = params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
             print("Harness type can only be '1D' or '2D'.") # FIXME raise proper exception
@@ -97,12 +109,14 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
             print("Harness type can only be '1D' or '2D'.")  # FIXME raise proper exception
@@ -128,12 +142,14 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
             print("Harness type can only be '1D' or '2D'.")  # FIXME raise proper exception
@@ -158,12 +174,14 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
             print("Harness type can only be '1D' or '2D'.")  # FIXME raise proper exception
@@ -190,12 +208,14 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D')
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
             print("Harness type can only be '1D' or '2D'.")  # FIXME raise proper exception
@@ -212,13 +232,23 @@ class PlimboRunner(object):
         self.master = master
 
     def after_plot(self, loadpath, save_dir = 'Plots', plot_type = 'Triplot', output_type = 'sim',
-                   autoscale = False, clims=None, cmaps=None, verbose = True):
+                   autoscale = False, clims=None, cmaps=None, verbose = True, harness_type = '1D'):
 
         if verbose:
             print("Plotting simulation...")
 
-        # declare an instance of the harness object:
-        master = ModelHarness(self.fn_config, verbose = verbose)
+        if harness_type == '1D':
+
+            master = ModelHarness(self.fn_config, harness_type='1D',
+                                  verbose=verbose,  savedir='Harness1D')
+
+        elif harness_type == '2D':
+
+            master = ModelHarness(self.fn_config, harness_type='2D',
+                                  verbose=verbose, new_mesh=False, savedir='Harness2D')
+
+        else:
+            print("Harness type can only be '1D' or '2D'.")
 
         master.plot_all_output(loadpath, save_dir = save_dir, plot_type=plot_type, output_type=output_type,
                                autoscale = autoscale, clims = clims, cmaps = cmaps)
@@ -227,13 +257,23 @@ class PlimboRunner(object):
             print("Plotting completed.")
 
     def after_ani(self, loadpath, save_dir = 'Animations', ani_type = 'Triplot', output_type = 'sim',
-                  autoscale=False, clims=None, cmaps=None, verbose = True):
+                  autoscale=False, clims=None, cmaps=None, verbose = True, harness_type = '1D'):
 
         if verbose:
             print("Animating simulation...")
 
-        # declare an instance of the harness object:
-        master = ModelHarness(self.fn_config, verbose = verbose)
+        if harness_type == '1D':
+
+            master = ModelHarness(self.fn_config,  harness_type='1D',
+                                  verbose=verbose, savedir='Harness1D')
+
+        elif harness_type == '2D':
+
+            master = ModelHarness(self.fn_config, harness_type='2D',
+                                  verbose=verbose, new_mesh=False, savedir='Harness2D')
+
+        else:
+            print("Harness type can only be '1D' or '2D'.")
 
         master.ani_all_output(loadpath, save_dir = save_dir, ani_type=ani_type, output_type=output_type,
                               autoscale=autoscale, clims=clims, cmaps=cmaps)
@@ -242,13 +282,23 @@ class PlimboRunner(object):
             print("Animations completed.")
 
     def after_data(self, loadpath, substance ='Erk', save_dir = 'OutputData',
-                   output_type = 'init', verbose = True):
+                   output_type = 'init', verbose = True, harness_type = '1D'):
 
         if verbose:
             print("Creating summary table exports for simulations...")
 
-            # declare an instance of the harness object:
-        master = ModelHarness(self.fn_config, verbose=verbose)
+        if harness_type == '1D':
+
+            master = ModelHarness(self.fn_config, harness_type='1D',
+                                  verbose=verbose, savedir='Harness1D')
+
+        elif harness_type == '2D':
+
+            master = ModelHarness(self.fn_config, harness_type='2D',
+                                  verbose=verbose, new_mesh=False, savedir='Harness2D')
+
+        else:
+            print("Harness type can only be '1D' or '2D'.")
 
         load_fname = os.path.join(loadpath, "Master.gz")
         master = master.load(load_fname)

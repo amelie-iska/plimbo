@@ -36,7 +36,7 @@ from plimbo.auto_params import ParamsManager
 class ModelHarness(object):
 
     def __init__(self, config_filename, paramo = None, xscale=1.0, harness_type = '1D',
-                 verbose = False, new_mesh=False, savedir = 'ModelSearch'):
+                 verbose = False, new_mesh=False, savedir = 'ModelSearch', head_frags = None, tail_frags = None):
 
         self.xscale = xscale
 
@@ -49,6 +49,19 @@ class ModelHarness(object):
         self.savedir = savedir
 
         self.config_fn = config_filename
+
+        # specify fragments that are heads or tails for the Markov simulation:
+        if head_frags is None:
+            self.head_frags = [0]
+
+        else:
+            self.head_frags = head_frags
+
+        if tail_frags is None:
+            self.tail_frags = [4]
+
+        else:
+            self.tail_frags = tail_frags
 
         # Create a simulator object:
         if harness_type == '1D':
@@ -91,21 +104,23 @@ class ModelHarness(object):
 
         # default RNAi testing sequence vector:
         self.RNAi_vect_default = [
-            {'bc': 0.1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 0.1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 0.1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 0.1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.25,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 0.1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 0.01, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 0.01, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 0.01, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 0.01, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.01, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.01, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 0.1, 'kinesin': 1},
@@ -113,8 +128,8 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 0.1},
         ]
 
-        self.RNAi_tags_default = ['RNAi_BC', 'RNAi_ERK', 'RNAi_APC', 'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH',
-                                  'cAMP_0.25x', 'cAMP_5x', 'Dynein', 'Kinesin']
+        self.RNAi_tags_default = ['cAMP_0.25x', 'cAMP_5x', 'RNAi_BC_part',  'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
+                                  'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'Kinesin']
 
         self.xscales_default = [0.75, 1.5, 3.0]
 
@@ -186,7 +201,7 @@ class ModelHarness(object):
 
                 self.outputs.append([data_dict_inits, data_dict_sims])
 
-                self.model.process_markov(head_i=0, tail_i=4)
+                self.model.process_markov(self.head_frags, self.tail_frags)
                 data_dict_prob['base'] = self.model.morph_probs.copy()
 
                 self.heteromorphoses.append(data_dict_prob)
@@ -291,7 +306,7 @@ class ModelHarness(object):
 
                 self.outputs.append([data_dict_inits, data_dict_sims])
 
-                self.model.process_markov(head_i=0, tail_i=4)
+                self.model.process_markov(self.head_frags, self.tail_frags)
                 data_dict_prob['base'] = self.model.morph_probs.copy()
                 self.heteromorphoses.append(data_dict_prob)
 
@@ -400,7 +415,7 @@ class ModelHarness(object):
                 data_dict_inits['base'] = self.model.molecules_time.copy()
                 data_dict_sims['base'] = self.model.molecules_sim_time.copy()
 
-                self.model.process_markov(head_i=0, tail_i=4)
+                self.model.process_markov(self.head_frags, self.tail_frags)
                 data_dict_prob['base'] = self.model.morph_probs.copy()
 
                 if plot:
@@ -451,7 +466,7 @@ class ModelHarness(object):
                     data_dict_inits[rnai_n] = self.model.molecules_time.copy()
                     data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
-                    self.model.process_markov(head_i=0, tail_i=4)
+                    self.model.process_markov(self.head_frags, self.tail_frags)
                     data_dict_prob[rnai_n] = self.model.morph_probs.copy()
 
                     if plot:
@@ -540,7 +555,7 @@ class ModelHarness(object):
 
                 self.outputs.append([data_dict_inits, data_dict_sims])
 
-                self.model.process_markov(head_i=0, tail_i=4)
+                self.model.process_markov(self.head_frags, self.tail_frags)
                 data_dict_prob['base'] = self.model.morph_probs.copy()
                 self.heteromorphoses.append(data_dict_prob)
 
@@ -636,7 +651,7 @@ class ModelHarness(object):
                 # Set reference data set to the main model curves::
                 self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
 
-                self.model.process_markov(head_i=0, tail_i=4)
+                self.model.process_markov(self.head_frags, self.tail_frags)
                 data_dict_prob['base'] = self.model.morph_probs.copy()
 
                 if plot:
@@ -687,7 +702,7 @@ class ModelHarness(object):
                     data_dict_inits[rnai_n] = self.model.molecules_time.copy()
                     data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
-                    self.model.process_markov(head_i=0, tail_i=4)
+                    self.model.process_markov(self.head_frags, self.tail_frags)
                     data_dict_prob[rnai_n] = self.model.morph_probs.copy()
 
                     if plot:
@@ -776,7 +791,7 @@ class ModelHarness(object):
         # Set reference data set to the main model curves::
         self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
 
-        self.model.process_markov(head_i=0, tail_i=4)
+        self.model.process_markov(self.head_frags, self.tail_frags)
         data_dict_prob['base'] = self.model.morph_probs.copy()
 
         if plot:
@@ -827,7 +842,7 @@ class ModelHarness(object):
             data_dict_inits[rnai_n] = self.model.molecules_time.copy()
             data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
-            self.model.process_markov(head_i=0, tail_i=4)
+            self.model.process_markov(self.head_frags, self.tail_frags)
             data_dict_prob[rnai_n] = self.model.morph_probs.copy()
 
             if plot:

@@ -121,15 +121,9 @@ class PlanariaGRN1D(PlanariaGRNABC):
         delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
         delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
 
-        if self.runtype == 'sim':
-            remod_term = self.hdac
-
-        else:
-            remod_term = 1.0
-
         # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.max_remod
-        self.Tail += delta_T*self.dt*self.max_remod
+        self.Head += delta_H*self.dt*self.max_remod*self.hdac
+        self.Tail += delta_T*self.dt*self.max_remod*self.hdac
 
         self.Blast = 1.0 - self.Head - self.Tail
 
@@ -370,10 +364,10 @@ class PlanariaGRN1D(PlanariaGRNABC):
         g_bc, m_bc = self.get_gradient(self.c_BC, self.runtype)
 
         # Motor transport term:
-        #         conv_term = m_bc*self.u*self.u_bc*kinesin
+        conv_term = m_bc*self.u*self.u_bc*kinesin
 
-        #         flux = -g_bc*self.D_bc + conv_term
-        flux = -g_bc * self.Do
+        flux = -g_bc*self.Do + conv_term
+        # flux = -g_bc * self.Do
 
         # divergence of the flux
         div_flux = self.get_div(flux, self.runtype)
@@ -551,7 +545,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return pH, pT, pB
 
-    def process_markov(self, head_i = 0, tail_i = 4): #FIXME allow for specification of two heads, e.g head_i = [0,4]
+    def process_markov(self, head_i, tail_i):
         """
         Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
         :param head_i: user-specified framgent representing head
@@ -571,7 +565,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
             wound_num = len(wounds_arr)
 
-            if wound_num == 1 and fragn == head_frag:
+            if wound_num == 1 and fragn in head_frag:
 
                 frag_probs[fragn]['pHa'] = 1.0
                 frag_probs[fragn]['pTa'] = 0.0
@@ -587,7 +581,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
                 frag_probs[fragn]['pTb'] = pTb
                 frag_probs[fragn]['pBb'] = pBb
 
-            elif wound_num == 1 and fragn == tail_frag:
+            elif wound_num == 1 and fragn in tail_frag:
 
                 frag_probs[fragn]['pHa'] = 0.0
                 frag_probs[fragn]['pTa'] = 1.0

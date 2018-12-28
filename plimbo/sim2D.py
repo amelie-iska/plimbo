@@ -88,17 +88,10 @@ class PlanariaGRN2D(PlanariaGRNABC):
         delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
         delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
 
-        if self.runtype == 'sim':
-            # remod_term = (self.hdac/(1 + self.hdac))
-            remod_term = self.hdac
-
-        else:
-            remod_term = 1.0
-
 
         # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.max_remod*remod_term
-        self.Tail += delta_T*self.dt*self.max_remod*remod_term
+        self.Head += delta_H*self.dt*self.max_remod*self.hdac
+        self.Tail += delta_T*self.dt*self.max_remod*self.hdac
         self.Blast = 1.0 - self.Head - self.Tail
 
     def load_transport_field(self):
@@ -552,10 +545,15 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         # gradient of concentration:
         _, g_bcx, g_bcy = self.cells.gradient(self.c_BC)
+        m_bc = self.cells.meanval(self.c_BC)
+
+        # Motor transport term:
+        conv_term_x = m_bc * self.ux * self.u_bc * kinesin
+        conv_term_y = m_bc * self.uy * self.u_bc * kinesin
 
         # flux:
-        fx = -g_bcx * self.Do
-        fy = -g_bcy * self.Do
+        fx = -g_bcx * self.Do + conv_term_x
+        fy = -g_bcy * self.Do + conv_term_y
 
         # divergence of the flux:
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -799,7 +797,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         return pH, pT, pB
 
-    def process_markov(self, head_i = 0, tail_i = 4): #FIXME allow for specification of two heads, e.g head_i = [0,4]
+    def process_markov(self, head_i, tail_i):
         """
         Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
         :param head_i: user-specified framgent representing head
@@ -819,7 +817,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
             wound_num = len(wounds_arr)
 
-            if wound_num == 1 and fragn == head_frag:
+            if wound_num == 1 and fragn in head_frag:
 
                 frag_probs[fragn]['pHa'] = 1.0
                 frag_probs[fragn]['pTa'] = 0.0
@@ -835,7 +833,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
                 frag_probs[fragn]['pTb'] = pTb
                 frag_probs[fragn]['pBb'] = pBb
 
-            elif wound_num == 1 and fragn == tail_frag:
+            elif wound_num == 1 and fragn in tail_frag:
 
                 frag_probs[fragn]['pHa'] = 0.0
                 frag_probs[fragn]['pTa'] = 1.0
@@ -932,7 +930,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_cmaps['APC'] = cm.Spectral
         mol_cmaps['cAMP'] = cm.Spectral
         mol_cmaps['Head'] = cm.RdBu_r
-        mol_cmaps['Tail'] = cm.RdBu
+        mol_cmaps['Tail'] = cm.magma
 
         self.default_cmaps = mol_cmaps
 

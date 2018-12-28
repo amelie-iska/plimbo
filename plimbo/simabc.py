@@ -58,6 +58,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'd_bc_deg': 3.0e-3,
                 'K_bc_camp': 1.0,
                 'n_bc_camp': 2.0,
+                'u_bc': 1.0e-7,
 
                 # ERK parameters
                 'K_erk_bc': 10.0,
@@ -111,8 +112,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
                 'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
                 'D_hdac': 1.0e-11, # diffusion constant for hdac remodeling molecule
-                'hdac_to': 36.0*3600,  # time at which hdac stops growing
-                'hdac_ts': 24.0*3600 # time period over which hdac stops growing
+                'hdac_to': 72.0*3600,  # time at which hdac stops growing
+                'hdac_ts': 12.0*3600 # time period over which hdac stops growing
 
 
             })
@@ -174,6 +175,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.n_bc_apc = self.pdict['n_bc_apc']
         self.K_bc_camp = self.pdict['K_bc_camp']
         self.n_bc_camp = self.pdict['n_bc_camp']
+        self.u_bc = self.pdict['u_bc']
 
         self.c_BC = np.ones(self.cdl)
         self.c_BC_time = []
@@ -723,7 +725,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def process_markov(self, head_i=0, tail_i=4):
+    def process_markov(self, head_i, tail_i):
         pass
 
     # Plotting functions---------------------------------------
