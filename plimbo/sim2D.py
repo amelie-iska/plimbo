@@ -408,9 +408,24 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
             self.target_inds_wound = np.asarray(next_inds_wound)
 
-                    # identify clusters of indices representing each fragment:
-            self.fragments, self.frag_xy, self.frag_xyr = self.cluster_points(self.cells.cell_i, dmax = 2.0)
+            # identify clusters of indices representing each fragment -- these are randomly ordered:
+            fragments, frag_xy, frag_xyr = self.cluster_points(self.cells.cell_i, dmax = 2.0)
 
+            # reorder fragments from top (head) to bottom (tail) of y-axis of rotated model:
+            # indices to sorted fragments:
+            fragsort_i = np.argsort(np.asarray([*frag_xyr.values()])[:, 1])[::-1]
+
+            # initialize finalized data dictionaries:
+            self.fragments = OrderedDict()
+            self.frag_xy = OrderedDict()
+            self.frag_xyr = OrderedDict()
+
+            for ii, sorti in enumerate(fragsort_i):
+                self.fragments[ii] = list(fragments.values())[sorti]
+                self.frag_xy[ii] = list(frag_xy.values())[sorti]
+                self.frag_xyr[ii] = list(frag_xyr.values())[sorti]
+
+            # now that fragments are sorted along the y-axis, proceed to organizing wounds within them:
             # idenify wounds within each fragment:
             self.wounds, self.wound_xy, self.wound_xyr = self.cluster_points(self.target_inds_wound, dmax=2.0)
 
@@ -418,7 +433,6 @@ class PlanariaGRN2D(PlanariaGRNABC):
             self.frags_and_wounds = OrderedDict()
 
             for fragi in self.fragments.keys():
-                # self.frags_and_wounds[fragi] = OrderedDict()
                 self.frags_and_wounds[fragi] = []
 
             for fragn, fragi in self.fragments.items():

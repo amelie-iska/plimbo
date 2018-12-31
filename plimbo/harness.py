@@ -37,6 +37,24 @@ class ModelHarness(object):
 
     def __init__(self, config_filename, paramo = None, xscale=1.0, harness_type = '1D', plot_frags = True,
                  verbose = False, new_mesh=False, savedir = 'ModelSearch', head_frags = None, tail_frags = None):
+        """
+        For the model formalism using the default bitmaps for 2D planaria simulations provided,
+        the 'head_frag' of a 1H model is specified as [0], while the tail_frag is specified as [4] for the 4-cut model (
+        the head fragment index will always be zero, while the tail_fragment will equal the number of cuts). This
+        is also the case for 1D simulations. To specify a 2H model, supply the default tail fragment index to
+          the head_frags array, for example: [0,4].
+
+        :param config_filename:
+        :param paramo:
+        :param xscale:
+        :param harness_type:
+        :param plot_frags:
+        :param verbose:
+        :param new_mesh:
+        :param savedir:
+        :param head_frags:
+        :param tail_frags:
+        """
 
         self.xscale = xscale
 
@@ -779,7 +797,6 @@ class ModelHarness(object):
 
         self.outputs = []  # Storage array for outputs of each model itteration
         self.heteromorphoses = [] # Storage array for heteromorph probabilities
-        self.wound_probs = []
 
         data_dict_inits = OrderedDict() # storage of inits for each molecules of a model itterantion
         data_dict_sims = OrderedDict() # storage of sims for each molecules of a model itterantion
@@ -813,7 +830,6 @@ class ModelHarness(object):
         self.model.process_markov(self.head_frags, self.tail_frags)
         data_dict_prob['base'] = self.model.morph_probs.copy()
 
-        self.wound_probs.append(self.model.frag_probs.copy())
 
         if plot:
             self.plot_single('base', 0, harness_type='simRNAi', plot_type=plot_type,

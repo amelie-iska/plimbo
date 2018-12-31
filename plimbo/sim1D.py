@@ -1358,7 +1358,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string)
 
-        plt.savefig(fname, format='png', dpi=reso, transparent = True)
+        plt.savefig(fname, format='png', dpi=reso, transparent = False)
         plt.close()
 
 

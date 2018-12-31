@@ -825,7 +825,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         morph_data = []
 
         col_tags = ['2T', '0H', '1H', '0T', '2H']
-        row_tags = ['Frag ' + str(i) for i in range (len(self.morph_probs.keys()))]
+        row_tags = []
 
         for frag_n, hmorphs, in self.morph_probs.items():
 
@@ -838,13 +838,16 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             row_data = [p2T, p0H, p1H, p0T, p2H]
 
             morph_data.append(row_data)
+            row_tags.append('Frag ' + str(frag_n))
 
         morph_data = np.asarray(morph_data)
 
         if transpose is True: # flip everything around
             morph_data = morph_data.T
+            # reassign column and row tags
+            col_tags = row_tags
             row_tags = ['2T', '0H', '1H', '0T', '2H']
-            col_tags = ['Frag ' + str(i) for i in range(len(self.morph_probs.keys()))]
+
 
 
         return morph_data, col_tags, row_tags
