@@ -545,107 +545,6 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return pH, pT, pB
 
-    def process_markov(self, head_i, tail_i):
-        """
-        Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
-        :param head_i: user-specified framgent representing head
-        :param tail_i: user-specified fragment representing tail
-
-        """
-
-
-        head_frag = head_i
-        tail_frag = tail_i
-
-        frag_probs = OrderedDict()
-        for fragn in self.fragments.keys():
-            frag_probs[fragn] = OrderedDict()
-
-        for fragn, wounds_arr in self.frags_and_wounds.items():
-
-            wound_num = len(wounds_arr)
-
-            if wound_num == 1 and fragn in head_frag:
-
-                frag_probs[fragn]['pHa'] = 1.0
-                frag_probs[fragn]['pTa'] = 0.0
-                frag_probs[fragn]['pBa'] = 0.0
-
-                pHb, pTb, _ = self.get_tops(wounds_arr[0])
-
-                # we are subtracting off pHb*pTb because with the 2D model there is the possibility of
-                # having a head and a tail at the same wound. Here we also recalculate absent head/tail:
-                pBb = 1 - pHb - pTb + pHb * pTb
-
-                frag_probs[fragn]['pHb'] = pHb
-                frag_probs[fragn]['pTb'] = pTb
-                frag_probs[fragn]['pBb'] = pBb
-
-            elif wound_num == 1 and fragn in tail_frag:
-
-                frag_probs[fragn]['pHa'] = 0.0
-                frag_probs[fragn]['pTa'] = 1.0
-                frag_probs[fragn]['pBa'] = 0.0
-
-                pHb, pTb, _ = self.get_tops(wounds_arr[0])
-
-                pBb = 1 - pHb - pTb + pHb * pTb
-
-                frag_probs[fragn]['pHb'] = pHb
-                frag_probs[fragn]['pTb'] = pTb
-                frag_probs[fragn]['pBb'] = pBb
-
-            elif wound_num == 2:
-
-                pHa, pTa, _ = self.get_tops(wounds_arr[0])
-                pHb, pTb, _ = self.get_tops(wounds_arr[1])
-
-                pBa = 1 - pHa - pTa + pHa * pTa
-                pBb = 1 - pHb - pTb + pHb * pTb
-
-                frag_probs[fragn]['pHa'] = pHa
-                frag_probs[fragn]['pTa'] = pTa
-                frag_probs[fragn]['pBa'] = pBa
-
-                frag_probs[fragn]['pHb'] = pHb
-                frag_probs[fragn]['pTb'] = pTb
-                frag_probs[fragn]['pBb'] = pBb
-
-        morph_probs = OrderedDict()
-        for fragn in self.fragments.keys():
-            morph_probs[fragn] = OrderedDict()
-
-        for fragn, prob_dict in frag_probs.items():
-
-            check_len = len(prob_dict.values())
-
-            if check_len == 6:
-                pHa = prob_dict['pHa']
-                pTa = prob_dict['pTa']
-                pBa = prob_dict['pBa']
-
-                pHb = prob_dict['pHb']
-                pTb = prob_dict['pTb']
-                pBb = prob_dict['pBb']
-
-                p2T = pTa * pTb
-                p0H = (pTa * pBb + pTb * pBa)
-                p1H = (pHa * pTb + pHb * pTa)
-                p0T = (pHa * pBb + pHb * pBa)
-                p2H = pHa * pHb
-
-                morph_probs[fragn]['2T'] = p2T
-                morph_probs[fragn]['0H'] = p0H
-                morph_probs[fragn]['1H'] = p1H
-                morph_probs[fragn]['0T'] = p0T
-                morph_probs[fragn]['2H'] = p2H
-
-        # probability of head/tail/fail outcomes at each wound:
-        self.frag_probs = frag_probs
-
-        # probability of heteromorphoses in each fragment:
-        self.morph_probs = morph_probs
-
     # Plotting functions---------------------------------------
 
     def init_plots(self):
@@ -825,7 +724,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string)
 
-        plt.savefig(fname, format='png', dpi=reso)
+        plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
 
     def biplot(self, ti, plot_type = 'init', fname = 'Biplot_', dirsave = None, reso = 150, linew = 3.0,
@@ -1438,6 +1337,19 @@ class PlanariaGRN1D(PlanariaGRNABC):
             fig.text(txt_x, txt_y, extra_text, transform=axarr[0].transAxes)
 
         fig.subplots_adjust(hspace=0.15)
+
+        if plot_type == 'sim':
+
+            # Add a data table to the plot describing outcome heteromorph probabilities:
+            hmorph_data, col_names, row_names = self.heteromorph_table(transpose=True)
+
+            plt.tight_layout(rect=[0.04, 0.25, 0.95, 0.95])
+
+            plt.table(cellText=hmorph_data, loc='bottom',
+                      cellLoc='left', rowLoc='left', colLoc='left', colLabels = col_names,
+                      rowLabels=row_names, edges='open', bbox=[0, -1.7, 1, 1.2])
+
+
         fig.suptitle('Initialization', x=0.1, y=0.94)
 
         tt = tsample[ti]
@@ -1446,7 +1358,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string)
 
-        plt.savefig(fname, format='png', dpi=reso)
+        plt.savefig(fname, format='png', dpi=reso, transparent = True)
         plt.close()
 
 

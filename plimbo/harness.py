@@ -35,7 +35,7 @@ from plimbo.auto_params import ParamsManager
 
 class ModelHarness(object):
 
-    def __init__(self, config_filename, paramo = None, xscale=1.0, harness_type = '1D',
+    def __init__(self, config_filename, paramo = None, xscale=1.0, harness_type = '1D', plot_frags = True,
                  verbose = False, new_mesh=False, savedir = 'ModelSearch', head_frags = None, tail_frags = None):
 
         self.xscale = xscale
@@ -206,6 +206,7 @@ class ModelHarness(object):
 
                 self.heteromorphoses.append(data_dict_prob)
 
+
                 if plot:
 
                     self.plot_single('base', ii, harness_type='sensitivity', plot_type=plot_type,
@@ -232,6 +233,7 @@ class ModelHarness(object):
         if data_output:
             self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_sensitivity)
             self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_sensitivity)
+            self.output_heteromorphs(save_dir=self.savedir_sensitivity)
 
         if save_all:
             fsave = os.path.join(self.savedir_sensitivity, "Master.gz")
@@ -334,6 +336,7 @@ class ModelHarness(object):
         if data_output:
             self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_search)
             self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_search)
+            self.output_heteromorphs(save_dir=self.savedir_sensitivity)
 
         if save_all:
             fsave = os.path.join(self.savedir_search, "Master.plimbo")
@@ -493,6 +496,7 @@ class ModelHarness(object):
         if data_output:
             self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
+            self.output_heteromorphs(save_dir=self.savedir_sensitivity)
 
         if save_all:
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
@@ -502,7 +506,7 @@ class ModelHarness(object):
                        run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
                        animate=False, save_dir='scale1', plot_type = 'Triplot',
-                       ani_type = 'Triplot', save_all = False,
+                       ani_type = 'Triplot', save_all = False, data_output = True
                        ):
 
         if xscales is None:
@@ -580,6 +584,9 @@ class ModelHarness(object):
                 print("Run", ii +1, "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if data_output:
+            self.output_heteromorphs(save_dir=self.savedir_scale)
+
         if save_all:
             fsave = os.path.join(self.savedir_scale, "Master.gz")
             self.save(fsave)
@@ -588,7 +595,7 @@ class ModelHarness(object):
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
                        animate=False, save_dir='scaleRNAi1', plot_type = 'Triplot', save_all = False,
-                       ani_type = 'Triplot'
+                       ani_type = 'Triplot', data_output = True
                        ):
 
         if RNAi_series is None or RNAi_names is None:
@@ -725,6 +732,8 @@ class ModelHarness(object):
                 print("Run", ii +1 , "has become unstable and been terminated.")
                 print('***************************************************')
 
+        if data_output:
+            self.output_heteromorphs(save_dir=self.savedir_scaleRNAi)
 
 
         if save_all:
@@ -735,7 +744,7 @@ class ModelHarness(object):
                     run_time_init = 36000.0, run_time_sim = 36000.0, run_time_step = 60,
                     run_time_sample = 50, run_time_reinit = 12, reset_clims = True,
                     plot_type = 'Triplot', ani_type = 'Triplot', animate = False, save_all = False,
-                    plot = True, save_dir = 'SimRNAi_1'):
+                    plot = True, save_dir = 'SimRNAi_1', data_output = True):
 
         if RNAi_series is None or RNAi_names is None:
 
@@ -761,6 +770,7 @@ class ModelHarness(object):
 
         self.outputs = []  # Storage array for outputs of each model itteration
         self.heteromorphoses = [] # Storage array for heteromorph probabilities
+        self.wound_probs = []
 
         data_dict_inits = OrderedDict() # storage of inits for each molecules of a model itterantion
         data_dict_sims = OrderedDict() # storage of sims for each molecules of a model itterantion
@@ -793,6 +803,8 @@ class ModelHarness(object):
 
         self.model.process_markov(self.head_frags, self.tail_frags)
         data_dict_prob['base'] = self.model.morph_probs.copy()
+
+        self.wound_probs.append(self.model.frag_probs.copy())
 
         if plot:
             self.plot_single('base', 0, harness_type='simRNAi', plot_type=plot_type,
@@ -860,6 +872,9 @@ class ModelHarness(object):
 
         self.outputs.append([data_dict_inits, data_dict_sims])
         self.heteromorphoses.append(data_dict_prob)
+
+        if data_output:
+            self.output_heteromorphs(save_dir=self.savedir_simRNAi)
 
         if save_all:
 
@@ -1308,5 +1323,50 @@ class ModelHarness(object):
 
         fpath2 = os.path.join(save_dir, 'param_values.csv')
         np.savetxt(fpath2, self.pm.params_M, delimiter=',', header=head)
+
+
+    def output_heteromorphs(self, save_dir = 'DataOutput'):
+
+        morph_col_tags = '2T,' + '0H,' + '1H,' + '0T,' + '2H'
+
+        for ri, hetmorphs_masterdict in enumerate(self.heteromorphoses):
+
+            dir_path = os.path.join(save_dir, 'Run_' + str(ri))
+            os.makedirs(dir_path, exist_ok=True)
+
+            for tag_n, hmorphs_dict in hetmorphs_masterdict.items():
+
+                morph_data = []
+
+                for frag_n, hmorphs, in hmorphs_dict.items():
+                    p2T = np.round(hmorphs['2T'], 2)
+                    p0H = np.round(hmorphs['0H'], 2)
+                    p1H = np.round(hmorphs['1H'], 2)
+                    p0T = np.round(hmorphs['0T'], 2)
+                    p2H = np.round(hmorphs['2H'], 2)
+
+                    row_data = [p2T, p0H, p1H, p0T, p2H]
+
+                    morph_data.append(row_data)
+
+                morph_data = np.asarray(morph_data)
+
+                fpath = os.path.join(dir_path, tag_n + '_heteromorphs.csv')
+
+                np.savetxt(fpath, morph_data, delimiter=',', header=morph_col_tags)
+
+    def view_fragments(self):
+
+        # create a model using the specific parameters from the params manager for this run:
+        self.model.model_init(self.config_fn, self.paramo, xscale=self.xscale,
+                              verbose=self.verbose, new_mesh=self.new_mesh)
+
+        if self.harness_type == '2D':
+
+            self.model.cut_cells()
+
+            self.model.plot_frags(dir_save=self.savepath)
+
+
 
 

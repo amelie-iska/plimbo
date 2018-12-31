@@ -797,108 +797,6 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         return pH, pT, pB
 
-    def process_markov(self, head_i, tail_i):
-        """
-        Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
-        :param head_i: user-specified framgent representing head
-        :param tail_i: user-specified fragment representing tail
-
-        """
-
-
-        head_frag = head_i
-        tail_frag = tail_i
-
-        frag_probs = OrderedDict()
-        for fragn in self.fragments.keys():
-            frag_probs[fragn] = OrderedDict()
-
-        for fragn, wounds_arr in self.frags_and_wounds.items():
-
-            wound_num = len(wounds_arr)
-
-            if wound_num == 1 and fragn in head_frag:
-
-                frag_probs[fragn]['pHa'] = 1.0
-                frag_probs[fragn]['pTa'] = 0.0
-                frag_probs[fragn]['pBa'] = 0.0
-
-                pHb, pTb, _ = self.get_tops(wounds_arr[0])
-
-                # we are subtracting off pHb*pTb because with the 2D model there is the possibility of
-                # having a head and a tail at the same wound. Here we also recalculate absent head/tail:
-                pBb = 1 - pHb - pTb + pHb * pTb
-
-                frag_probs[fragn]['pHb'] = pHb
-                frag_probs[fragn]['pTb'] = pTb
-                frag_probs[fragn]['pBb'] = pBb
-
-            elif wound_num == 1 and fragn in tail_frag:
-
-                frag_probs[fragn]['pHa'] = 0.0
-                frag_probs[fragn]['pTa'] = 1.0
-                frag_probs[fragn]['pBa'] = 0.0
-
-                pHb, pTb, _ = self.get_tops(wounds_arr[0])
-
-                pBb = 1 - pHb - pTb + pHb * pTb
-
-                frag_probs[fragn]['pHb'] = pHb
-                frag_probs[fragn]['pTb'] = pTb
-                frag_probs[fragn]['pBb'] = pBb
-
-            elif wound_num == 2:
-
-                pHa, pTa, _ = self.get_tops(wounds_arr[0])
-                pHb, pTb, _ = self.get_tops(wounds_arr[1])
-
-                pBa = 1 - pHa - pTa + pHa * pTa
-                pBb = 1 - pHb - pTb + pHb * pTb
-
-                frag_probs[fragn]['pHa'] = pHa
-                frag_probs[fragn]['pTa'] = pTa
-                frag_probs[fragn]['pBa'] = pBa
-
-                frag_probs[fragn]['pHb'] = pHb
-                frag_probs[fragn]['pTb'] = pTb
-                frag_probs[fragn]['pBb'] = pBb
-
-        morph_probs = OrderedDict()
-        for fragn in self.fragments.keys():
-            morph_probs[fragn] = OrderedDict()
-
-        for fragn, prob_dict in frag_probs.items():
-
-            check_len = len(prob_dict.values())
-
-            if check_len == 6:
-                pHa = prob_dict['pHa']
-                pTa = prob_dict['pTa']
-                pBa = prob_dict['pBa']
-
-                pHb = prob_dict['pHb']
-                pTb = prob_dict['pTb']
-                pBb = prob_dict['pBb']
-
-                p2T = pTa * pTb
-                p0H = (pTa * pBb + pTb * pBa)
-                p1H = (pHa * pTb + pHb * pTa)
-                p0T = (pHa * pBb + pHb * pBa)
-                p2H = pHa * pHb
-
-                morph_probs[fragn]['2T'] = p2T
-                morph_probs[fragn]['0H'] = p0H
-                morph_probs[fragn]['1H'] = p1H
-                morph_probs[fragn]['0T'] = p0T
-                morph_probs[fragn]['2H'] = p2H
-
-        # probability of head/tail/fail outcomes at each wound:
-        self.frag_probs = frag_probs
-
-        # probability of heteromorphoses in each fragment:
-        self.morph_probs = morph_probs
-
-
     # Plotting functions---------------------------------------
 
     def init_plots(self):
@@ -933,6 +831,9 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_cmaps['Tail'] = cm.magma
 
         self.default_cmaps = mol_cmaps
+
+        self.groupc = ['LightBlue', 'DarkCyan', 'CadetBlue', 'SteelBlue', 'DeepSkyBlue', 'MediumBlue', 'DarkBlue',
+                       'IndianRed', 'FireBrick', 'DarkRed', 'Brown', 'Green', 'Purple', 'Indigo', 'DarkSeaGreen']
 
     def triplot(self, ti, plot_type='init',
                 autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
@@ -1409,10 +1310,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.close()
 
 
-    def plot_frags(self, show_plot = False, save_plot = True, reso = 150, group_colors = None):
+    def plot_frags(self, show_plot = False, save_plot = True,
+                   reso = 150, group_colors = None, dir_save = None):
 
         if group_colors is None:
-            group_colors = self.groupc  # FIXME we need a warning if there are more fragments than colors
+            group_colors = self.groupc
 
         plt.figure(figsize=(12, 12))
         ax = plt.subplot(111)
@@ -1421,7 +1323,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
             col1 = PolyCollection(self.verts_r[clusti] * 1e3, color=group_colors[clustn], edgecolor=None)
             ax.add_collection(col1)
             xi, yi = self.frag_xyr[clustn]
-            plt.text(xi * 1e3, yi * 1e3, 'frag_' + str(clustn), color='white',
+            plt.text(xi * 1e3, yi * 1e3, 'frag_' + str(clustn), color='black',
                      fontsize=18, fontweight='bold',
                      horizontalalignment='center', verticalalignment='center')
 
@@ -1434,8 +1336,14 @@ class PlanariaGRN2D(PlanariaGRNABC):
         if save_plot:
 
             fstr = 'IdentifiedCutFragments.png'
-            dirstr = os.path.join(self.p.sim_export_dirname)
-            fname = os.path.join(dirstr, fstr)
+
+            if dir_save is None:
+                dirstr = self.p.sim_export_dirname
+                fname = os.path.join(self.p.sim_export_dirname, fstr)
+
+            else:
+                dirstr = dir_save
+                fname = os.path.join(dirstr, fstr)
 
             os.makedirs(dirstr, exist_ok=True)
 
@@ -1604,12 +1512,25 @@ class PlanariaGRN2D(PlanariaGRNABC):
         tit_string = str(tdays) + ' Hours'
         fig.suptitle(tit_string, x=0.5, y=0.1)
 
+        fig.subplots_adjust(wspace=0.0)
+
         if extra_text is not None:
             fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)
 
-        fig.subplots_adjust(wspace=0.0)
+        if plot_type == 'sim':
 
-        plt.savefig(fname, format='png', dpi=reso,  transparent = True)
+            # Add a data table to the plot describing outcome heteromorph probabilities:
+            hmorph_data, col_names, row_names = self.heteromorph_table(transpose=False)
+
+            # plt.tight_layout(rect=[0.0, 0.0, 0.5, 0.95])
+
+            tabo = plt.table(cellText=hmorph_data, loc='right',
+                      cellLoc='left', rowLoc='left', colLoc='left', colLabels=col_names,
+                      rowLabels=row_names, edges='open', bbox=[1.5, 0.05, 2.0, 1.0])
+            tabo.auto_set_font_size(False)
+            tabo.set_fontsize(fontsize - 4)
+
+        plt.savefig(fname, format='png', dpi=reso, bbox_inches='tight')
         plt.close()
 
 

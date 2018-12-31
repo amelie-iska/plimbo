@@ -55,7 +55,7 @@ class PlimboRunner(object):
 
 
     def simRNAi(self, RNAi_vect = None, RNAi_tags = None, params = None, run_time_init = 36000.0,
-                run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0,
+                run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, plot_frags = True,
                 run_time_reinit = 12.0,  xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SimRNAi_1', reset_clims = True, animate = False, plot = True,
                 plot_type = 'Triplot', ani_type = 'Triplot', save_harness = False, harness_type='1D'):
@@ -67,12 +67,14 @@ class PlimboRunner(object):
 
             master = ModelHarness(self.fn_config, paramo = params, xscale = xscale, harness_type = '1D',
                                   verbose = verbose, new_mesh=new_mesh, savedir = 'Harness1D',
+                                  plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo = params, xscale=xscale, harness_type='2D',
                                   verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
@@ -97,8 +99,11 @@ class PlimboRunner(object):
 
         self.master = master
 
+        if plot_frags is True:
+            self.master.model.plot_frags(show_plot=False, save_plot=True, reso=150, group_colors=None)
 
-    def sensitivity(self, params=None, run_time_init=36000.0, factor = 0.25,
+
+    def sensitivity(self, params=None, run_time_init=36000.0, factor = 0.25, plot_frags = True,
                 run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
                  xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                 save_dir='Sensitivity_1', reset_clims=True, animate=False, plot=True,
@@ -109,13 +114,13 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D', plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D', plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
@@ -132,7 +137,7 @@ class PlimboRunner(object):
 
 
     def search(self, params=None, run_time_init=36000.0, factor=0.25, levels = 1, search_style = 'log',
-                    run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
+                    run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0, plot_frags = True,
                     xscale=1.0, verbose=True, new_mesh=False, save_dir='Search_1',
                     reset_clims=True, animate=False, plot=True, ani_type = 'Triplot',
                     plot_type='Triplot', save_harness=False, harness_type='1D'):
@@ -142,12 +147,14 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
+                                  plot_frags = plot_frags,
                                   verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
+                                  plot_frags = plot_frags,
                                   verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
@@ -163,7 +170,7 @@ class PlimboRunner(object):
         self.master = master
 
 
-    def scaleRNAi(self, params=None, xscales = None,  RNAi_vect = None, RNAi_tags = None,
+    def scaleRNAi(self, params=None, xscales = None,  RNAi_vect = None, RNAi_tags = None, plot_frags = True,
                   run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
                run_time_reinit=12.0, xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                save_dir='ScaleRNAi_1', reset_clims=True, animate=False, plot=True,
@@ -174,13 +181,13 @@ class PlimboRunner(object):
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D', plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D', plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
@@ -202,19 +209,19 @@ class PlimboRunner(object):
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, search_style = 'log',
                    factor = 0.8, levels = 1, run_time_reinit = 12.0, xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SearchRNAi_1', reset_clims = True, animate = False, plot = True, ani_type = 'Triplot',
-                plot_type = 'Triplot', save_harness = True, harness_type='1D'):
+                plot_type = 'Triplot', save_harness = True, harness_type='1D', plot_frags = True,):
 
         # Create an instance of the model harness:
         if harness_type == '1D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D', plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
             master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D', plot_frags = plot_frags,
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         else:
@@ -231,6 +238,9 @@ class PlimboRunner(object):
 
         self.master = master
 
+        if plot_frags is True:
+            self.master.model.plot_frags(show_plot=False, save_plot=True, reso=150, group_colors=None)
+
     def after_plot(self, loadpath, save_dir = 'Plots', plot_type = 'Triplot', output_type = 'sim',
                    autoscale = False, clims=None, cmaps=None, verbose = True, harness_type = '1D'):
 
@@ -239,12 +249,12 @@ class PlimboRunner(object):
 
         if harness_type == '1D':
 
-            master = ModelHarness(self.fn_config, harness_type='1D',
+            master = ModelHarness(self.fn_config, harness_type='1D', plot_frags = True,
                                   verbose=verbose,  savedir='Harness1D')
 
         elif harness_type == '2D':
 
-            master = ModelHarness(self.fn_config, harness_type='2D',
+            master = ModelHarness(self.fn_config, harness_type='2D', plot_frags = True,
                                   verbose=verbose, new_mesh=False, savedir='Harness2D')
 
         else:
@@ -264,12 +274,12 @@ class PlimboRunner(object):
 
         if harness_type == '1D':
 
-            master = ModelHarness(self.fn_config,  harness_type='1D',
+            master = ModelHarness(self.fn_config,  harness_type='1D', plot_frags = False,
                                   verbose=verbose, savedir='Harness1D')
 
         elif harness_type == '2D':
 
-            master = ModelHarness(self.fn_config, harness_type='2D',
+            master = ModelHarness(self.fn_config, harness_type='2D', plot_frags = False,
                                   verbose=verbose, new_mesh=False, savedir='Harness2D')
 
         else:
@@ -289,12 +299,12 @@ class PlimboRunner(object):
 
         if harness_type == '1D':
 
-            master = ModelHarness(self.fn_config, harness_type='1D',
+            master = ModelHarness(self.fn_config, harness_type='1D', plot_frags = False,
                                   verbose=verbose, savedir='Harness1D')
 
         elif harness_type == '2D':
 
-            master = ModelHarness(self.fn_config, harness_type='2D',
+            master = ModelHarness(self.fn_config, harness_type='2D', plot_frags = False,
                                   verbose=verbose, new_mesh=False, savedir='Harness2D')
 
         else:
@@ -314,6 +324,26 @@ class PlimboRunner(object):
 
         if verbose:
             print("Exported summary data tables.")
+
+    def frag_plot(self, loadpath, params = None, xscale = None, new_mesh = False,
+                  save_dir = 'Fragments', verbose = True, harness_type = '2D'):
+
+        if harness_type == '1D':
+
+            master = ModelHarness(self.fn_config, paramo = params, xscale = xscale, harness_type = '1D',
+                                  verbose = verbose, new_mesh=new_mesh, savedir = 'Harness1D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
+
+        elif harness_type == '2D':
+
+            master = ModelHarness(self.fn_config, paramo = params, xscale=xscale, harness_type='2D',
+                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
+
+        else:
+            print("Harness type can only be '1D' or '2D'.") # FIXME raise proper exception
+
+        master.view_fragments()
 
 
 

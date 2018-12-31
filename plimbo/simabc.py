@@ -724,9 +724,141 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
     def get_tops(self, cinds):
         pass
 
-    @abstractmethod
     def process_markov(self, head_i, tail_i):
-        pass
+        """
+        Post-processing of the Markov model to return heteromorphoses probabilities for cut fragments
+        :param head_i: user-specified framgent representing head
+        :param tail_i: user-specified fragment representing tail
+
+        """
+
+
+        head_frag = head_i
+        tail_frag = tail_i
+
+        frag_probs = OrderedDict()
+        for fragn in self.fragments.keys():
+            frag_probs[fragn] = OrderedDict()
+
+        for fragn, wounds_arr in self.frags_and_wounds.items():
+
+            wound_num = len(wounds_arr)
+
+            if wound_num == 1 and fragn in head_frag:
+
+                frag_probs[fragn]['pHa'] = 1.0
+                frag_probs[fragn]['pTa'] = 0.0
+                frag_probs[fragn]['pBa'] = 0.0
+
+                pHb, pTb, _ = self.get_tops(wounds_arr[0])
+
+                # we are subtracting off pHb*pTb because with the 2D model there is the possibility of
+                # having a head and a tail at the same wound. Here we also recalculate absent head/tail:
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+            elif wound_num == 1 and fragn in tail_frag:
+
+                frag_probs[fragn]['pHa'] = 0.0
+                frag_probs[fragn]['pTa'] = 1.0
+                frag_probs[fragn]['pBa'] = 0.0
+
+                pHb, pTb, _ = self.get_tops(wounds_arr[0])
+
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+            elif wound_num == 2:
+
+                pHa, pTa, _ = self.get_tops(wounds_arr[0])
+                pHb, pTb, _ = self.get_tops(wounds_arr[1])
+
+                pBa = 1 - pHa - pTa + pHa * pTa
+                pBb = 1 - pHb - pTb + pHb * pTb
+
+                frag_probs[fragn]['pHa'] = pHa
+                frag_probs[fragn]['pTa'] = pTa
+                frag_probs[fragn]['pBa'] = pBa
+
+                frag_probs[fragn]['pHb'] = pHb
+                frag_probs[fragn]['pTb'] = pTb
+                frag_probs[fragn]['pBb'] = pBb
+
+        morph_probs = OrderedDict()
+        for fragn in self.fragments.keys():
+            morph_probs[fragn] = OrderedDict()
+
+        for fragn, prob_dict in frag_probs.items():
+
+            check_len = len(prob_dict.values())
+
+            if check_len == 6:
+                pHa = prob_dict['pHa']
+                pTa = prob_dict['pTa']
+                pBa = prob_dict['pBa']
+
+                pHb = prob_dict['pHb']
+                pTb = prob_dict['pTb']
+                pBb = prob_dict['pBb']
+
+                p2T = pTa * pTb
+                p0H = (pTa * pBb + pTb * pBa)
+                p1H = (pHa * pTb + pHb * pTa)
+                p0T = (pHa * pBb + pHb * pBa)
+                p2H = pHa * pHb
+
+                morph_probs[fragn]['2T'] = p2T
+                morph_probs[fragn]['0H'] = p0H
+                morph_probs[fragn]['1H'] = p1H
+                morph_probs[fragn]['0T'] = p0T
+                morph_probs[fragn]['2H'] = p2H
+
+        # probability of head/tail/fail outcomes at each wound:
+        self.frag_probs = frag_probs
+
+        # probability of heteromorphoses in each fragment:
+        self.morph_probs = morph_probs
+
+    def heteromorph_table(self, transpose = False):
+        """
+        Produces a data table of fragments in rows and heteromorph probabilities in columns
+         (or reverse, if transpose is True), which is suitable for adding to a plot.
+
+        """
+        morph_data = []
+
+        col_tags = ['2T', '0H', '1H', '0T', '2H']
+        row_tags = ['Frag ' + str(i) for i in range (len(self.morph_probs.keys()))]
+
+        for frag_n, hmorphs, in self.morph_probs.items():
+
+            p2T = np.round(hmorphs['2T'],2)
+            p0H = np.round(hmorphs['0H'],2)
+            p1H = np.round(hmorphs['1H'],2)
+            p0T = np.round(hmorphs['0T'],2)
+            p2H = np.round(hmorphs['2H'],2)
+
+            row_data = [p2T, p0H, p1H, p0T, p2H]
+
+            morph_data.append(row_data)
+
+        morph_data = np.asarray(morph_data)
+
+        if transpose is True: # flip everything around
+            morph_data = morph_data.T
+            row_tags = ['2T', '0H', '1H', '0T', '2H']
+            col_tags = ['Frag ' + str(i) for i in range(len(self.morph_probs.keys()))]
+
+
+        return morph_data, col_tags, row_tags
+
+
 
     # Plotting functions---------------------------------------
 
