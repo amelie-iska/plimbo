@@ -750,11 +750,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 frag_probs[fragn]['pTa'] = 0.0
                 frag_probs[fragn]['pBa'] = 0.0
 
-                pHb, pTb, _ = self.get_tops(wounds_arr[0])
-
-                # we are subtracting off pHb*pTb because with the 2D model there is the possibility of
-                # having a head and a tail at the same wound. Here we also recalculate absent head/tail:
-                pBb = 1 - pHb - pTb + pHb * pTb
+                pHb, pTb, pBb = self.get_tops(wounds_arr[0])
 
                 frag_probs[fragn]['pHb'] = pHb
                 frag_probs[fragn]['pTb'] = pTb
@@ -766,9 +762,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 frag_probs[fragn]['pTa'] = 1.0
                 frag_probs[fragn]['pBa'] = 0.0
 
-                pHb, pTb, _ = self.get_tops(wounds_arr[0])
-
-                pBb = 1 - pHb - pTb + pHb * pTb
+                pHb, pTb, pBb = self.get_tops(wounds_arr[0])
 
                 frag_probs[fragn]['pHb'] = pHb
                 frag_probs[fragn]['pTb'] = pTb
@@ -776,11 +770,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
             elif wound_num == 2:
 
-                pHa, pTa, _ = self.get_tops(wounds_arr[0])
-                pHb, pTb, _ = self.get_tops(wounds_arr[1])
-
-                pBa = 1 - pHa - pTa + pHa * pTa
-                pBb = 1 - pHb - pTb + pHb * pTb
+                pHa, pTa, pBa = self.get_tops(wounds_arr[0])
+                pHb, pTb, pBb = self.get_tops(wounds_arr[1])
 
                 frag_probs[fragn]['pHa'] = pHa
                 frag_probs[fragn]['pTa'] = pTa

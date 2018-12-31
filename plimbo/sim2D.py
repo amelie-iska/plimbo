@@ -408,9 +408,6 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
             self.target_inds_wound = np.asarray(next_inds_wound)
 
-            # update the hurt_mask to reflect thicker cell layers around wounds:
-            self.hurt_mask[self.target_inds_wound] = 1
-
                     # identify clusters of indices representing each fragment:
             self.fragments, self.frag_xy, self.frag_xyr = self.cluster_points(self.cells.cell_i, dmax = 2.0)
 
@@ -780,20 +777,24 @@ class PlanariaGRN2D(PlanariaGRNABC):
     # Post-processing functions--------------------------------
     def get_tops(self, cinds):
         """
-        Collects the top 33% of the sample and averages it.
-        :param cinds:
-        :return:
+        Collects the top 33% of the sample at the wound where head signal is highest,
+        and averages over tail and blast samples in the same region.
+        This avoid difficulties with 2D map sampling where head signal can
+        be a small pinpoint (but which appears realistic).
+
         """
 
         top33 = int(len(cinds) / 3)
 
-        sort_H = np.sort(self.Head[cinds])[::-1]
-        sort_T = np.sort(self.Tail[cinds])[::-1]
-        sort_B = np.sort(self.Blast[cinds])[::-1]
+        inds_sort_H = np.argsort(self.Head[cinds])[::-1]
 
-        pH = sort_H[:top33].mean()
-        pT = sort_T[:top33].mean()
-        pB = sort_B[:top33].mean()
+        sort_H = self.Head[cinds][inds_sort_H[:top33]]
+        sort_T = self.Tail[cinds][inds_sort_H[:top33]]
+        sort_B = self.Blast[cinds][inds_sort_H[:top33]]
+
+        pH = sort_H.mean()
+        pT = sort_T.mean()
+        pB = sort_B.mean()
 
         return pH, pT, pB
 
@@ -1319,15 +1320,35 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.figure(figsize=(12, 12))
         ax = plt.subplot(111)
 
-        for clustn, clusti in self.fragments.items():
-            col1 = PolyCollection(self.verts_r[clusti] * 1e3, color=group_colors[clustn], edgecolor=None)
-            ax.add_collection(col1)
-            xi, yi = self.frag_xyr[clustn]
-            plt.text(xi * 1e3, yi * 1e3, 'frag_' + str(clustn), color='black',
-                     fontsize=18, fontweight='bold',
-                     horizontalalignment='center', verticalalignment='center')
+        txt_xoff = -4.0 * self.x_scale
+
+        # plot entire cluster:
+        colo = PolyCollection(self.verts_r * 1e3, color='NavajoWhite', edgecolor=None)
+        ax.add_collection(colo)
+
+        for fragn, wounds_arr in self.frags_and_wounds.items():
+
+            for jj, woundi in enumerate(wounds_arr): # plot wounds as red cells:
+                coli = PolyCollection(self.verts_r[woundi] * 1e3, color='Red', edgecolor=None)
+                ax.add_collection(coli)
+
+            # label the fragment:
+            xi, yi = self.frag_xyr[fragn]
+            plt.text(xi * 1e3 + txt_xoff, yi * 1e3, 'Fragment ' + str(fragn), color='black',
+                     fontsize=16, fontweight='bold',
+                     horizontalalignment='left', verticalalignment='center')
 
         plt.axis('equal')
+
+        # for clustn, clusti in self.fragments.items():
+        #     col1 = PolyCollection(self.verts_r[clusti] * 1e3, color=group_colors[clustn], edgecolor=None)
+        #     ax.add_collection(col1)
+        #     xi, yi = self.frag_xyr[clustn]
+        #     plt.text(xi * 1e3, yi * 1e3, 'frag_' + str(clustn), color='black',
+        #              fontsize=18, fontweight='bold',
+        #              horizontalalignment='center', verticalalignment='center')
+        #
+        # plt.axis('equal')
 
         if show_plot:
 

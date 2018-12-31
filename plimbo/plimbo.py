@@ -136,38 +136,38 @@ class PlimboRunner(object):
         self.master = master
 
 
-    def search(self, params=None, run_time_init=36000.0, factor=0.25, levels = 1, search_style = 'log',
-                    run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0, plot_frags = True,
-                    xscale=1.0, verbose=True, new_mesh=False, save_dir='Search_1',
-                    reset_clims=True, animate=False, plot=True, ani_type = 'Triplot',
-                    plot_type='Triplot', save_harness=False, harness_type='1D'):
-
-        # Create an instance of the model harness:
-
-        if harness_type == '1D':
-
-            master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
-                                  plot_frags = plot_frags,
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
-                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
-
-        elif harness_type == '2D':
-
-            master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
-                                  plot_frags = plot_frags,
-                                  verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
-                                  head_frags=self.head_frags, tail_frags=self.tail_frags)
-
-        else:
-            print("Harness type can only be '1D' or '2D'.")  # FIXME raise proper exception
-
-        # run a local search on the model, changing each parameter progressively:
-        master.run_search(factor = factor, levels = levels, search_style = search_style, verbose=verbose,
-                           run_time_init=run_time_init, run_time_sim=run_time_sim, run_time_step=run_time_step,
-                          run_time_sample=run_time_sample, reset_clims=reset_clims, plot=plot, plot_type = plot_type,
-                          animate = animate,  ani_type = ani_type, save_dir = save_dir, save_all = save_harness)
-
-        self.master = master
+    # def search(self, params=None, run_time_init=36000.0, factor=0.25, levels = 1, search_style = 'log',
+    #                 run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0, plot_frags = True,
+    #                 xscale=1.0, verbose=True, new_mesh=False, save_dir='Search_1',
+    #                 reset_clims=True, animate=False, plot=True, ani_type = 'Triplot',
+    #                 plot_type='Triplot', save_harness=False, harness_type='1D'):
+    #
+    #     # Create an instance of the model harness:
+    #
+    #     if harness_type == '1D':
+    #
+    #         master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='1D',
+    #                               plot_frags = plot_frags,
+    #                               verbose=verbose, new_mesh=new_mesh, savedir='Harness1D',
+    #                               head_frags=self.head_frags, tail_frags=self.tail_frags)
+    #
+    #     elif harness_type == '2D':
+    #
+    #         master = ModelHarness(self.fn_config, paramo=params, xscale=xscale, harness_type='2D',
+    #                               plot_frags = plot_frags,
+    #                               verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
+    #                               head_frags=self.head_frags, tail_frags=self.tail_frags)
+    #
+    #     else:
+    #         print("Harness type can only be '1D' or '2D'.")  # FIXME raise proper exception
+    #
+    #     # run a local search on the model, changing each parameter progressively:
+    #     master.run_search(factor = factor, levels = levels, search_style = search_style, verbose=verbose,
+    #                        run_time_init=run_time_init, run_time_sim=run_time_sim, run_time_step=run_time_step,
+    #                       run_time_sample=run_time_sample, reset_clims=reset_clims, plot=plot, plot_type = plot_type,
+    #                       animate = animate,  ani_type = ani_type, save_dir = save_dir, save_all = save_harness)
+    #
+    #     self.master = master
 
 
     def scaleRNAi(self, params=None, xscales = None,  RNAi_vect = None, RNAi_tags = None, plot_frags = True,
@@ -325,18 +325,18 @@ class PlimboRunner(object):
         if verbose:
             print("Exported summary data tables.")
 
-    def frag_plot(self, loadpath, params = None, xscale = None, new_mesh = False,
+    def frag_plot(self, loadpath, params = None, new_mesh = False,
                   save_dir = 'Fragments', verbose = True, harness_type = '2D'):
 
         if harness_type == '1D':
 
-            master = ModelHarness(self.fn_config, paramo = params, xscale = xscale, harness_type = '1D',
+            master = ModelHarness(self.fn_config, paramo = params, harness_type = '1D',
                                   verbose = verbose, new_mesh=new_mesh, savedir = 'Harness1D',
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 
         elif harness_type == '2D':
 
-            master = ModelHarness(self.fn_config, paramo = params, xscale=xscale, harness_type='2D',
+            master = ModelHarness(self.fn_config, paramo = params, harness_type='2D',
                                   verbose=verbose, new_mesh=new_mesh, savedir='Harness2D',
                                   head_frags=self.head_frags, tail_frags=self.tail_frags)
 

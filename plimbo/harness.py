@@ -240,107 +240,107 @@ class ModelHarness(object):
             self.save(fsave)
 
 
-    def run_search(self, factor = 0.8, levels = 1, search_style = 'log', verbose=True,
-                   run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60, run_time_sample=50,
-                   reset_clims=True, plot=True, animate = False, save_dir = 'Search1', save_all = False,
-                   fixed_params = None, plot_type = 'Triplot', ani_type = 'Triplot', data_output = True):
-
-        # general saving directory for this procedure:
-        self.savedir_search = os.path.join(self.savepath, save_dir)
-        os.makedirs(self.savedir_search, exist_ok=True)
-
-        self.subfolders_dict['search'] = self.savedir_search
-
-        # Create datatags for the harness to save data series to:
-        self.datatags = []
-
-        self.datatags.append('base')
-
-        # Create the parameters matrix:
-        self.pm.create_search_matrix(factor=factor, levels=levels, style=search_style)
-        self.has_autoparams = True
-
-        self.outputs = []  # Storage array for all last timestep outputs
-        self.heteromorphoses = [] # Storage array for heteromorph probabilities
-
-        for ii, params_list in enumerate(self.pm.params_M):  # Step through the parameters matrix
-
-            try:
-
-                if verbose is True:
-                    print('Run ', ii + 1, " of ", self.pm.N_runs)
-
-                data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
-                data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
-                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
-
-                # convert the array to a dictionary:
-                run_params = OrderedDict(zip(self.pm.param_labels, params_list))
-
-                # create a model using the specific parameters from the params manager for this run:
-                self.model.model_init(self.config_fn, run_params, xscale=self.xscale,
-                                    verbose=self.verbose, new_mesh=self.new_mesh)
-
-                # Run initialization of full model:
-                self.model.initialize(knockdown= None,
-                                       run_time=run_time_init,
-                                       run_time_step=run_time_step,
-                                       run_time_sample=run_time_sample,
-                                       reset_clims = reset_clims)
-
-                self.model.simulate(knockdown= None,
-                                       run_time=run_time_sim,
-                                       run_time_step=run_time_step,
-                                       run_time_sample=run_time_sample,
-                                       reset_clims = reset_clims)
-
-                # if we're on the first timestep, set the reference data set:
-                if ii == 0:
-                    self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
-
-                # if we're past the first timesep, prepare messages for the plots about how params have changed:
-                if ii > 0:
-                    self.write_plot_msg(ii)
-
-
-                data_dict_inits['base'] = self.model.molecules_time.copy()
-                data_dict_sims['base'] = self.model.molecules_sim_time.copy()
-
-                self.outputs.append([data_dict_inits, data_dict_sims])
-
-                self.model.process_markov(self.head_frags, self.tail_frags)
-                data_dict_prob['base'] = self.model.morph_probs.copy()
-                self.heteromorphoses.append(data_dict_prob)
-
-                if plot:
-                    self.plot_single('base', ii, harness_type='search', plot_type=plot_type, output_type='init',
-                                     ref_data = self.ref_data[0], extra_text = self.plot_info_msg)
-                    self.plot_single('base', ii, harness_type='search', plot_type=plot_type, output_type='sim',
-                                     ref_data=self.ref_data[1], extra_text = self.plot_info_msg)
-
-                if animate:
-                    self.ani_single('base', ii, harness_type='search', ani_type=ani_type,
-                                    output_type='init', ref_data = self.ref_data[0], extra_text = self.plot_info_msg)
-                    self.ani_single('base', ii, harness_type='search', ani_type=ani_type,
-                                    output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
-
-                if verbose is True:
-                    print('----------------')
-
-            except:
-
-                print('***************************************************')
-                print("Run", ii +1, "has become unstable and been terminated.")
-                print('***************************************************')
-
-        if data_output:
-            self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_search)
-            self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_search)
-            self.output_heteromorphs(save_dir=self.savedir_sensitivity)
-
-        if save_all:
-            fsave = os.path.join(self.savedir_search, "Master.plimbo")
-            self.save(fsave)
+    # def run_search(self, factor = 0.8, levels = 1, search_style = 'log', verbose=True,
+    #                run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60, run_time_sample=50,
+    #                reset_clims=True, plot=True, animate = False, save_dir = 'Search1', save_all = False,
+    #                fixed_params = None, plot_type = 'Triplot', ani_type = 'Triplot', data_output = True):
+    #
+    #     # general saving directory for this procedure:
+    #     self.savedir_search = os.path.join(self.savepath, save_dir)
+    #     os.makedirs(self.savedir_search, exist_ok=True)
+    #
+    #     self.subfolders_dict['search'] = self.savedir_search
+    #
+    #     # Create datatags for the harness to save data series to:
+    #     self.datatags = []
+    #
+    #     self.datatags.append('base')
+    #
+    #     # Create the parameters matrix:
+    #     self.pm.create_search_matrix(factor=factor, levels=levels, style=search_style)
+    #     self.has_autoparams = True
+    #
+    #     self.outputs = []  # Storage array for all last timestep outputs
+    #     self.heteromorphoses = [] # Storage array for heteromorph probabilities
+    #
+    #     for ii, params_list in enumerate(self.pm.params_M):  # Step through the parameters matrix
+    #
+    #         try:
+    #
+    #             if verbose is True:
+    #                 print('Run ', ii + 1, " of ", self.pm.N_runs)
+    #
+    #             data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
+    #             data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+    #             data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
+    #
+    #             # convert the array to a dictionary:
+    #             run_params = OrderedDict(zip(self.pm.param_labels, params_list))
+    #
+    #             # create a model using the specific parameters from the params manager for this run:
+    #             self.model.model_init(self.config_fn, run_params, xscale=self.xscale,
+    #                                 verbose=self.verbose, new_mesh=self.new_mesh)
+    #
+    #             # Run initialization of full model:
+    #             self.model.initialize(knockdown= None,
+    #                                    run_time=run_time_init,
+    #                                    run_time_step=run_time_step,
+    #                                    run_time_sample=run_time_sample,
+    #                                    reset_clims = reset_clims)
+    #
+    #             self.model.simulate(knockdown= None,
+    #                                    run_time=run_time_sim,
+    #                                    run_time_step=run_time_step,
+    #                                    run_time_sample=run_time_sample,
+    #                                    reset_clims = reset_clims)
+    #
+    #             # if we're on the first timestep, set the reference data set:
+    #             if ii == 0:
+    #                 self.ref_data = [self.model.molecules_time.copy(), self.model.molecules_sim_time.copy()]
+    #
+    #             # if we're past the first timesep, prepare messages for the plots about how params have changed:
+    #             if ii > 0:
+    #                 self.write_plot_msg(ii)
+    #
+    #
+    #             data_dict_inits['base'] = self.model.molecules_time.copy()
+    #             data_dict_sims['base'] = self.model.molecules_sim_time.copy()
+    #
+    #             self.outputs.append([data_dict_inits, data_dict_sims])
+    #
+    #             self.model.process_markov(self.head_frags, self.tail_frags)
+    #             data_dict_prob['base'] = self.model.morph_probs.copy()
+    #             self.heteromorphoses.append(data_dict_prob)
+    #
+    #             if plot:
+    #                 self.plot_single('base', ii, harness_type='search', plot_type=plot_type, output_type='init',
+    #                                  ref_data = self.ref_data[0], extra_text = self.plot_info_msg)
+    #                 self.plot_single('base', ii, harness_type='search', plot_type=plot_type, output_type='sim',
+    #                                  ref_data=self.ref_data[1], extra_text = self.plot_info_msg)
+    #
+    #             if animate:
+    #                 self.ani_single('base', ii, harness_type='search', ani_type=ani_type,
+    #                                 output_type='init', ref_data = self.ref_data[0], extra_text = self.plot_info_msg)
+    #                 self.ani_single('base', ii, harness_type='search', ani_type=ani_type,
+    #                                 output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
+    #
+    #             if verbose is True:
+    #                 print('----------------')
+    #
+    #         except:
+    #
+    #             print('***************************************************')
+    #             print("Run", ii +1, "has become unstable and been terminated.")
+    #             print('***************************************************')
+    #
+    #     if data_output:
+    #         self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_search)
+    #         self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_search)
+    #         self.output_heteromorphs(save_dir=self.savedir_sensitivity)
+    #
+    #     if save_all:
+    #         fsave = os.path.join(self.savedir_search, "Master.plimbo")
+    #         self.save(fsave)
 
     def run_searchRNAi(self, RNAi_series = None, RNAi_names = None, factor = 0.8, levels = 1, search_style = 'log',
                         verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0, save_all = False,
@@ -364,9 +364,10 @@ class ModelHarness(object):
 
         self.datatags.append('base')
 
-        # add in new datatags for RNAi_series
-        for rnai_n in RNAi_names:
-            self.datatags.append(rnai_n)
+        if len(RNAi_series): # if there's anything in the RNAi series:
+            # add in new datatags for RNAi_series
+            for rnai_n in RNAi_names:
+                self.datatags.append(rnai_n)
 
         # Create the parameters matrix:
         self.pm.create_search_matrix(factor=factor, levels = levels, style = search_style)
@@ -436,55 +437,57 @@ class ModelHarness(object):
                 if verbose is True:
                     print('----------------')
 
-                for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
+                if len(RNAi_series): # if there's anything in the RNAi test series:
 
-                    if verbose is True:
-                        print('Runing RNAi Sequence ', rnai_n)
+                    for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
 
-                    # Reinitialize the model again:
-                    self.model.model_init(self.config_fn, run_params, xscale=self.xscale,
-                                          verbose=self.verbose, new_mesh=self.new_mesh)
+                        if verbose is True:
+                            print('Runing RNAi Sequence ', rnai_n)
 
-                    # Run initialization phase of full model:
-                    self.model.initialize(knockdown=None,
-                                          run_time=run_time_init,
-                                          run_time_step=run_time_step,
-                                          run_time_sample=run_time_sample,
-                                          reset_clims=reset_clims)
+                        # Reinitialize the model again:
+                        self.model.model_init(self.config_fn, run_params, xscale=self.xscale,
+                                              verbose=self.verbose, new_mesh=self.new_mesh)
 
-                    if run_time_reinit > 0.0:  # if there is a reinitialization phase (RNAi applied, no cutting)
-                        self.model.reinitialize(knockdown=rnai_s,
-                                                run_time=run_time_reinit,
-                                                run_time_step=run_time_step,
-                                                run_time_sample=run_time_sample
-                                                )
-                    # Run the simulation with RNAi intervention applied:
-                    self.model.simulate(knockdown=rnai_s,
-                                        run_time=run_time_sim,
-                                        run_time_step=run_time_step,
-                                        run_time_sample=run_time_sample,
-                                        reset_clims=False)
+                        # Run initialization phase of full model:
+                        self.model.initialize(knockdown=None,
+                                              run_time=run_time_init,
+                                              run_time_step=run_time_step,
+                                              run_time_sample=run_time_sample,
+                                              reset_clims=reset_clims)
 
-                    # Save whole molecules master arrays to their respective data dictionaries:
-                    data_dict_inits[rnai_n] = self.model.molecules_time.copy()
-                    data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
+                        if run_time_reinit > 0.0:  # if there is a reinitialization phase (RNAi applied, no cutting)
+                            self.model.reinitialize(knockdown=rnai_s,
+                                                    run_time=run_time_reinit,
+                                                    run_time_step=run_time_step,
+                                                    run_time_sample=run_time_sample
+                                                    )
+                        # Run the simulation with RNAi intervention applied:
+                        self.model.simulate(knockdown=rnai_s,
+                                            run_time=run_time_sim,
+                                            run_time_step=run_time_step,
+                                            run_time_sample=run_time_sample,
+                                            reset_clims=False)
 
-                    self.model.process_markov(self.head_frags, self.tail_frags)
-                    data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+                        # Save whole molecules master arrays to their respective data dictionaries:
+                        data_dict_inits[rnai_n] = self.model.molecules_time.copy()
+                        data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
-                    if plot:
-                        self.plot_single(rnai_n, ii, harness_type='searchRNAi', plot_type=plot_type,
-                                         output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
+                        self.model.process_markov(self.head_frags, self.tail_frags)
+                        data_dict_prob[rnai_n] = self.model.morph_probs.copy()
 
-                    if animate:
-                        self.ani_single(rnai_n, ii, harness_type='searchRNAi', ani_type=ani_type,
-                                        output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
+                        if plot:
+                            self.plot_single(rnai_n, ii, harness_type='searchRNAi', plot_type=plot_type,
+                                             output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
 
-                    if verbose is True:
-                        print('----------------')
+                        if animate:
+                            self.ani_single(rnai_n, ii, harness_type='searchRNAi', ani_type=ani_type,
+                                            output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg)
 
-                self.outputs.append([data_dict_inits, data_dict_sims])
-                self.heteromorphoses.append(data_dict_prob)
+                        if verbose is True:
+                            print('----------------')
+
+                    self.outputs.append([data_dict_inits, data_dict_sims])
+                    self.heteromorphoses.append(data_dict_prob)
 
             except:
 
@@ -502,94 +505,94 @@ class ModelHarness(object):
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
             self.save(fsave)
 
-    def run_scale(self, xscales = None, verbose=True,
-                       run_time_init=36000.0, run_time_sim=36000.0,
-                       run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
-                       animate=False, save_dir='scale1', plot_type = 'Triplot',
-                       ani_type = 'Triplot', save_all = False, data_output = True
-                       ):
-
-        if xscales is None:
-            xscales = self.xscales_default
-
-        # general saving directory for this procedure:
-        self.savedir_scale = os.path.join(self.savepath, save_dir)
-        os.makedirs(self.savedir_scale, exist_ok=True)
-
-        self.subfolders_dict['scale'] = self.savedir_scale
-
-        # Create datatags for the harness to save data series to:
-        self.datatags = []
-
-        self.datatags.append('base')
-
-        self.outputs = []  # Storage array for all last timestep outputs
-        self.heteromorphoses = [] # Storage array for heteromorph probabilities
-
-        for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
-
-            try:
-
-                if verbose is True:
-                    print('Run ', ii + 1, " of ", len(xscales))
-
-                data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
-                data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
-                data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
-
-                # create a model using the specific parameters from the params manager for this run at this scale:
-                self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
-                                      verbose=self.verbose, new_mesh=self.new_mesh)
-
-                # Run initialization of full model:
-                self.model.initialize(knockdown=None,
-                                      run_time=run_time_init,
-                                      run_time_step=run_time_step,
-                                      run_time_sample=run_time_sample,
-                                      reset_clims=reset_clims)
-
-                self.model.simulate(knockdown=None,
-                                    run_time=run_time_sim,
-                                    run_time_step=run_time_step,
-                                    run_time_sample=run_time_sample,
-                                    reset_clims=reset_clims)
-
-                data_dict_inits['base'] = self.model.molecules_time.copy()
-                data_dict_sims['base'] = self.model.molecules_sim_time.copy()
-
-                self.outputs.append([data_dict_inits, data_dict_sims])
-
-                self.model.process_markov(self.head_frags, self.tail_frags)
-                data_dict_prob['base'] = self.model.morph_probs.copy()
-                self.heteromorphoses.append(data_dict_prob)
-
-                if plot:
-                    self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
-                                     output_type='init', extra_text = self.plot_info_msg)
-                    self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
-                                     output_type='sim', extra_text = self.plot_info_msg)
-
-                if animate:
-                    self.ani_single('base', ii, harness_type='scale', ani_type=ani_type,
-                                    output_type='init', extra_text = self.plot_info_msg)
-                    self.ani_single('base', ii, harness_type='scale', ani_type=ani_type,
-                                    output_type='sim', extra_text = self.plot_info_msg)
-
-                if verbose is True:
-                    print('----------------')
-
-            except:
-
-                print('***************************************************')
-                print("Run", ii +1, "has become unstable and been terminated.")
-                print('***************************************************')
-
-        if data_output:
-            self.output_heteromorphs(save_dir=self.savedir_scale)
-
-        if save_all:
-            fsave = os.path.join(self.savedir_scale, "Master.gz")
-            self.save(fsave)
+    # def run_scale(self, xscales = None, verbose=True,
+    #                    run_time_init=36000.0, run_time_sim=36000.0,
+    #                    run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
+    #                    animate=False, save_dir='scale1', plot_type = 'Triplot',
+    #                    ani_type = 'Triplot', save_all = False, data_output = True
+    #                    ):
+    #
+    #     if xscales is None:
+    #         xscales = self.xscales_default
+    #
+    #     # general saving directory for this procedure:
+    #     self.savedir_scale = os.path.join(self.savepath, save_dir)
+    #     os.makedirs(self.savedir_scale, exist_ok=True)
+    #
+    #     self.subfolders_dict['scale'] = self.savedir_scale
+    #
+    #     # Create datatags for the harness to save data series to:
+    #     self.datatags = []
+    #
+    #     self.datatags.append('base')
+    #
+    #     self.outputs = []  # Storage array for all last timestep outputs
+    #     self.heteromorphoses = [] # Storage array for heteromorph probabilities
+    #
+    #     for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
+    #
+    #         try:
+    #
+    #             if verbose is True:
+    #                 print('Run ', ii + 1, " of ", len(xscales))
+    #
+    #             data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
+    #             data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
+    #             data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
+    #
+    #             # create a model using the specific parameters from the params manager for this run at this scale:
+    #             self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
+    #                                   verbose=self.verbose, new_mesh=self.new_mesh)
+    #
+    #             # Run initialization of full model:
+    #             self.model.initialize(knockdown=None,
+    #                                   run_time=run_time_init,
+    #                                   run_time_step=run_time_step,
+    #                                   run_time_sample=run_time_sample,
+    #                                   reset_clims=reset_clims)
+    #
+    #             self.model.simulate(knockdown=None,
+    #                                 run_time=run_time_sim,
+    #                                 run_time_step=run_time_step,
+    #                                 run_time_sample=run_time_sample,
+    #                                 reset_clims=reset_clims)
+    #
+    #             data_dict_inits['base'] = self.model.molecules_time.copy()
+    #             data_dict_sims['base'] = self.model.molecules_sim_time.copy()
+    #
+    #             self.outputs.append([data_dict_inits, data_dict_sims])
+    #
+    #             self.model.process_markov(self.head_frags, self.tail_frags)
+    #             data_dict_prob['base'] = self.model.morph_probs.copy()
+    #             self.heteromorphoses.append(data_dict_prob)
+    #
+    #             if plot:
+    #                 self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
+    #                                  output_type='init', extra_text = self.plot_info_msg)
+    #                 self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
+    #                                  output_type='sim', extra_text = self.plot_info_msg)
+    #
+    #             if animate:
+    #                 self.ani_single('base', ii, harness_type='scale', ani_type=ani_type,
+    #                                 output_type='init', extra_text = self.plot_info_msg)
+    #                 self.ani_single('base', ii, harness_type='scale', ani_type=ani_type,
+    #                                 output_type='sim', extra_text = self.plot_info_msg)
+    #
+    #             if verbose is True:
+    #                 print('----------------')
+    #
+    #         except:
+    #
+    #             print('***************************************************')
+    #             print("Run", ii +1, "has become unstable and been terminated.")
+    #             print('***************************************************')
+    #
+    #     if data_output:
+    #         self.output_heteromorphs(save_dir=self.savedir_scale)
+    #
+    #     if save_all:
+    #         fsave = os.path.join(self.savedir_scale, "Master.gz")
+    #         self.save(fsave)
 
     def run_scaleRNAi(self, xscales = None, RNAi_series = None, RNAi_names = None, verbose=True,
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
@@ -617,9 +620,10 @@ class ModelHarness(object):
 
         self.datatags.append('base')
 
-        # add in new datatags for RNAi_series
-        for rnai_n in RNAi_names:
-            self.datatags.append(rnai_n)
+        if len(RNAi_series): # if there's anything in the series:
+            # add in new datatags for RNAi_series
+            for rnai_n in RNAi_names:
+                self.datatags.append(rnai_n)
 
         self.outputs = []  # Storage array for all last timestep outputs
         self.heteromorphoses = [] # Storage array for heteromorph probabilities
@@ -676,55 +680,58 @@ class ModelHarness(object):
                 if verbose is True:
                     print('----------------')
 
-                for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
 
-                    if verbose is True:
-                        print('Runing RNAi Sequence ', rnai_n)
+                if len(RNAi_series): # if there's anything in the series, run it:
 
-                    # Reinitialize the model again:
-                    self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
-                                          verbose=self.verbose, new_mesh=self.new_mesh)
+                    for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
 
-                    # Run initialization phase of full model:
-                    self.model.initialize(knockdown=None,
-                                          run_time=run_time_init,
-                                          run_time_step=run_time_step,
-                                          run_time_sample=run_time_sample,
-                                          reset_clims=reset_clims)
+                        if verbose is True:
+                            print('Runing RNAi Sequence ', rnai_n)
 
-                    if run_time_reinit > 0.0:  # if there is a reinitialization phase (RNAi applied, no cutting)
-                        self.model.reinitialize(knockdown=rnai_s,
-                                                run_time=run_time_reinit,
-                                                run_time_step=run_time_step,
-                                                run_time_sample=run_time_sample
-                                                )
-                    # Run the simulation with RNAi intervention applied:
-                    self.model.simulate(knockdown=rnai_s,
-                                        run_time=run_time_sim,
-                                        run_time_step=run_time_step,
-                                        run_time_sample=run_time_sample,
-                                        reset_clims=False)
+                        # Reinitialize the model again:
+                        self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
+                                              verbose=self.verbose, new_mesh=self.new_mesh)
 
-                    # Save whole molecules master arrays to their respective data dictionaries:
-                    data_dict_inits[rnai_n] = self.model.molecules_time.copy()
-                    data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
+                        # Run initialization phase of full model:
+                        self.model.initialize(knockdown=None,
+                                              run_time=run_time_init,
+                                              run_time_step=run_time_step,
+                                              run_time_sample=run_time_sample,
+                                              reset_clims=reset_clims)
 
-                    self.model.process_markov(self.head_frags, self.tail_frags)
-                    data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+                        if run_time_reinit > 0.0:  # if there is a reinitialization phase (RNAi applied, no cutting)
+                            self.model.reinitialize(knockdown=rnai_s,
+                                                    run_time=run_time_reinit,
+                                                    run_time_step=run_time_step,
+                                                    run_time_sample=run_time_sample
+                                                    )
+                        # Run the simulation with RNAi intervention applied:
+                        self.model.simulate(knockdown=rnai_s,
+                                            run_time=run_time_sim,
+                                            run_time_step=run_time_step,
+                                            run_time_sample=run_time_sample,
+                                            reset_clims=False)
 
-                    if plot:
-                        self.plot_single(rnai_n, ii, harness_type='scaleRNAi', plot_type=plot_type,
-                                         output_type='sim', ref_data=self.ref_data[1])
+                        # Save whole molecules master arrays to their respective data dictionaries:
+                        data_dict_inits[rnai_n] = self.model.molecules_time.copy()
+                        data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
-                    if animate:
-                        self.ani_single(rnai_n, ii, harness_type='scaleRNAi', ani_type=ani_type,
-                                        output_type='sim', ref_data=self.ref_data[1])
+                        self.model.process_markov(self.head_frags, self.tail_frags)
+                        data_dict_prob[rnai_n] = self.model.morph_probs.copy()
 
-                    if verbose is True:
-                        print('----------------')
+                        if plot:
+                            self.plot_single(rnai_n, ii, harness_type='scaleRNAi', plot_type=plot_type,
+                                             output_type='sim', ref_data=self.ref_data[1])
 
-                self.outputs.append([data_dict_inits, data_dict_sims])
-                self.heteromorphoses.append(data_dict_prob)
+                        if animate:
+                            self.ani_single(rnai_n, ii, harness_type='scaleRNAi', ani_type=ani_type,
+                                            output_type='sim', ref_data=self.ref_data[1])
+
+                        if verbose is True:
+                            print('----------------')
+
+                    self.outputs.append([data_dict_inits, data_dict_sims])
+                    self.heteromorphoses.append(data_dict_prob)
 
             except:
 
@@ -763,10 +770,12 @@ class ModelHarness(object):
 
         self.datatags.append('base')
 
-        # add in new datatags for RNAi_series
-        for rnai_n in RNAi_names:
-            data_tag = rnai_n
-            self.datatags.append(data_tag)
+        if len(RNAi_series): # if there's anything in the series, run it:
+
+            # add in new datatags for RNAi_series
+            for rnai_n in RNAi_names:
+                data_tag = rnai_n
+                self.datatags.append(data_tag)
 
         self.outputs = []  # Storage array for outputs of each model itteration
         self.heteromorphoses = [] # Storage array for heteromorph probabilities
@@ -821,54 +830,55 @@ class ModelHarness(object):
         if verbose is True:
             print('----------------')
 
-        for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
+        if len(RNAi_series): # if there's anything in the RNAi test series, run it:
 
-            if verbose is True:
-                print('Runing RNAi Sequence ', rnai_n)
+            for rnai_s, rnai_n in zip(RNAi_series, RNAi_names):
 
-            # Reinitialize the model again:
-            self.model.model_init(self.config_fn, self.paramo, xscale=self.xscale,
-                                  verbose=self.verbose, new_mesh=self.new_mesh)
+                if verbose is True:
+                    print('Runing RNAi Sequence ', rnai_n)
 
-            # Run initialization phase of full model:
-            self.model.initialize(knockdown=None,
-                                  run_time=run_time_init,
-                                  run_time_step=run_time_step,
-                                  run_time_sample=run_time_sample,
-                                  reset_clims=reset_clims)
+                # Reinitialize the model again:
+                self.model.model_init(self.config_fn, self.paramo, xscale=self.xscale,
+                                      verbose=self.verbose, new_mesh=self.new_mesh)
 
-            if run_time_reinit > 0.0: # if there is a reinitialization phase (RNAi applied, no cutting)
-                self.model.reinitialize(knockdown=rnai_s,
-                                    run_time=run_time_reinit,
-                                    run_time_step=run_time_step,
-                                    run_time_sample=run_time_sample
-                                   )
-            # Run the simulation with RNAi intervention applied:
-            self.model.simulate(knockdown=rnai_s,
-                            run_time=run_time_sim,
-                            run_time_step=run_time_step,
-                            run_time_sample=run_time_sample,
-                            reset_clims=False)
+                # Run initialization phase of full model:
+                self.model.initialize(knockdown=None,
+                                      run_time=run_time_init,
+                                      run_time_step=run_time_step,
+                                      run_time_sample=run_time_sample,
+                                      reset_clims=reset_clims)
 
-            # Save whole molecules master arrays to their respective data dictionaries:
-            data_dict_inits[rnai_n] = self.model.molecules_time.copy()
-            data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
+                if run_time_reinit > 0.0: # if there is a reinitialization phase (RNAi applied, no cutting)
+                    self.model.reinitialize(knockdown=rnai_s,
+                                        run_time=run_time_reinit,
+                                        run_time_step=run_time_step,
+                                        run_time_sample=run_time_sample
+                                       )
+                # Run the simulation with RNAi intervention applied:
+                self.model.simulate(knockdown=rnai_s,
+                                run_time=run_time_sim,
+                                run_time_step=run_time_step,
+                                run_time_sample=run_time_sample,
+                                reset_clims=False)
 
-            self.model.process_markov(self.head_frags, self.tail_frags)
-            data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+                # Save whole molecules master arrays to their respective data dictionaries:
+                data_dict_inits[rnai_n] = self.model.molecules_time.copy()
+                data_dict_sims[rnai_n] = self.model.molecules_sim_time.copy()
 
-            if plot:
-                self.plot_single(rnai_n, 0, harness_type='simRNAi', plot_type=plot_type,
-                                 output_type='sim', ref_data=self.ref_data[1])
+                self.model.process_markov(self.head_frags, self.tail_frags)
+                data_dict_prob[rnai_n] = self.model.morph_probs.copy()
+
+                if plot:
+                    self.plot_single(rnai_n, 0, harness_type='simRNAi', plot_type=plot_type,
+                                     output_type='sim', ref_data=self.ref_data[1])
 
 
-            if animate:
-                self.ani_single(rnai_n, 0, harness_type='simRNAi', ani_type=ani_type,
-                                output_type='sim', ref_data=self.ref_data[1])
+                if animate:
+                    self.ani_single(rnai_n, 0, harness_type='simRNAi', ani_type=ani_type,
+                                    output_type='sim', ref_data=self.ref_data[1])
 
-            if verbose is True:
-                print('----------------')
-
+                if verbose is True:
+                    print('----------------')
 
         self.outputs.append([data_dict_inits, data_dict_sims])
         self.heteromorphoses.append(data_dict_prob)
