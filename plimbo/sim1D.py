@@ -364,10 +364,11 @@ class PlanariaGRN1D(PlanariaGRNABC):
         g_bc, m_bc = self.get_gradient(self.c_BC, self.runtype)
 
         # Motor transport term:
-        conv_term = m_bc*self.u*self.u_bc*kinesin
+        # conv_term = m_bc*self.u*self.u_bc*kinesin
 
-        flux = -g_bc*self.Do + conv_term
-        # flux = -g_bc * self.Do
+        # flux = -g_bc*self.Do + conv_term
+
+        flux = -g_bc * self.Do
 
         # divergence of the flux
         div_flux = self.get_div(flux, self.runtype)

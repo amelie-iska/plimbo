@@ -58,7 +58,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'd_bc_deg': 3.0e-3,
                 'K_bc_camp': 1.0,
                 'n_bc_camp': 2.0,
-                'u_bc': 1.0e-7,
+                # 'u_bc': 1.0e-7,
 
                 # ERK parameters
                 'K_erk_bc': 10.0,
@@ -175,7 +175,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.n_bc_apc = self.pdict['n_bc_apc']
         self.K_bc_camp = self.pdict['K_bc_camp']
         self.n_bc_camp = self.pdict['n_bc_camp']
-        self.u_bc = self.pdict['u_bc']
+        # self.u_bc = self.pdict['u_bc']
 
         self.c_BC = np.ones(self.cdl)
         self.c_BC_time = []

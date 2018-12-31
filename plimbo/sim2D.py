@@ -558,13 +558,17 @@ class PlanariaGRN2D(PlanariaGRNABC):
         _, g_bcx, g_bcy = self.cells.gradient(self.c_BC)
         m_bc = self.cells.meanval(self.c_BC)
 
-        # Motor transport term:
-        conv_term_x = m_bc * self.ux * self.u_bc * kinesin
-        conv_term_y = m_bc * self.uy * self.u_bc * kinesin
+        # # Motor transport term:
+        # conv_term_x = m_bc * self.ux * self.u_bc * kinesin
+        # conv_term_y = m_bc * self.uy * self.u_bc * kinesin
+
+        # # flux:
+        # fx = -g_bcx * self.Do + conv_term_x
+        # fy = -g_bcy * self.Do + conv_term_y
 
         # flux:
-        fx = -g_bcx * self.Do + conv_term_x
-        fy = -g_bcy * self.Do + conv_term_y
+        fx = -g_bcx * self.Do
+        fy = -g_bcy * self.Do
 
         # divergence of the flux:
         div_flux = self.cells.div(fx, fy, cbound=True)
