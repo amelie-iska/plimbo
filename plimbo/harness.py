@@ -126,19 +126,19 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 0.1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 0.05, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 0.01, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 0.0, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 0.01, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 0.0, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 0.01, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 1, 'apc': 0.0, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 0.01, 'wnt': 1, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 0.0, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.01, 'hh': 1, 'camp': 1,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.0, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.01, 'camp': 1,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.0, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 0.1, 'kinesin': 1},
@@ -517,100 +517,11 @@ class ModelHarness(object):
         if data_output:
             self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
-            self.output_heteromorphs(save_dir=self.savedir_sensitivity)
+            self.output_heteromorphs(save_dir=self.savedir_searchRNAi)
 
         if save_all:
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
             self.save(fsave)
-
-    # def run_scale(self, xscales = None, verbose=True,
-    #                    run_time_init=36000.0, run_time_sim=36000.0,
-    #                    run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
-    #                    animate=False, save_dir='scale1', plot_type = 'Triplot',
-    #                    ani_type = 'Triplot', save_all = False, data_output = True
-    #                    ):
-    #
-    #     if xscales is None:
-    #         xscales = self.xscales_default
-    #
-    #     # general saving directory for this procedure:
-    #     self.savedir_scale = os.path.join(self.savepath, save_dir)
-    #     os.makedirs(self.savedir_scale, exist_ok=True)
-    #
-    #     self.subfolders_dict['scale'] = self.savedir_scale
-    #
-    #     # Create datatags for the harness to save data series to:
-    #     self.datatags = []
-    #
-    #     self.datatags.append('base')
-    #
-    #     self.outputs = []  # Storage array for all last timestep outputs
-    #     self.heteromorphoses = [] # Storage array for heteromorph probabilities
-    #
-    #     for ii, xxs in enumerate(xscales):  # Step through the x-scaling factors
-    #
-    #         try:
-    #
-    #             if verbose is True:
-    #                 print('Run ', ii + 1, " of ", len(xscales))
-    #
-    #             data_dict_inits = OrderedDict()  # Storage array for full molecules array created in each model init
-    #             data_dict_sims = OrderedDict()  # Storage array for full molecules array created in each model sim
-    #             data_dict_prob = OrderedDict()  # storage of fragment probabilities for each itteration
-    #
-    #             # create a model using the specific parameters from the params manager for this run at this scale:
-    #             self.model.model_init(self.config_fn, self.paramo, xscale=xxs,
-    #                                   verbose=self.verbose, new_mesh=self.new_mesh)
-    #
-    #             # Run initialization of full model:
-    #             self.model.initialize(knockdown=None,
-    #                                   run_time=run_time_init,
-    #                                   run_time_step=run_time_step,
-    #                                   run_time_sample=run_time_sample,
-    #                                   reset_clims=reset_clims)
-    #
-    #             self.model.simulate(knockdown=None,
-    #                                 run_time=run_time_sim,
-    #                                 run_time_step=run_time_step,
-    #                                 run_time_sample=run_time_sample,
-    #                                 reset_clims=reset_clims)
-    #
-    #             data_dict_inits['base'] = self.model.molecules_time.copy()
-    #             data_dict_sims['base'] = self.model.molecules_sim_time.copy()
-    #
-    #             self.outputs.append([data_dict_inits, data_dict_sims])
-    #
-    #             self.model.process_markov(self.head_frags, self.tail_frags)
-    #             data_dict_prob['base'] = self.model.morph_probs.copy()
-    #             self.heteromorphoses.append(data_dict_prob)
-    #
-    #             if plot:
-    #                 self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
-    #                                  output_type='init', extra_text = self.plot_info_msg)
-    #                 self.plot_single('base', ii, harness_type='scale', plot_type=plot_type,
-    #                                  output_type='sim', extra_text = self.plot_info_msg)
-    #
-    #             if animate:
-    #                 self.ani_single('base', ii, harness_type='scale', ani_type=ani_type,
-    #                                 output_type='init', extra_text = self.plot_info_msg)
-    #                 self.ani_single('base', ii, harness_type='scale', ani_type=ani_type,
-    #                                 output_type='sim', extra_text = self.plot_info_msg)
-    #
-    #             if verbose is True:
-    #                 print('----------------')
-    #
-    #         except:
-    #
-    #             print('***************************************************')
-    #             print("Run", ii +1, "has become unstable and been terminated.")
-    #             print('***************************************************')
-    #
-    #     if data_output:
-    #         self.output_heteromorphs(save_dir=self.savedir_scale)
-    #
-    #     if save_all:
-    #         fsave = os.path.join(self.savedir_scale, "Master.gz")
-    #         self.save(fsave)
 
     def run_scaleRNAi(self, xscales = None, RNAi_series = None, RNAi_names = None, verbose=True,
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,

@@ -317,7 +317,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 \
         """
 
-        maxd = dmax * self.p.cell_radius  # maximum search distance to nearest-neighbours
+        maxd = dmax*self.p.cell_radius*self.x_scale  # maximum search distance to nearest-neighbours
 
         cell_centres = self.XY[cinds]  # get relevant cloud of x,y points to cluster
 
