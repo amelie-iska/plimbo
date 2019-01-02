@@ -712,7 +712,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 ref = ref_data[1][substance][ti]
                 carray = self.molecules_sim_time[substance][ti]
 
-            diff = ((carray - ref)/ref).mean()*100 # percent difference initial to final
+            diffi = ((carray - ref)/ref)*100 # percent difference initial to final at each data point
+            diff = np.sum(diffi)*(1/self.cdl) # average percent difference whole model
 
         else:
             diff = None

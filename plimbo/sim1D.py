@@ -583,7 +583,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
 
     def triplot(self, ti, plot_type = 'init',
-                fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0,
+                fname = 'Triplot_', dirsave = None, reso = 150, linew = 3.0, axisoff = False,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                       ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
@@ -730,7 +730,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
     def biplot(self, ti, plot_type = 'init', fname = 'Biplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
-               ref_data=None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+               ref_data=None, extra_text = None, txt_x = 0.05, txt_y = 0.92, axisoff = False):
 
 
         if cmaps is None:
@@ -859,7 +859,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         plt.savefig(fname, format='png', dpi=reso,  transparent = True)
         plt.close()
 
-    def plot(self, ti, ctag, plot_type='init', dirsave = 'Plot', reso = 150, linew = 3.0,
+    def plot(self, ti, ctag, plot_type='init', dirsave = 'Plot', reso = 150, linew = 3.0, axisoff = False,
                 cmaps=None, fontsize=16.0, fsize=(10, 6), clims = None, autoscale = True):
 
         if cmaps is None:
@@ -942,7 +942,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return sim_xoo, sim_coo
 
-    def animate_triplot(self, ani_type = 'init', dirsave = None, reso = 150, linew = 3.0,
+    def animate_triplot(self, ani_type = 'init', dirsave = None, reso = 150, linew = 3.0, axisoff = False,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                         ref_data=None, extra_text = None):
 
@@ -961,7 +961,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
                              ref_data=ref_data, extra_text = extra_text)
 
 
-    def animate_biplot(self, ani_type='init', dirsave = None, reso = 150, linew = 3.0,
+    def animate_biplot(self, ani_type='init', dirsave = None, reso = 150, linew = 3.0, axisoff = False,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                        ref_data=None, extra_text = None):
 
@@ -979,7 +979,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
                             cmaps=cmaps, fontsize=fontsize, fsize=fsize, autoscale=autoscale,
                             ref_data=ref_data, extra_text=extra_text)
 
-    def animate_plot(self, ctag, ani_type='init', dirsave = 'PlotAni', reso = 150, linew = 3.0,
+    def animate_plot(self, ctag, ani_type='init', dirsave = 'PlotAni', reso = 150, linew = 3.0, axisoff = False,
                 cmaps=None, fontsize=16.0, fsize=(10, 6), clims = None, autoscale = True):
 
         if ani_type == 'init' or ani_type == 'reinit':
@@ -997,7 +997,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
     def hexplot(self, ti, plot_type = 'init',  fname = 'Hexplot_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (16, 12), clims = None, autoscale = True,
-                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92, axisoff = False):
 
         if cmaps is None:
             cmaps = self.default_cmaps
@@ -1208,7 +1208,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
     def markovplot(self, ti, plot_type = 'init',  fname = 'Markov_', dirsave = None, reso = 150, linew = 3.0,
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
-                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
+                      ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92, axisoff = False):
 
         if cmaps is None:
             cmaps = self.default_cmaps

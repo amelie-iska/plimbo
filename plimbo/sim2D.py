@@ -1329,13 +1329,13 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.close()
 
 
-    def plot_frags(self, show_plot = False, save_plot = True,
+    def plot_frags(self, show_plot = False, save_plot = True, fsize=(12, 12),
                    reso = 150, group_colors = None, dir_save = None):
 
         if group_colors is None:
             group_colors = self.groupc
 
-        plt.figure(figsize=(12, 12))
+        plt.figure(figsize=fsize)
         ax = plt.subplot(111)
 
         txt_xoff = -4.0 * self.x_scale
