@@ -61,10 +61,14 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 # 'u_bc': 1.0e-7,
 
                 # ERK parameters
+                'r_erk': 5.0e-3,
+                'd_erk': 5.0e-3,
                 'K_erk_bc': 10.0,
                 'n_erk_bc': 2.0,
 
                 # APC parameters
+                'r_apc': 5.0e-3,
+                'd_apc': 5.0e-3,
                 'K_apc_wnt': 5.0,
                 'n_apc_wnt': 2.0,
 
@@ -96,9 +100,15 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'u_nrf': -1.5e-7,
 
                 # Notum parameters
+                'r_notum': 5.0e-3,
+                'd_notum': 5.0e-3,
                 'K_notum_nrf': 300.0,
                 'n_notum_nrf': 2.5,
                 'D_notum': 2.5e-11,
+
+                #cAMP parameters:
+                'r_camp': 5.0e-3,
+                'd_camp': 5.0e-3,
 
                 # Markov model parameters:
                 'C1': 0.50, # ERK constant to modulate head formation
@@ -181,8 +191,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_BC_time = []
 
         # ERK parameters
-        self.r_erk = 5.0e-3
-        self.d_erk = 5.0e-3
+        self.r_erk = self.pdict['r_erk']
+        self.d_erk = self.pdict['d_erk']
         self.K_erk_bc = self.pdict['K_erk_bc']
         self.K_erk_bc = self.pdict['K_erk_bc']
         self.n_erk_bc = self.pdict['n_erk_bc']
@@ -191,8 +201,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_ERK_time = []
 
         # APC parameters
-        self.r_apc = 5.0e-3
-        self.d_apc = 5.0e-3
+        self.r_apc = self.pdict['r_apc']
+        self.d_apc = self.pdict['d_apc']
         self.K_apc_wnt = self.pdict['K_apc_wnt']
         self.n_apc_wnt = self.pdict['n_apc_wnt']
 
@@ -237,8 +247,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
         # Notum parameters
         self.D_notum = self.pdict['D_notum']
-        self.r_notum = 5.0e-3
-        self.d_notum = 5.0e-3
+        self.r_notum = self.pdict['r_notum']
+        self.d_notum = self.pdict['d_notum']
         self.K_notum_nrf = self.pdict['K_notum_nrf']
         self.n_notum_nrf = self.pdict['n_notum_nrf']
 
@@ -246,8 +256,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_Notum_time = []
 
         # cAMP parameters
-        self.r_camp = 5.0e-3
-        self.d_camp = 5.0e-3
+        self.r_camp = self.pdict['r_camp']
+        self.d_camp = self.pdict['d_camp']
 
         self.c_cAMP = np.ones(self.cdl) * 1.0
 
@@ -916,6 +926,11 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                       cmaps = None, fontsize = 16.0, fsize = (12, 12), clims = None, autoscale = True,
                       ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
+        pass
+
+    @abstractmethod
+    def plot_frags(self, show_plot = False, save_plot = True, fsize=(12, 12),
+                   reso = 150, group_colors = None, dir_save = None):
         pass
 
 

@@ -1362,6 +1362,13 @@ class PlanariaGRN1D(PlanariaGRNABC):
         plt.savefig(fname, format='png', dpi=reso, transparent = False)
         plt.close()
 
+    def plot_frags(self, show_plot = False, save_plot = True, fsize=(12, 12),
+                   reso = 150, group_colors = None, dir_save = None):
+
+        pass
+
+
+
 
 
 

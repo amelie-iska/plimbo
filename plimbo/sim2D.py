@@ -823,7 +823,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         # default plot legend scaling (can be modified)
         mol_clims = OrderedDict()
 
-        mol_clims['β-Cat'] = (0, 100.0)
+        mol_clims['β-Cat'] = (0, 125.0)
         mol_clims['Erk'] = (0, 1.0)
         mol_clims['Wnt'] = (0, 200.0)
         mol_clims['Hh'] = (0, 650.0)
@@ -1338,7 +1338,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.figure(figsize=fsize)
         ax = plt.subplot(111)
 
-        txt_xoff = -4.0 * self.x_scale
+        txt_xoff = -5.0 * self.x_scale
 
         # plot entire cluster:
         colo = PolyCollection(self.verts_r * 1e3, color='NavajoWhite', edgecolor=None)
@@ -1352,8 +1352,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
             # label the fragment:
             xi, yi = self.frag_xyr[fragn]
-            plt.text(xi * 1e3 + txt_xoff, yi * 1e3, 'Fragment ' + str(fragn), color='black',
-                     fontsize=16, fontweight='bold',
+            plt.text(xi * 1e3 + txt_xoff, yi * 1e3, 'Frag ' + str(fragn), color='black',
+                     fontsize=12, fontweight='bold',
                      horizontalalignment='left', verticalalignment='center')
 
         plt.axis('equal')

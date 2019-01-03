@@ -126,8 +126,6 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1},
-            {'bc': 0.05, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 1},
             {'bc': 0.0, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 0.0, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
@@ -146,17 +144,107 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 0.1},
         ]
 
-        self.RNAi_tags_default = ['cAMP_0.25x', 'cAMP_5x', 'RNAi_BC_part',  'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
+        self.RNAi_tags_default = ['cAMP_0.25x', 'cAMP_5x', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
                                   'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'Kinesin']
 
         self.xscales_default = [0.75, 1.5, 3.0]
+
+
 
 
     def run_sensitivity(self, factor = 0.1, verbose=True, run_time_init = 36000.0,
                         run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50,
                         reset_clims = True, animate = False, plot = True, plot_type = 'Triplot',
                         save_dir = 'Sensitivity1', ani_type = 'Triplot', axisoff = False,
-                        save_all = False, data_output = True, reference = 'Head', fsize=(6,8)):
+                        save_all = False, data_output = True, reference = 'Head', fsize=(6,8),
+                        clims = None, paramo_units = None):
+
+        if paramo_units is None:
+
+            # units listing for the parameters in the model:
+            self.params_units = OrderedDict({
+
+                # Small general diffusion factor:
+                'Do': 'm^2/s',
+
+                # Beta cat parameters
+                'r_bc': 'mol/s',
+                'd_bc': '1/s',
+                'K_bc_apc': 'mol/m^3',
+                'n_bc_apc': ' ',
+                'd_bc_deg': '1/s',
+                'K_bc_camp': 'mol/m^3',
+                'n_bc_camp': ' ',
+                # 'u_bc': 1.0e-7,
+
+                # ERK parameters
+                'r_erk': 'mol/s',
+                'd_erk': '1/s',
+                'K_erk_bc': 'mol/m^3',
+                'n_erk_bc': ' ',
+
+                # APC parameters
+                'r_apc': 'mol/s',
+                'd_apc': '1/s',
+                'K_apc_wnt': 'mol/m^3',
+                'n_apc_wnt': ' ',
+
+                # Hedgehog parameters:
+                'r_hh': 'mol/s',  # 2.5e-3
+                'd_hh': '1/s',
+                'D_hh': 'm^2/s',
+                'u_hh': 'm/s',
+
+                # Wnt parameters
+                'r_wnt': 'mol/s',
+                'd_wnt': '1/s',
+                'K_wnt_notum': 'mol/m^3',
+                'n_wnt_notum': ' ',
+                'D_wnt': 'm^2/s',
+                'd_wnt_deg_notum': '1/s',
+                'd_wnt_deg_ptc': '1/s',
+                'K_wnt_hh': 'mol/m^3',
+                'n_wnt_hh': ' ',
+                'K_wnt_camp': 'mol/m^3',
+                'n_wnt_camp':' ',
+
+                # NRF parameters
+                'r_nrf': 'mol/s',
+                'd_nrf': '1/s',
+                'K_nrf_bc': 'mol/m^3',
+                'n_nrf_bc': ' ',
+                'D_nrf': 'm^2/s',
+                'u_nrf': 'm/s',
+
+                # Notum parameters
+                'r_notum': 'mol/s',
+                'd_notum': '1/s',
+                'K_notum_nrf': 'mol/m^3',
+                'n_notum_nrf': ' ',
+                'D_notum': 'm^2/s',
+
+                # cAMP parameters:
+                'r_camp': 'mol/s',
+                'd_camp': '1/s',
+
+                # Markov model parameters:
+                'C1': 'mol/m^3',  # ERK constant to modulate head formation
+                'K1': 'mol/m^3',
+
+                'C2': 'mol/m^3',  # Beta-catenin concentration to modulate tail formation
+                'K2': 'mol/m^3',
+                'Beta_HB': '1/s',  # head tissue decay time constant
+                'Beta_TB': '1/s',  # tail tissue decay time constant
+
+                'max_remod': 's',  # maximum rate at which tissue remodelling occurs
+                'hdac_growth': '1/s',  # growth and decay constant for hdac remodeling molecule
+                'D_hdac': 'm^2/s',  # diffusion constant for hdac remodeling molecule
+                'hdac_to': 's',  # time at which hdac stops growing
+                'hdac_ts': 's'  # time period over which hdac stops growing
+            })
+
+        else:
+            self.params_units = paramo_units
 
         # general saving directory for this procedure:
         self.savedir_sensitivity = os.path.join(self.savepath, save_dir)
@@ -200,11 +288,17 @@ class ModelHarness(object):
                                        run_time_sample=run_time_sample,
                                        reset_clims = reset_clims)
 
+                if data_output:
+                    self.output_clims(ri=ii, save_dir=self.savedir_sensitivity, run_type='init')
+
                 self.model.simulate(knockdown= None,
                                        run_time=run_time_sim,
                                        run_time_step=run_time_step,
                                        run_time_sample=run_time_sample,
                                        reset_clims = reset_clims)
+
+                if data_output:
+                    self.output_clims(ri=ii, save_dir=self.savedir_sensitivity, run_type='sim')
 
                 # if we're on the first timestep, set it as the reference data set:
                 if ii == 0:
@@ -224,24 +318,23 @@ class ModelHarness(object):
 
                 self.heteromorphoses.append(data_dict_prob)
 
-
                 if plot:
 
                     self.plot_single('base', ii, harness_type='sensitivity', plot_type=plot_type, axisoff = axisoff,
                                      output_type='init', ref_data=self.ref_data[0], extra_text = self.plot_info_msg,
-                                     fsize=fsize)
+                                     fsize=fsize, clims=clims)
 
                     self.plot_single('base', ii, harness_type='sensitivity', plot_type=plot_type, axisoff = axisoff,
                                      output_type='sim', ref_data=self.ref_data[1], extra_text = self.plot_info_msg,
-                                     fsize=fsize)
+                                     fsize=fsize, clims=clims)
 
                 if animate:
                     self.ani_single('base', ii, harness_type='sensitivity', ani_type=ani_type, axisoff = axisoff,
                                     output_type='init', ref_data=self.ref_data[0], extra_text = self.plot_info_msg,
-                                    fsize=fsize)
+                                    fsize=fsize, clims=clims)
                     self.ani_single('base', ii, harness_type='sensitivity', ani_type=ani_type, axisoff = axisoff,
                                     output_type='sim', ref_data=self.ref_data[1], extra_text = self.plot_info_msg,
-                                    fsize=fsize)
+                                    fsize=fsize, clims=clims)
 
                 if verbose is True:
                     print('----------------')
@@ -256,6 +349,7 @@ class ModelHarness(object):
             self.output_delta_table(substance=reference, run_type='init', save_dir=self.savedir_sensitivity)
             self.output_summary_table(substance=reference, run_type='init', save_dir=self.savedir_sensitivity)
             self.output_heteromorphs(save_dir=self.savedir_sensitivity)
+            self.model.plot_frags(dir_save=self.savedir_sensitivity, fsize=fsize)
 
         if save_all:
             fsave = os.path.join(self.savedir_sensitivity, "Master.gz")
@@ -266,7 +360,7 @@ class ModelHarness(object):
                         verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0, save_all = False,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True, ani_type = 'Triplot',
                        animate=False, save_dir='SearchRNAi1', fixed_params = None, plot_type = 'Triplot',
-                       data_output = True, axisoff = False, fsize=(6,8)):
+                       data_output = True, axisoff = False, fsize=(6,8), clims = None):
 
         if RNAi_series is None or RNAi_names is None:
 
@@ -321,11 +415,17 @@ class ModelHarness(object):
                                        run_time_sample=run_time_sample,
                                        reset_clims = reset_clims)
 
+                if data_output:
+                    self.output_clims(ri=ii, save_dir=self.savedir_searchRNAi, run_type='init')
+
                 self.model.simulate(knockdown= None,
                                        run_time=run_time_sim,
                                        run_time_step=run_time_step,
                                        run_time_sample=run_time_sample,
                                        reset_clims = reset_clims)
+
+                if data_output:
+                    self.output_clims(ri=ii, save_dir=self.savedir_searchRNAi, run_type='sim')
 
                 # if we're on the first timestep, set it as the reference data set:
                 if ii == 0:
@@ -345,18 +445,18 @@ class ModelHarness(object):
                 if plot:
                     self.plot_single('base', ii, harness_type='searchRNAi', plot_type=plot_type, axisoff = axisoff,
                                      output_type='init', ref_data = self.ref_data[0], extra_text = self.plot_info_msg,
-                                     fsize=fsize)
+                                     fsize=fsize, clims=clims)
                     self.plot_single('base', ii, harness_type='searchRNAi', plot_type=plot_type, axisoff = axisoff,
                                      output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg,
-                                     fsize=fsize)
+                                     fsize=fsize, clims=clims)
 
                 if animate:
                     self.ani_single('base', ii, harness_type='searchRNAi', ani_type=ani_type, axisoff = axisoff,
                                     output_type='init', ref_data = self.ref_data[0], extra_text = self.plot_info_msg,
-                                    fsize=fsize)
+                                    fsize=fsize, clims=clims)
                     self.ani_single('base', ii, harness_type='searchRNAi', ani_type=ani_type, axisoff = axisoff,
                                     output_type='sim', ref_data = self.ref_data[1], extra_text = self.plot_info_msg,
-                                    fsize=fsize)
+                                    fsize=fsize, clims=clims)
 
                 if verbose is True:
                     print('----------------')
@@ -404,12 +504,13 @@ class ModelHarness(object):
                                              axisoff = axisoff,
                                              output_type='sim', ref_data = self.ref_data[1],
                                              extra_text = self.plot_info_msg,
-                                             fsize=fsize)
+                                             fsize=fsize,
+                                             clims=clims)
 
                         if animate:
                             self.ani_single(rnai_n, ii, harness_type='searchRNAi', ani_type=ani_type, axisoff = axisoff,
                                             output_type='sim', ref_data = self.ref_data[1],
-                                            extra_text = self.plot_info_msg, fsize=fsize)
+                                            extra_text = self.plot_info_msg, fsize=fsize, clims=clims)
 
                         if verbose is True:
                             print('----------------')
@@ -428,6 +529,7 @@ class ModelHarness(object):
             self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_heteromorphs(save_dir=self.savedir_searchRNAi)
+            self.model.plot_frags(dir_save=self.savedir_searchRNAi, fsize=fsize)
 
         if save_all:
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
@@ -437,7 +539,7 @@ class ModelHarness(object):
                        run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True,
                        animate=False, save_dir='scaleRNAi1', plot_type = 'Triplot', save_all = False,
-                       ani_type = 'Triplot', data_output = True, axisoff = False, fsize=(6,8),
+                       ani_type = 'Triplot', data_output = True, axisoff = False, fsize=(6,8), clims = None
                        ):
 
         if RNAi_series is None or RNAi_names is None:
@@ -489,11 +591,17 @@ class ModelHarness(object):
                                       run_time_sample=run_time_sample,
                                       reset_clims=reset_clims)
 
+                if data_output:
+                    self.output_clims(ri=ii, save_dir=self.savedir_scaleRNAi, run_type='init')
+
                 self.model.simulate(knockdown=None,
                                     run_time=run_time_sim,
                                     run_time_step=run_time_step,
                                     run_time_sample=run_time_sample,
                                     reset_clims=reset_clims)
+
+                if data_output:
+                    self.output_clims(ri=ii, save_dir=self.savedir_scaleRNAi, run_type='sim')
 
                 data_dict_inits['base'] = self.model.molecules_time.copy()
                 data_dict_sims['base'] = self.model.molecules_sim_time.copy()
@@ -506,15 +614,15 @@ class ModelHarness(object):
 
                 if plot:
                     self.plot_single('base', ii, harness_type='scaleRNAi', plot_type=plot_type, axisoff = axisoff,
-                                     output_type='init', extra_text = self.plot_info_msg, fsize=fsize)
+                                     output_type='init', extra_text = self.plot_info_msg, fsize=fsize, clims=clims)
                     self.plot_single('base', ii, harness_type='scaleRNAi', plot_type=plot_type, axisoff = axisoff,
-                                     output_type='sim', extra_text = self.plot_info_msg, fsize=fsize)
+                                     output_type='sim', extra_text = self.plot_info_msg, fsize=fsize, clims=clims)
 
                 if animate:
                     self.ani_single('base', ii, harness_type='scaleRNAi', ani_type=ani_type, axisoff = axisoff,
-                                    output_type='init', extra_text = self.plot_info_msg, fsize=fsize)
+                                    output_type='init', extra_text = self.plot_info_msg, fsize=fsize, clims=clims)
                     self.ani_single('base', ii, harness_type='scaleRNAi', ani_type=ani_type, axisoff = axisoff,
-                                    output_type='sim', extra_text = self.plot_info_msg, fsize=fsize)
+                                    output_type='sim', extra_text = self.plot_info_msg, fsize=fsize, clims=clims)
 
                 if verbose is True:
                     print('----------------')
@@ -560,11 +668,11 @@ class ModelHarness(object):
 
                         if plot:
                             self.plot_single(rnai_n, ii, harness_type='scaleRNAi', plot_type=plot_type, axisoff = axisoff,
-                                             output_type='sim', ref_data=self.ref_data[1], fsize=fsize)
+                                             output_type='sim', ref_data=self.ref_data[1], fsize=fsize, clims=clims)
 
                         if animate:
                             self.ani_single(rnai_n, ii, harness_type='scaleRNAi', ani_type=ani_type, axisoff = axisoff,
-                                            output_type='sim', ref_data=self.ref_data[1], fsize=fsize)
+                                            output_type='sim', ref_data=self.ref_data[1], fsize=fsize, clims=clims)
 
                         if verbose is True:
                             print('----------------')
@@ -580,6 +688,7 @@ class ModelHarness(object):
 
         if data_output:
             self.output_heteromorphs(save_dir=self.savedir_scaleRNAi)
+            self.model.plot_frags(dir_save=self.savedir_scaleRNAi, fsize=fsize)
 
 
         if save_all:
@@ -590,7 +699,8 @@ class ModelHarness(object):
                     run_time_init = 36000.0, run_time_sim = 36000.0, run_time_step = 60,
                     run_time_sample = 50, run_time_reinit = 12, reset_clims = True,
                     plot_type = 'Triplot', ani_type = 'Triplot', animate = False, save_all = False,
-                    plot = True, save_dir = 'SimRNAi_1', data_output = True, axisoff = False, fsize=(6,8)):
+                    plot = True, save_dir = 'SimRNAi_1', data_output = True, axisoff = False, fsize=(6,8),
+                    clims = None):
 
         if RNAi_series is None or RNAi_names is None:
 
@@ -634,12 +744,18 @@ class ModelHarness(object):
                               run_time_sample=run_time_sample,
                               reset_clims=reset_clims)
 
+        if data_output:
+            self.output_clims(save_dir=self.savedir_simRNAi, run_type='init')
+
         # Run simulation of full model:
         self.model.simulate(knockdown=None,
                               run_time=run_time_sim,
                               run_time_step=run_time_step,
                               run_time_sample=run_time_sample,
                               reset_clims=reset_clims)
+
+        if data_output:
+            self.output_clims(save_dir=self.savedir_simRNAi, run_type='sim')
 
         # Save whole molecules master arrays to their respective data dictionaries:
         data_dict_inits['base'] = self.model.molecules_time.copy()
@@ -654,15 +770,15 @@ class ModelHarness(object):
 
         if plot:
             self.plot_single('base', 0, harness_type='simRNAi', plot_type=plot_type, axisoff = axisoff,
-                             output_type='init', extra_text = self.plot_info_msg, fsize=fsize)
+                             output_type='init', extra_text = self.plot_info_msg, fsize=fsize, clims = clims)
             self.plot_single('base', 0, harness_type='simRNAi', plot_type=plot_type, axisoff = axisoff,
-                             output_type='sim', extra_text = self.plot_info_msg, fsize=fsize)
+                             output_type='sim', extra_text = self.plot_info_msg, fsize=fsize, clims = clims)
 
         if animate:
             self.ani_single('base', 0, harness_type='simRNAi', ani_type=ani_type, axisoff = axisoff,
-                            output_type='init', extra_text = self.plot_info_msg, fsize=fsize)
+                            output_type='init', extra_text = self.plot_info_msg, fsize=fsize, clims = clims)
             self.ani_single('base', 0, harness_type='simRNAi', ani_type=ani_type, axisoff = axisoff,
-                            output_type='sim', extra_text = self.plot_info_msg, fsize=fsize)
+                            output_type='sim', extra_text = self.plot_info_msg, fsize=fsize, clims = clims)
 
         if verbose is True:
             print('----------------')
@@ -722,6 +838,7 @@ class ModelHarness(object):
 
         if data_output:
             self.output_heteromorphs(save_dir=self.savedir_simRNAi)
+            self.model.plot_frags(dir_save=self.savedir_simRNAi, fsize=fsize)
 
         if save_all:
 
@@ -908,7 +1025,7 @@ class ModelHarness(object):
             print('No outputs to animate.')
 
     def plot_single(self, tagi, ri, harness_type=None, plot_type='Triplot', output_type='sim',
-                    ref_data = None, extra_text = None, axisoff = False, fsize = (6,8)):
+                    ref_data = None, extra_text = None, axisoff = False, fsize = (6,8), clims = None):
         """
 
         :param tagi: datatag for the plot
@@ -935,22 +1052,22 @@ class ModelHarness(object):
 
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain, fsize=fsize,
-                                   cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                   cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                    ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Biplot':
                 self.model.biplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain, fsize=fsize,
-                                   cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                   cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                   ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Hexplot':
                 self.model.hexplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain, fsize=fsize,
-                                   cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                   cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                   ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Markovplot':
                 self.model.markovplot(-1, plot_type='init', fname=fni, dirsave=plotdirmain, fsize=fsize,
-                                   cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                   cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                    ref_data = ref_data, extra_text = extra_text)
 
         elif output_type == 'sim':
@@ -962,26 +1079,26 @@ class ModelHarness(object):
 
             if plot_type == 'Triplot':
                 self.model.triplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain, fsize=fsize,
-                                   cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                   cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                    ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Biplot':
                 self.model.biplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain, fsize=fsize,
-                                  cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                  cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                   ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Hexplot':
                 self.model.hexplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain, fsize=fsize,
-                                  cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                  cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                   ref_data = ref_data, extra_text = extra_text)
 
             elif plot_type == 'Markovplot':
                 self.model.markovplot(-1, plot_type='sim', fname=fns, dirsave=plotdirmain, fsize=fsize,
-                                   cmaps=None, clims=None, autoscale=False, axisoff = axisoff,
+                                   cmaps=None, clims=clims, autoscale=False, axisoff = axisoff,
                                    ref_data = ref_data, extra_text = extra_text)
 
     def ani_single(self, tagi, ri, harness_type=None, ani_type='Triplot', output_type='sim', axisoff = True,
-                   ref_data = None, extra_text = None, fsize=(6,8)):
+                   ref_data = None, extra_text = None, fsize=(6,8), clims = None):
 
         if harness_type is None:
             harness_type = ''
@@ -1000,12 +1117,12 @@ class ModelHarness(object):
 
             if ani_type == 'Triplot':
                 self.model.animate_triplot(ani_type='init', dirsave=plotdiri, axisoff = axisoff,
-                                   cmaps=None, clims=None, autoscale=False, fsize=fsize,
+                                   cmaps=None, clims=clims, autoscale=False, fsize=fsize,
                                            ref_data = ref_data, extra_text = extra_text)
 
             elif ani_type == 'Biplot':
                 self.model.animate_biplot(ani_type='init', dirsave=plotdiri, axisoff = axisoff,
-                                  cmaps=None, clims=None, autoscale=False, fsize=fsize,
+                                  cmaps=None, clims=clims, autoscale=False, fsize=fsize,
                                           ref_data = ref_data, extra_text = extra_text)
 
         elif output_type == 'sim':
@@ -1018,12 +1135,12 @@ class ModelHarness(object):
 
             if ani_type == 'Triplot':
                 self.model.animate_triplot(ani_type='sim', dirsave=plotdirs, axisoff = axisoff,
-                                   cmaps=None, clims=None, autoscale=False, fsize=fsize,
+                                   cmaps=None, clims=clims, autoscale=False, fsize=fsize,
                                            ref_data = ref_data, extra_text = extra_text)
 
             elif ani_type == 'Biplot':
                 self.model.animate_biplot(ani_type='sim', dirsave=plotdirs, axisoff = axisoff,
-                                  cmaps=None, clims=None, autoscale=False, fsize=fsize,
+                                  cmaps=None, clims=clims, autoscale=False, fsize=fsize,
                                           ref_data = ref_data, extra_text = extra_text)
 
     def write_plot_msg(self, ii):
@@ -1154,9 +1271,12 @@ class ModelHarness(object):
         if a == b:
             diag_vals = np.diag(change_input[1:])
 
-            hdr = 'Parameter, %Δ Parameter, %Δ Output'
+            base_vals = np.array(list(self.paramo.values()))
+            units = np.array(list(self.params_units.values()))
 
-            writeM = np.column_stack((self.pm.param_labels, diag_vals, change_output[1:]))
+            hdr = 'Parameter, Base value, Units, %Δ Parameter, %Δ Output'
+
+            writeM = np.column_stack((self.pm.param_labels, base_vals, units, diag_vals, change_output[1:]))
 
             fnme = substance + '_sensitivity_analysis.csv'
 
@@ -1201,6 +1321,34 @@ class ModelHarness(object):
                 fpath = os.path.join(dir_path, tag_n + '_heteromorphs.csv')
 
                 np.savetxt(fpath, morph_data, delimiter=',', header=morph_col_tags)
+
+    def output_clims(self, ri = 0, save_dir = 'DataOutput', run_type = 'init'):
+        """
+        Outputs min/max values used on plots for each substance.
+
+        """
+
+        # output clims for the run
+
+        dir_path = os.path.join(save_dir, 'Run_' + str(ri))
+        os.makedirs(dir_path, exist_ok=True)
+
+        if run_type == 'init':
+            fpath = os.path.join(dir_path, 'Clims_init.csv')
+
+        elif run_type == 'reinit':
+            fpath = os.path.join(dir_path, 'Clims_reinit.csv')
+
+        elif run_type == 'sim':
+            fpath = os.path.join(dir_path, 'Clims_sim.csv')
+
+        MM = []
+        for ctag, (cmin, cmax) in self.model.default_clims.items():
+            MM.append([ctag, cmin, cmax])
+        MM = np.asarray(MM)
+        head = 'Substance, Min, Max'
+
+        np.savetxt(fpath, MM, delimiter=',', fmt="%s", header=head)
 
     def view_fragments(self, fsize=(6,8)):
 

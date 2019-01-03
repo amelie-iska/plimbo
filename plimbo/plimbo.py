@@ -59,7 +59,7 @@ class PlimboRunner(object):
                 run_time_reinit = 12.0,  xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SimRNAi_1', reset_clims = True, animate = False, plot = True, axisoff = False,
                 plot_type = 'Triplot', ani_type = 'Triplot', save_harness = False, harness_type='1D',
-                fsize = (6,8)):
+                fsize = (6,8), clims = None):
 
 
         # Create an instance of the model harness:
@@ -98,7 +98,8 @@ class PlimboRunner(object):
                            save_dir = save_dir,
                            ani_type=ani_type,
                            axisoff=axisoff,
-                           fsize = fsize)
+                           fsize = fsize,
+                           clims=clims)
 
         self.master = master
 
@@ -107,7 +108,8 @@ class PlimboRunner(object):
                 run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
                  xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                 save_dir='Sensitivity_1', reset_clims=True, animate=False, plot=True, axisoff = False,
-                plot_type='Triplot', save_harness=False, harness_type='1D', reference = 'Head', fsize = (6,8)):
+                plot_type='Triplot', save_harness=False, harness_type='1D', reference = 'Head', fsize = (6,8),
+                    clims = None, paramo_units = None):
 
         # Create an instance of the model harness:
 
@@ -132,7 +134,7 @@ class PlimboRunner(object):
                         run_time_sim = run_time_sim, run_time_step = run_time_step, save_all = save_harness,
                         run_time_sample = run_time_sample, reset_clims = reset_clims, ani_type = ani_type,
                         animate = animate, plot = plot, save_dir = save_dir, plot_type = plot_type,
-                        reference = reference, axisoff=axisoff, fsize=fsize)
+                        reference = reference, axisoff=axisoff, fsize=fsize, clims =clims, paramo_units=paramo_units)
 
         self.master = master
 
@@ -142,7 +144,7 @@ class PlimboRunner(object):
                   run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
                run_time_reinit=12.0, xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                save_dir='ScaleRNAi_1', reset_clims=True, animate=False, plot=True, axisoff = False,
-               plot_type='Triplot', save_harness=False, harness_type='1D', fsize = (6,8)):
+               plot_type='Triplot', save_harness=False, harness_type='1D', fsize = (6,8), clims = None):
 
         # Create an instance of the model harness:
 
@@ -168,7 +170,7 @@ class PlimboRunner(object):
                                run_time_sim=run_time_sim, run_time_step=run_time_step, save_all = save_harness,
                              run_time_sample=run_time_sample, reset_clims=reset_clims, ani_type = ani_type,
                                plot=plot, animate=animate, save_dir=save_dir, plot_type = plot_type, axisoff=axisoff,
-                                fsize = fsize)
+                                fsize = fsize, clims = clims)
 
         self.master = master
 
@@ -177,7 +179,8 @@ class PlimboRunner(object):
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, search_style = 'log',
                    factor = 0.8, levels = 1, run_time_reinit = 12.0, xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SearchRNAi_1', reset_clims = True, animate = False, plot = True, ani_type = 'Triplot',
-                plot_type = 'Triplot', save_harness = True, harness_type='1D', plot_frags = True, fsize = (6,8)):
+                plot_type = 'Triplot', save_harness = True, harness_type='1D', plot_frags = True, fsize = (6,8),
+                   clims = None):
 
         # Create an instance of the model harness:
         if harness_type == '1D':
@@ -202,7 +205,7 @@ class PlimboRunner(object):
                                   run_time_init=run_time_init, run_time_sim=run_time_sim, save_all = save_harness,
                                  run_time_step=run_time_step, run_time_sample=run_time_sample, axisoff=axisoff,
                                   reset_clims=reset_clims, plot=plot, plot_type = plot_type, ani_type = ani_type,
-                               animate=animate, save_dir=save_dir, fixed_params = None, fsize=fsize)
+                               animate=animate, save_dir=save_dir, fixed_params = None, fsize=fsize, clims = clims)
 
         self.master = master
 
