@@ -45,7 +45,8 @@ class ParamsManager(object):
         self.N_runs = self.params_M.shape[0]
         self.N_params = self.params_M.shape[1]
 
-    def create_search_matrix(self, factor =0.8, levels = 1, style='log', free_params = None): # FIXME have fixed parameters
+    def create_search_matrix(self, factor =0.8, levels = 1, style='log',
+                             free_params = None):
 
         self.factor = factor
         self.levels = levels
@@ -57,13 +58,33 @@ class ParamsManager(object):
 
             params_M = [self.paramo_array]
 
-            for i in range(len(self.paramo_array)):
+            if free_params is None: # if all parameters are varied, add each perturbation to the final params matrix:
 
-                for j in range(self.levels):
-                    params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
+                for i in range(len(self.paramo_array)):
 
-                for j in range(self.levels):
-                    params_M.append(self.paramo_array * (1 / self.delta_M[i, :]) ** (j + 1))
+                    for j in range(self.levels):
+                        params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
+
+                    for j in range(self.levels):
+                        params_M.append(self.paramo_array * (1 / self.delta_M[i, :]) ** (j + 1))
+
+            else:  # if some parameters are fixed, only add free parameters cases to the final params matrix:
+
+                free_params_list = np.array(list(free_params.values()))
+
+                for i in range(len(self.paramo_array)):
+
+                    param_flag = free_params_list[i] # get the flag for the parameter
+
+                    if param_flag == 1: # if the flag is True/1 then add this case to the params Matrix
+
+                        for j in range(self.levels):
+                            params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
+
+                        for j in range(self.levels):
+                            params_M.append(self.paramo_array * (1 / self.delta_M[i, :]) ** (j + 1))
+
+
 
         elif style == 'lin':
 
@@ -75,13 +96,31 @@ class ParamsManager(object):
 
             params_M = [self.paramo_array]
 
-            for i in range(len(self.paramo_array)):
+            if free_params is None: # if all parameters are varied, add each perturbation to the final params matrix:
 
-                for j in range(self.levels):
-                    params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
+                for i in range(len(self.paramo_array)):
 
-                for j in range(self.levels):
-                    params_M.append(self.paramo_array + (j + 1) * self.delta_M[i, :])
+                    for j in range(self.levels):
+                        params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
+
+                    for j in range(self.levels):
+                        params_M.append(self.paramo_array + (j + 1) * self.delta_M[i, :])
+
+            else: # if some parameters are fixed, only add free parameters cases to the final params matrix:
+
+                free_params_list = np.array(list(free_params.values()))
+
+                for i in range(len(self.paramo_array)):
+
+                    param_flag = free_params_list[i] # get the flag for the parameter
+
+                    if param_flag == 1: # if the flag is True/1 then add this case to the params Matrix
+
+                        for j in range(self.levels):
+                            params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
+
+                        for j in range(self.levels):
+                            params_M.append(self.paramo_array + (j + 1) * self.delta_M[i, :])
 
         else:
             print("Error! The choices for search matrix style are 'log' and 'lin'")

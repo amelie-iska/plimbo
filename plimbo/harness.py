@@ -359,7 +359,7 @@ class ModelHarness(object):
     def run_searchRNAi(self, RNAi_series = None, RNAi_names = None, factor = 0.8, levels = 1, search_style = 'log',
                         verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0, save_all = False,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True, ani_type = 'Triplot',
-                       animate=False, save_dir='SearchRNAi1', fixed_params = None, plot_type = 'Triplot',
+                       animate=False, save_dir='SearchRNAi1', free_params = None, plot_type = 'Triplot',
                        data_output = True, axisoff = False, fsize=(6,8), clims = None):
 
         if RNAi_series is None or RNAi_names is None:
@@ -384,7 +384,7 @@ class ModelHarness(object):
                 self.datatags.append(rnai_n)
 
         # Create the parameters matrix:
-        self.pm.create_search_matrix(factor=factor, levels = levels, style = search_style)
+        self.pm.create_search_matrix(factor=factor, levels=levels, style=search_style, free_params=free_params)
         self.has_autoparams = True
 
         self.outputs = []  # Storage array for all last timestep outputs

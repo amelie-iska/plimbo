@@ -16,27 +16,47 @@ PLIMBO
 ======
 
 **PLIMBO** (**P**\ lanarian **I**\ nterface for **M**\ odelling **B**\ ody
-**O**\ rganization) is an open-source cross-platform... *something, something.*
+**O**\ rganization) is an open-source cross-platform simulator of morphogen-
+directed regeneration of planarian head and tail, using a model reported on
+in the manuscript ‘Neural Control of Body-plan Axis in Regenerating Planaria’.
+PLIMBO represents a 1D and 2D simulator of the reaction-diffusion-convection
+model for planarian regeneration, with tools for facilitating model discovery
+and sensitivity analysis.
+
 PLIMBO is associated with the `Paul Allen Discovery Center`_ at `Tufts
 University`_ and supported by a `Paul Allen Discovery Center award`_ from the
 `Paul G. Allen Frontiers Group`_.
 
-PLIMBO is `portably implemented <codebase_>`__ in pure `Python 3`_,
+PLIMBO is `portably implemented <codebase_>`__ in pure `Python 3`_, will be
 `continuously stress-tested <testing_>`__ with GitLab-CI_ **×** Appveyor_ **+**
 py.test_, and `permissively distributed <License_>`__ under the `BSD 2-clause
 license`_.
+
+Installation and Use
+====================
+To use the Planaria Interface for Modeling Body Organization (PLIMBO), first
+follow the installation instructions for the BETSE simulator:
+
+https://gitlab.com/betse/betse
+
+PLIMBO can then be downloaded from the present repository:
+
+https://gitlab.com/betse/plimbo
+
+All main functions of PLIMBO are set up in a Jupyter Notebook, PLIMBO_Runner.ipynb,
+which is available in the top-level of the PLIMBO repository. Documentation for
+use is supplied in PLIMBO_Runner.ipynb. Jupyter is a free and Open Source
+interactive Python environment available from:
+
+https://jupyter.org/
+
 
 Contact
 =======
 
 To contact `Dr. Pietak`_, the principal developer of the PLIMBO codebase and
-first or second author of all above papers, cordially direct correspondence to
-either:
+the PLIMBO planaria model, please direct correspondence to:
 
-* The `anonymous contact form <Organic Mechanics Contact_>`__ at `Organic
-  Mechanics`_, the personal archives of all material published to date by
-  `Dr. Pietak`_ – including papers, presentations, textbooks, and additional
-  theoretical work.
 * The personal e-mail account of `Dr. Pietak`_: [#e-mail]_
 
   * *Username:* **alexis** ``{dot}`` **pietak**
@@ -44,8 +64,7 @@ either:
 
 To report a software issue (e.g., bug, crash, or other unexpected behaviour)
 *or* request a new feature in PLIMBO, consider `submitting a new issue <issue
-submission_>`__ to our `issue tracker`_. Thanks in advance; it's only through
-generous user contributions that your user experience can continue to improve.
+submission_>`__ to our `issue tracker`_. Thanks in advance.
 
 .. [#e-mail]
    To protect Dr. Pietak's e-mail address against `automated harvesting <e-mail
@@ -55,17 +74,6 @@ generous user contributions that your user experience can continue to improve.
    * Replacing the ``{dot}`` substring with the ``.`` charecter.
    * Concatenating the username and hostname strings with the ``@`` character.
 
-   For this reason, consider directing correspondence to the `anonymous contact
-   form <Organic Mechanics Contact_>`__ at `Organic Mechanics`_ instead.
-
-Authors
-=======
-
-PLIMBO comes courtesy a dedicated community of `authors <author list_>`__ and
-contributors_ – without whom this project would be computationally impoverished,
-biologically misaligned, and simply unusable.
-
-**Thanks, all.**
 
 License
 =======

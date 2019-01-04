@@ -175,7 +175,8 @@ class PlimboRunner(object):
         self.master = master
 
 
-    def searchRNAi(self, params=None, RNAi_vect = None, RNAi_tags = None, run_time_init = 36000.0, axisoff = False,
+    def searchRNAi(self, params=None, free_params = None, RNAi_vect = None, RNAi_tags = None,
+                   run_time_init = 36000.0, axisoff = False,
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, search_style = 'log',
                    factor = 0.8, levels = 1, run_time_reinit = 12.0, xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SearchRNAi_1', reset_clims = True, animate = False, plot = True, ani_type = 'Triplot',
@@ -205,7 +206,7 @@ class PlimboRunner(object):
                                   run_time_init=run_time_init, run_time_sim=run_time_sim, save_all = save_harness,
                                  run_time_step=run_time_step, run_time_sample=run_time_sample, axisoff=axisoff,
                                   reset_clims=reset_clims, plot=plot, plot_type = plot_type, ani_type = ani_type,
-                               animate=animate, save_dir=save_dir, fixed_params = None, fsize=fsize, clims = clims)
+                               animate=animate, save_dir=save_dir, free_params=free_params, fsize=fsize, clims = clims)
 
         self.master = master
 
