@@ -45,20 +45,21 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                  verbose=False):
 
         if pdict is None: # default parameters
-            self.pdict = OrderedDict({  # Dimensional scaling:
+            self.pdict = OrderedDict({
 
                 # Small general diffusion factor:
                 'Do': 1.0e-11,
 
                 # Beta cat parameters
-                'r_bc': 1.0e-3,
+                'r_bc': 1.5e-3,
                 'd_bc': 5.0e-7,
                 'K_bc_apc': 0.5,
                 'n_bc_apc': 1.0,
                 'd_bc_deg': 3.0e-3,
                 'K_bc_camp': 1.0,
                 'n_bc_camp': 2.0,
-                # 'u_bc': 1.0e-7,
+                'D_bc': 1.0e-11,
+                'u_bc': 2.0e-8,
 
                 # ERK parameters
                 'r_erk': 5.0e-3,
@@ -73,7 +74,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'n_apc_wnt': 2.0,
 
                 # Hedgehog parameters:
-                'r_hh': 5.0e-3,  # 2.5e-3
+                'r_hh': 5.0e-3,
                 'd_hh': 1.0e-5,
                 'D_hh': 2.5e-11,
                 'u_hh': 1.5e-7,
@@ -185,7 +186,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.n_bc_apc = self.pdict['n_bc_apc']
         self.K_bc_camp = self.pdict['K_bc_camp']
         self.n_bc_camp = self.pdict['n_bc_camp']
-        # self.u_bc = self.pdict['u_bc']
+        self.D_bc = self.pdict['D_bc']
+        self.u_bc = self.pdict['u_bc']
 
         self.c_BC = np.ones(self.cdl)
         self.c_BC_time = []
@@ -535,7 +537,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
     def initialize(self,
                    knockdown= None,
                    run_time=48.0 * 3600,
-                   run_time_step=10,
+                   run_time_step=60,
                    run_time_sample=100,
                    reset_clims = True,
                    ):
@@ -552,9 +554,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.time = np.linspace(self.tmin, self.tmax, self.nt)
         self.tsample = self.time[0:-1:self.tsamp]
 
-        if self.x_scale != 1.0:
-            # scale the cell cluster by the given factor
-            self.cells = self.scale_cells(self.x_scale)
+        # scale the cell cluster by the given factor
+        self.cells = self.scale_cells(self.x_scale)
 
         # save the cells object at this stage so that we can plot init later
         self.cells_i = copy.deepcopy(self.cells)

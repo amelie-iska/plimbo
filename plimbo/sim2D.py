@@ -18,25 +18,18 @@ from matplotlib import rcParams
 
 from collections import OrderedDict
 import copy
-import pickle
 import os
 import os.path
-import sys, time
-import csv
 
-from scipy.ndimage import rotate
-from scipy.misc import imresize
 
 from betse.lib.pickle import pickles
 from betse.science.simrunner import SimRunner
-from betse.science.parameters import Parameters
 from betse.science import filehandling as fh
 from betse.science.math import modulate
 from betse.util.path import files
 from betse.science.phase.phasecls import SimPhase
 from betse.science.phase.phaseenum import SimPhaseKind
 from betse.science.math import toolbox as tb
-# from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 from plimbo.simabc import PlanariaGRNABC
 from sklearn.cluster import DBSCAN
 
@@ -131,15 +124,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
         # ux = (ux/u_mag)
         # uy = (uy/u_mag)
 
-        # make the field divergence-free with respect to individual
-        # control cells of the mesh (produces a smoother field):
-        uxi, uyi = self.cells.single_cell_div_free(ux, uy)
+        # average to the midpoint between two cell membranes to smooth the field:
+        self.ux = self.cells.meanval(ux)
+        self.uy = self.cells.meanval(uy)
 
-        # average to the midpoint between two cell membranes:
-        self.ux = self.cells.meanval(uxi)
-        self.uy = self.cells.meanval(uyi)
-
-        #         Get the average transport field at the cell centres:
+        # Get the average transport field at the cell centres:
         self.ucx, self.ucy = self.cells.average_vector(self.ux, self.uy)
 
         # cell-centre average magnitude
@@ -558,17 +547,17 @@ class PlanariaGRN2D(PlanariaGRNABC):
         _, g_bcx, g_bcy = self.cells.gradient(self.c_BC)
         m_bc = self.cells.meanval(self.c_BC)
 
-        # # Motor transport term:
-        # conv_term_x = m_bc * self.ux * self.u_bc * kinesin
-        # conv_term_y = m_bc * self.uy * self.u_bc * kinesin
-
-        # # flux:
-        # fx = -g_bcx * self.Do + conv_term_x
-        # fy = -g_bcy * self.Do + conv_term_y
+        # Motor transport term:
+        conv_term_x = m_bc * self.ux * self.u_bc * kinesin
+        conv_term_y = m_bc * self.uy * self.u_bc * kinesin
 
         # flux:
-        fx = -g_bcx * self.Do
-        fy = -g_bcy * self.Do
+        fx = -g_bcx * self.D_bc + conv_term_x
+        fy = -g_bcy * self.D_bc + conv_term_y
+
+        # # flux:
+        # fx = -g_bcx * self.Do
+        # fy = -g_bcy * self.Do
 
         # divergence of the flux:
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -657,6 +646,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
                    self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT* term_hh
                                            - self.d_wnt_deg_ptc * term_hh * self.c_WNT)
 
+
         return del_wnt  # change in Wnt
 
     def update_hh(self, rnai=1.0, kinesin=1.0):
@@ -676,9 +666,6 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         fx = -g_hh_x * self.D_hh + conv_term_x
         fy = -g_hh_y * self.D_hh + conv_term_y
-
-        # fx = -g_hh_x * self.D_hh
-        # fy = -g_hh_y * self.D_hh
 
         #         divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -823,7 +810,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         # default plot legend scaling (can be modified)
         mol_clims = OrderedDict()
 
-        mol_clims['β-Cat'] = (0, 125.0)
+        mol_clims['β-Cat'] = (0, 150.0)
         mol_clims['Erk'] = (0, 1.0)
         mol_clims['Wnt'] = (0, 200.0)
         mol_clims['Hh'] = (0, 650.0)

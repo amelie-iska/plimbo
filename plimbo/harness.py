@@ -122,7 +122,7 @@ class ModelHarness(object):
 
         # default RNAi testing sequence vector:
         self.RNAi_vect_default = [
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.25,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.40,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1},
@@ -139,12 +139,12 @@ class ModelHarness(object):
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.0, 'camp': 1,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 0.1, 'kinesin': 1},
+             'dynein': 0.0, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin': 0.1},
+             'dynein': 1, 'kinesin': 0.0},
         ]
 
-        self.RNAi_tags_default = ['cAMP_0.25x', 'cAMP_5x', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
+        self.RNAi_tags_default = ['cAMP_0.38x', 'cAMP_5x', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
                                   'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'Kinesin']
 
         self.xscales_default = [0.75, 1.5, 3.0]
@@ -156,8 +156,8 @@ class ModelHarness(object):
                         run_time_sim = 36000.0, run_time_step = 60, run_time_sample = 50,
                         reset_clims = True, animate = False, plot = True, plot_type = 'Triplot',
                         save_dir = 'Sensitivity1', ani_type = 'Triplot', axisoff = False,
-                        save_all = False, data_output = True, reference = 'Head', fsize=(6,8),
-                        clims = None, paramo_units = None):
+                        save_all = False, data_output = True, reference = ['Head','Tail'], fsize=(6,8),
+                        clims = None, paramo_units = None, run_type = 'init'):
 
         if paramo_units is None:
 
@@ -175,7 +175,8 @@ class ModelHarness(object):
                 'd_bc_deg': '1/s',
                 'K_bc_camp': 'mol/m^3',
                 'n_bc_camp': ' ',
-                # 'u_bc': 1.0e-7,
+                'D_bc': 'm^2/s',
+                'u_bc': 'm/s',
 
                 # ERK parameters
                 'r_erk': 'mol/s',
@@ -346,8 +347,8 @@ class ModelHarness(object):
                 print('***************************************************')
 
         if data_output:
-            self.output_delta_table(substance=reference, run_type='init', save_dir=self.savedir_sensitivity)
-            self.output_summary_table(substance=reference, run_type='init', save_dir=self.savedir_sensitivity)
+            self.output_delta_table(substance=reference, run_type=run_type, save_dir=self.savedir_sensitivity)
+            self.output_summary_table(substance=reference, run_type=run_type, save_dir=self.savedir_sensitivity)
             self.output_heteromorphs(save_dir=self.savedir_sensitivity)
             self.model.plot_frags(dir_save=self.savedir_sensitivity, fsize=fsize)
 
@@ -360,7 +361,7 @@ class ModelHarness(object):
                         verbose=True, run_time_reinit=0.0, run_time_init=36000.0, run_time_sim=36000.0, save_all = False,
                        run_time_step=60, run_time_sample=50, reset_clims=True, plot=True, ani_type = 'Triplot',
                        animate=False, save_dir='SearchRNAi1', free_params = None, plot_type = 'Triplot',
-                       data_output = True, axisoff = False, fsize=(6,8), clims = None):
+                       data_output = True, axisoff = False, fsize=(6,8), clims = None, up_only = False):
 
         if RNAi_series is None or RNAi_names is None:
 
@@ -384,7 +385,8 @@ class ModelHarness(object):
                 self.datatags.append(rnai_n)
 
         # Create the parameters matrix:
-        self.pm.create_search_matrix(factor=factor, levels=levels, style=search_style, free_params=free_params)
+        self.pm.create_search_matrix(factor=factor, levels=levels, style=search_style,
+                                     free_params=free_params, up_only = up_only)
         self.has_autoparams = True
 
         self.outputs = []  # Storage array for all last timestep outputs
@@ -526,8 +528,8 @@ class ModelHarness(object):
 
 
         if data_output:
-            self.output_delta_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
-            self.output_summary_table(substance='Head', run_type='init', save_dir=self.savedir_searchRNAi)
+            self.output_delta_table(substance=['Head', 'Tail'], run_type='init', save_dir=self.savedir_searchRNAi)
+            self.output_summary_table(substance=['Head','Tail'], run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_heteromorphs(save_dir=self.savedir_searchRNAi)
             self.model.plot_frags(dir_save=self.savedir_searchRNAi, fsize=fsize)
 
@@ -1240,56 +1242,60 @@ class ModelHarness(object):
         return tab_inputs, tab_outputs
 
 
-    def output_delta_table(self, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
+    def output_delta_table(self, substance = ['Erk'], run_type = 'sim', save_dir = 'DataOutput'):
 
-        change_input, change_output = self.work_all_output(substance = substance,
-                                                                     run_type = run_type,
-                                                                     ref_data = self.ref_data)
+        for mol in substance:
 
-        hdr = ''
+            change_input, change_output = self.work_all_output(substance = mol,
+                                                                         run_type = run_type,
+                                                                         ref_data = self.ref_data)
 
-        for plab in self.pm.param_labels:
-            hdr += '% Δ' + plab + ','
-        hdr += '% ΔOutput'
+            hdr = ''
 
-        writeM = np.column_stack((change_input[1:], change_output[1:]))
+            for plab in self.pm.param_labels:
+                hdr += '% Δ' + plab + ','
+            hdr += '% ΔOutput'
 
-        fnme = substance + '_analysis.csv'
+            writeM = np.column_stack((change_input[1:], change_output[1:]))
 
-        fpath = os.path.join(save_dir, fnme)
-
-        np.savetxt(fpath, writeM, delimiter=',', header=hdr)
-
-    def output_summary_table(self, substance = 'Erk', run_type = 'sim', save_dir = 'DataOutput'):
-
-        change_input, change_output = self.work_all_output(substance=substance,
-                                                                     run_type = run_type,
-                                                                     ref_data = self.ref_data)
-
-        a, b = change_input[1:].shape
-
-        if a == b:
-            diag_vals = np.diag(change_input[1:])
-
-            base_vals = np.array(list(self.paramo.values()))
-            units = np.array(list(self.params_units.values()))
-
-            hdr = 'Parameter, Base value, Units, %Δ Parameter, %Δ Output'
-
-            writeM = np.column_stack((self.pm.param_labels, base_vals, units, diag_vals, change_output[1:]))
-
-            fnme = substance + '_sensitivity_analysis.csv'
+            fnme = mol + '_analysis.csv'
 
             fpath = os.path.join(save_dir, fnme)
 
-            np.savetxt(fpath, writeM, fmt='%s', delimiter=',', header=hdr)
+            np.savetxt(fpath, writeM, delimiter=',', header=hdr)
 
-        head = ''
-        for pi in self.pm.param_labels:
-            head += pi + ','
+    def output_summary_table(self, substance = ['Erk'], run_type = 'sim', save_dir = 'DataOutput'):
 
-        fpath2 = os.path.join(save_dir, 'param_values.csv')
-        np.savetxt(fpath2, self.pm.params_M, delimiter=',', header=head)
+        for mol in substance:
+
+            change_input, change_output = self.work_all_output(substance=mol,
+                                                                         run_type = run_type,
+                                                                         ref_data = self.ref_data)
+
+            a, b = change_input[1:].shape
+
+            if a == b:
+                diag_vals = np.diag(change_input[1:])
+
+                base_vals = np.array(list(self.paramo.values()))
+                units = np.array(list(self.params_units.values()))
+
+                hdr = 'Parameter, Base value, Units, %Δ Parameter, %Δ Output'
+
+                writeM = np.column_stack((self.pm.param_labels, base_vals, units, diag_vals, change_output[1:]))
+
+                fnme = mol + '_sensitivity_analysis.csv'
+
+                fpath = os.path.join(save_dir, fnme)
+
+                np.savetxt(fpath, writeM, fmt='%s', delimiter=',', header=hdr)
+
+            head = ''
+            for pi in self.pm.param_labels:
+                head += pi + ','
+
+            fpath2 = os.path.join(save_dir, 'param_values.csv')
+            np.savetxt(fpath2, self.pm.params_M, delimiter=',', header=head)
 
 
     def output_heteromorphs(self, save_dir = 'DataOutput'):

@@ -46,7 +46,7 @@ class ParamsManager(object):
         self.N_params = self.params_M.shape[1]
 
     def create_search_matrix(self, factor =0.8, levels = 1, style='log',
-                             free_params = None):
+                             free_params = None, up_only = False):
 
         self.factor = factor
         self.levels = levels
@@ -62,8 +62,10 @@ class ParamsManager(object):
 
                 for i in range(len(self.paramo_array)):
 
-                    for j in range(self.levels):
-                        params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
+                    if up_only is False:
+
+                        for j in range(self.levels):
+                            params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
 
                     for j in range(self.levels):
                         params_M.append(self.paramo_array * (1 / self.delta_M[i, :]) ** (j + 1))
@@ -78,8 +80,10 @@ class ParamsManager(object):
 
                     if param_flag == 1: # if the flag is True/1 then add this case to the params Matrix
 
-                        for j in range(self.levels):
-                            params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
+                        if up_only is False:
+
+                            for j in range(self.levels):
+                                params_M.append(self.paramo_array * (self.delta_M[i, :] ** (self.levels - j)))
 
                         for j in range(self.levels):
                             params_M.append(self.paramo_array * (1 / self.delta_M[i, :]) ** (j + 1))
@@ -100,8 +104,10 @@ class ParamsManager(object):
 
                 for i in range(len(self.paramo_array)):
 
-                    for j in range(self.levels):
-                        params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
+                    if up_only is False:
+
+                        for j in range(self.levels):
+                            params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
 
                     for j in range(self.levels):
                         params_M.append(self.paramo_array + (j + 1) * self.delta_M[i, :])
@@ -116,8 +122,10 @@ class ParamsManager(object):
 
                     if param_flag == 1: # if the flag is True/1 then add this case to the params Matrix
 
-                        for j in range(self.levels):
-                            params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
+                        if up_only is False:
+
+                            for j in range(self.levels):
+                                params_M.append(self.paramo_array - (self.levels - j) * self.delta_M[i, :])
 
                         for j in range(self.levels):
                             params_M.append(self.paramo_array + (j + 1) * self.delta_M[i, :])
