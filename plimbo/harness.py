@@ -11,22 +11,11 @@ PLIMBO module.
 '''
 
 import numpy as np
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib import colorbar
 from collections import OrderedDict
-from scipy.ndimage import rotate
-from scipy.misc import imresize
-import copy
-import pickle
 import os
 import os.path
-import sys, time
-import csv
 from betse.lib.pickle import pickles
 from betse.util.path import dirs, pathnames
-from matplotlib import rcParams
 
 from plimbo.sim1D import PlanariaGRN1D
 from plimbo.sim2D import PlanariaGRN2D
@@ -122,7 +111,7 @@ class ModelHarness(object):
 
         # default RNAi testing sequence vector:
         self.RNAi_vect_default = [
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.40,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.35,
              'dynein': 1, 'kinesin': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1},
@@ -144,10 +133,10 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 0.0},
         ]
 
-        self.RNAi_tags_default = ['cAMP_0.38x', 'cAMP_5x', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
+        self.RNAi_tags_default = ['cAMP_0.35x', 'cAMP_5x', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
                                   'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'Kinesin']
 
-        self.xscales_default = [0.75, 1.5, 3.0]
+        self.xscales_default = [0.5, 1.5, 3.0]
 
 
 
@@ -168,74 +157,73 @@ class ModelHarness(object):
                 'Do': 'm^2/s',
 
                 # Beta cat parameters
-                'r_bc': 'mol/s',
+                'r_bc': 'nM/s',
                 'd_bc': '1/s',
-                'K_bc_apc': 'mol/m^3',
+                'K_bc_apc': 'nM/m^3',
                 'n_bc_apc': ' ',
                 'd_bc_deg': '1/s',
-                'K_bc_camp': 'mol/m^3',
+                'K_bc_camp': 'uM/m^3',
                 'n_bc_camp': ' ',
                 'D_bc': 'm^2/s',
-                'u_bc': 'm/s',
+                # 'u_bc': 'm/s',
 
                 # ERK parameters
-                'r_erk': 'mol/s',
+                'r_erk': 'nM/s',
                 'd_erk': '1/s',
-                'K_erk_bc': 'mol/m^3',
+                'K_erk_bc': 'nM/m^3',
                 'n_erk_bc': ' ',
 
                 # APC parameters
-                'r_apc': 'mol/s',
+                'r_apc': 'nM/s',
                 'd_apc': '1/s',
                 'K_apc_wnt': 'mol/m^3',
                 'n_apc_wnt': ' ',
 
                 # Hedgehog parameters:
-                'r_hh': 'mol/s',  # 2.5e-3
+                'r_hh': 'nM/s',  # 2.5e-3
                 'd_hh': '1/s',
                 'D_hh': 'm^2/s',
                 'u_hh': 'm/s',
 
                 # Wnt parameters
-                'r_wnt': 'mol/s',
+                'r_wnt': 'nM/s',
                 'd_wnt': '1/s',
-                'K_wnt_notum': 'mol/m^3',
+                'K_wnt_notum': 'nM/m^3',
                 'n_wnt_notum': ' ',
                 'D_wnt': 'm^2/s',
                 'd_wnt_deg_notum': '1/s',
                 'd_wnt_deg_ptc': '1/s',
-                'K_wnt_hh': 'mol/m^3',
+                'K_wnt_hh': 'nM/m^3',
                 'n_wnt_hh': ' ',
-                'K_wnt_camp': 'mol/m^3',
+                'K_wnt_camp': 'uM/m^3',
                 'n_wnt_camp':' ',
 
                 # NRF parameters
-                'r_nrf': 'mol/s',
+                'r_nrf': 'nM/s',
                 'd_nrf': '1/s',
-                'K_nrf_bc': 'mol/m^3',
+                'K_nrf_bc': 'nM/m^3',
                 'n_nrf_bc': ' ',
                 'D_nrf': 'm^2/s',
                 'u_nrf': 'm/s',
 
                 # Notum parameters
-                'r_notum': 'mol/s',
+                'r_notum': 'nM/s',
                 'd_notum': '1/s',
-                'K_notum_nrf': 'mol/m^3',
+                'K_notum_nrf': 'nM/m^3',
                 'n_notum_nrf': ' ',
                 'D_notum': 'm^2/s',
 
                 # cAMP parameters:
-                'r_camp': 'mol/s',
+                'r_camp': 'uM/s',
                 'd_camp': '1/s',
 
                 # Markov model parameters:
-                'C1': 'mol/m^3',  # ERK constant to modulate head formation
-                'K1': 'mol/m^3',
+                'C1': 'nM/m^3',  # ERK constant to modulate head formation
+                'K1': 'nM/m^3',
 
-                'C2': 'mol/m^3',  # Beta-catenin concentration to modulate tail formation
-                'K2': 'mol/m^3',
-                'Beta_HB': '1/s',  # head tissue decay time constant
-                'Beta_TB': '1/s',  # tail tissue decay time constant
+                'C2': 'nM/m^3',  # Beta-catenin concentration to modulate tail formation
+                'K2': 'nM/m^3',
+                'Beta_B': '1/s',  # head/tail tissue decay time constant
 
                 'max_remod': 's',  # maximum rate at which tissue remodelling occurs
                 'hdac_growth': '1/s',  # growth and decay constant for hdac remodeling molecule

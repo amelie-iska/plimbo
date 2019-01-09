@@ -8,23 +8,11 @@
 '''
 
 import numpy as np
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib import colorbar
 from matplotlib import rcParams
 from collections import OrderedDict
-from scipy.ndimage import rotate
-from scipy.misc import imresize
-import copy
-import pickle
 import os
 import os.path
-import sys, time
-import csv
-from betse.lib.pickle import pickles
-# from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
-from betse.science.parameters import Parameters
 from betse.science.math import toolbox as tb
 from plimbo.simabc import PlanariaGRNABC
 from sklearn.cluster import DBSCAN
@@ -118,8 +106,8 @@ class PlanariaGRN1D(PlanariaGRNABC):
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 
-        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
-        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
+        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_B + self.alpha_BH)
+        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_B + self.alpha_BT)
 
         # Update probabilities in time:
         self.Head += delta_H*self.dt*self.max_remod*self.hdac
@@ -364,11 +352,11 @@ class PlanariaGRN1D(PlanariaGRNABC):
         g_bc, m_bc = self.get_gradient(self.c_BC, self.runtype)
 
         # Motor transport term:
-        conv_term = m_bc*self.u*self.u_bc*kinesin
+        # conv_term = m_bc*self.u*self.u_bc*kinesin
 
-        flux = -g_bc*self.D_bc + conv_term
+        # flux = -g_bc*self.D_bc + conv_term
 
-        # flux = -g_bc * self.Do
+        flux = -g_bc * self.D_bc
 
         # divergence of the flux
         div_flux = self.get_div(flux, self.runtype)

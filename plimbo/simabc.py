@@ -9,22 +9,9 @@ Abstract base classes for high-level simulator objects.
 
 from abc import ABCMeta, abstractmethod
 import numpy as np
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib import colorbar
-from matplotlib import rcParams
 from collections import OrderedDict
-from scipy.ndimage import rotate
-from scipy.misc import imresize
 import copy
-import pickle
-import os
-import os.path
-import sys, time
-import csv
 from betse.lib.pickle import pickles
-# from betse.util.type.mapping.mapcls import DynamicValue, DynamicValueDict
 from betse.science.parameters import Parameters
 from betse.util.type.types import NumpyArrayType
 
@@ -58,8 +45,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'd_bc_deg': 3.0e-3,
                 'K_bc_camp': 1.0,
                 'n_bc_camp': 2.0,
-                'D_bc': 1.0e-11,
-                'u_bc': 2.0e-8,
+                'D_bc': 1.5e-12,
+                # 'u_bc': 2.0e-8,
 
                 # ERK parameters
                 'r_erk': 5.0e-3,
@@ -86,7 +73,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'n_wnt_notum': 2.0,
                 'D_wnt': 0.75e-11,
                 'd_wnt_deg_notum': 5.0e-3,
-                'd_wnt_deg_ptc': 2.5e-5,
+                'd_wnt_deg_ptc': 3.5e-5,
                 'K_wnt_hh': 62.5,
                 'n_wnt_hh': 2.0,
                 'K_wnt_camp': 0.5,
@@ -98,13 +85,13 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'K_nrf_bc': 100.0,
                 'n_nrf_bc': 1.0,
                 'D_nrf': 2.5e-11,
-                'u_nrf': -1.5e-7,
+                'u_nrf': -1.0e-7,
 
                 # Notum parameters
                 'r_notum': 5.0e-3,
                 'd_notum': 5.0e-3,
                 'K_notum_nrf': 300.0,
-                'n_notum_nrf': 2.5,
+                'n_notum_nrf': 3.0,
                 'D_notum': 2.5e-11,
 
                 #cAMP parameters:
@@ -117,8 +104,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 'C2': 75.0, # Beta-catenin concentration to modulate tail formation
                 'K2': 4.0,
-                'Beta_HB': 5.0e-3, # head tissue decay time constant
-                'Beta_TB': 5.0e-3, # tail tissue decay time constant
+                'Beta_B': 5.0e-3, # head/tail tissue decay time constant
 
                 'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
                 'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
@@ -187,7 +173,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.K_bc_camp = self.pdict['K_bc_camp']
         self.n_bc_camp = self.pdict['n_bc_camp']
         self.D_bc = self.pdict['D_bc']
-        self.u_bc = self.pdict['u_bc']
+        # self.u_bc = self.pdict['u_bc']
 
         self.c_BC = np.ones(self.cdl)
         self.c_BC_time = []
@@ -270,8 +256,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.K1 = self.pdict['K1']
         self.C2 = self.pdict['C2']  # Beta-catenin concentration to modulate tail formation
         self.K2 = self.pdict['K2']
-        self.beta_HB = self.pdict['Beta_HB']  # head tissue decay time constant
-        self.beta_TB = self.pdict['Beta_TB']  # tail tissue decay time constant
+        self.beta_B = self.pdict['Beta_B']  # head/tail tissue decay time constant
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 

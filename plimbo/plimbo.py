@@ -7,23 +7,8 @@
 Top-level Planarian Interface for Modelling Body Organization (PLIMBO) module.
 '''
 
-# import pickle
-import numpy as np
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib import colorbar
-from collections import OrderedDict
-from scipy.ndimage import rotate
-from scipy.misc import imresize
-import copy
-import pickle
 import os
 import os.path
-import sys, time
-import csv
-from betse.lib.pickle import pickles
-from matplotlib import rcParams
 
 from plimbo.harness import ModelHarness
 

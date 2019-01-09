@@ -11,8 +11,6 @@ import numpy as np
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib import colorbar
 from matplotlib.collections import PolyCollection
 from matplotlib import rcParams
 
@@ -21,8 +19,6 @@ import copy
 import os
 import os.path
 
-
-from betse.lib.pickle import pickles
 from betse.science.simrunner import SimRunner
 from betse.science import filehandling as fh
 from betse.science.math import modulate
@@ -78,8 +74,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 
-        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_HB + self.alpha_BH)
-        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_TB + self.alpha_BT)
+        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_B + self.alpha_BH)
+        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_B + self.alpha_BT)
 
 
         # Update probabilities in time:
@@ -545,19 +541,19 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         # gradient of concentration:
         _, g_bcx, g_bcy = self.cells.gradient(self.c_BC)
-        m_bc = self.cells.meanval(self.c_BC)
+        # m_bc = self.cells.meanval(self.c_BC)
 
-        # Motor transport term:
-        conv_term_x = m_bc * self.ux * self.u_bc * kinesin
-        conv_term_y = m_bc * self.uy * self.u_bc * kinesin
-
-        # flux:
-        fx = -g_bcx * self.D_bc + conv_term_x
-        fy = -g_bcy * self.D_bc + conv_term_y
+        # #Motor transport term:
+        # conv_term_x = m_bc * self.ux * self.u_bc * kinesin
+        # conv_term_y = m_bc * self.uy * self.u_bc * kinesin
 
         # # flux:
-        # fx = -g_bcx * self.Do
-        # fy = -g_bcy * self.Do
+        # fx = -g_bcx * self.D_bc + conv_term_x
+        # fy = -g_bcy * self.D_bc + conv_term_y
+
+        # flux:
+        fx = -g_bcx * self.D_bc
+        fy = -g_bcy * self.D_bc
 
         # divergence of the flux:
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -726,13 +722,9 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         return del_cAMP
 
-    def test_run(self, run_time=100.0,
-                 run_time_step=10.0,
-                 run_time_sample=100):
-
-        # Test concentration to ensure conservatio of mass
-        termx = (self.xc / self.xc.mean()) ** 2
-        self.c_Test = termx / (1 + termx)
+    def test_runA(self, run_time=96.0*3600,
+                 run_time_step=60.0,
+                 run_time_sample=50):
 
         self.c_Test_time = []
 
@@ -745,39 +737,116 @@ class PlanariaGRN2D(PlanariaGRNABC):
         self.time = np.linspace(self.tmin, self.tmax, self.nt)
         self.tsample = self.time[0:-1:self.tsamp]
 
-        Dtest = 5.0e-11
-        utest = -1.0e-7
-        rtest = 0.0
-        dtest = 0.0
+        to_NRF = self.r_nrf/self.d_nrf
+
+        self.c_NRF = np.ones(self.cdl)*to_NRF
+
+        print("Running convection test!")
 
         for tt in self.time:
 
-            # Gradient of concentration
-            _, g_x, g_y = self.cells.gradient(self.c_Test)
+            # Gradient and midpoint mean of concentration
+            _, g_nrf_x, g_nrf_y = self.cells.gradient(self.c_NRF)
 
-            #         Motor transport term:
-            m_test = self.cells.meanval(self.c_Test)
+            m_nrf = self.cells.meanval(self.c_NRF)
 
-            conv_x = m_test * self.ux * utest
-            conv_y = m_test * self.uy * utest
+            # Motor transport term:
+            conv_term_x = m_nrf * self.ux * self.u_nrf
+            conv_term_y = m_nrf * self.uy * self.u_nrf
 
-            fx = -g_x * Dtest + conv_x
-            fy = -g_y * Dtest + conv_y
+            fx = -g_nrf_x * self.D_nrf + conv_term_x
+            fy = -g_nrf_y * self.D_nrf + conv_term_y
 
-            #             fx = -g_x*Dtest
-            #             fy = -g_y*Dtest
-
-            #         divergence
             div_flux = self.cells.div(fx, fy, cbound=True)
 
-            # final change in test
-            del_test = (-div_flux + rtest - dtest * self.c_Test)
+            # divergence of flux, growth and decay, breakdown in chemical tagging reaction:
+            # del_nrf = (-div_flux + self.r_nrf - self.d_nrf * self.c_NRF)
 
-            self.c_Test += del_test * self.dt
+            del_nrf = -div_flux
+
+            self.c_NRF += del_nrf * self.dt
+
+            if tt in self.tsample:
+
+                self.c_Test_time.append(self.c_NRF*1)
 
         self.tot_conc_time = np.asarray(
             [(ci * self.cells.cell_vol).sum() for ci in self.c_Test_time]
         )
+
+    def test_runB(self, run_time=96.0*3600,
+                 run_time_step=60.0,
+                 run_time_sample=50):
+
+        self.c_NRF_time = []
+        self.c_BC_time = []
+
+        # set time parameters:
+        self.tmin = 0.0
+        self.tmax = run_time
+        self.dt = run_time_step * self.x_scale
+        self.tsamp = run_time_sample
+        self.nt = int((self.tmax - self.tmin) / self.dt)
+        self.time = np.linspace(self.tmin, self.tmax, self.nt)
+        self.tsample = self.time[0:-1:self.tsamp]
+
+        print("Running convection test B!")
+
+        for tt in self.time:
+
+            #Update BC----------------------------------------------------------
+            # Growth and decay
+            iAPC = (self.c_NRF / self.K_notum_nrf) ** self.n_notum_nrf
+            term_apc = iAPC / (1 + iAPC)
+
+            # gradient of concentration:
+            _, g_bcx, g_bcy = self.cells.gradient(self.c_BC)
+
+
+            # flux:
+            fx = -g_bcx * self.D_bc
+            fy = -g_bcy * self.D_bc
+
+            # divergence of the flux:
+            div_flux = self.cells.div(fx, fy, cbound=True)
+
+            # change of bc:
+            del_bc = (-div_flux + self.r_bc * self.NerveDensity -
+                      self.d_bc * self.c_BC - self.d_bc_deg * term_apc * self.c_BC)
+
+
+            #Update NRF---------------------------------------------------------
+
+            # Growth and decay interactions:
+            iBC = (self.c_BC / self.K_nrf_bc) ** self.n_nrf_bc
+
+            term_bc = iBC / (1 + iBC)
+
+            # Gradient and midpoint mean of concentration
+            _, g_nrf_x, g_nrf_y = self.cells.gradient(self.c_NRF)
+
+            m_nrf = self.cells.meanval(self.c_NRF)
+
+            # Motor transport term:
+            conv_term_x = m_nrf * self.ux * self.u_nrf
+            conv_term_y = m_nrf * self.uy * self.u_nrf
+
+            fx = -g_nrf_x * self.D_nrf + conv_term_x
+            fy = -g_nrf_y * self.D_nrf + conv_term_y
+
+            div_flux = self.cells.div(fx, fy, cbound=True)
+
+            # divergence of flux, growth and decay, breakdown in chemical tagging reaction:
+            del_nrf = (-div_flux + self.r_nrf * term_bc - self.d_nrf * self.c_NRF)
+
+
+            self.c_NRF += del_nrf * self.dt
+            self.c_BC += del_bc * self.dt
+
+            if tt in self.tsample:
+
+                self.c_NRF_time.append(self.c_NRF*1)
+                self.c_BC_time.append(self.c_BC*1)
 
     # Post-processing functions--------------------------------
     def get_tops(self, cinds):
@@ -827,12 +896,12 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         mol_cmaps['β-Cat'] = cm.magma
         mol_cmaps['Erk'] = cm.RdBu_r
-        mol_cmaps['Wnt'] = cm.Spectral
-        mol_cmaps['Hh'] = cm.Spectral
-        mol_cmaps['NRF'] = cm.Spectral
+        mol_cmaps['Wnt'] = cm.magma
+        mol_cmaps['Hh'] = cm.magma
+        mol_cmaps['NRF'] = cm.magma
         mol_cmaps['Notum'] = cm.PiYG_r
-        mol_cmaps['APC'] = cm.Spectral
-        mol_cmaps['cAMP'] = cm.Spectral
+        mol_cmaps['APC'] = cm.magma
+        mol_cmaps['cAMP'] = cm.magma
         mol_cmaps['Head'] = cm.RdBu_r
         mol_cmaps['Tail'] = cm.magma
 
