@@ -32,24 +32,88 @@ PLIMBO is `portably implemented <codebase_>`__ in pure `Python 3`_, will be
 py.test_, and `permissively distributed <License_>`__ under the `BSD 2-clause
 license`_.
 
-Installation and Use
-====================
-To use the Planaria Interface for Modeling Body Organization (PLIMBO), first
-follow the installation instructions for the BETSE simulator:
+Installation
+============
 
-https://gitlab.com/betse/betse
+PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 
-PLIMBO can then be downloaded from the present repository:
+- [\ *Windows*\ ] Emulate **Ubuntu Linux** via the `Windows Subsystem for Linux
+  (WSL) <WSL_>`__. [#windows_not]_
+- Install the **Python 3.x** [#python2_not]_ (e.g., 3.6) variant of Anaconda_.
+  [#anaconda_not]_
+- Install `Jupyter Notebook`_.
+- Open a **Bash terminal.** [#terminal]_
+- Run the following commands.
 
-https://gitlab.com/betse/plimbo
+  - Enable conda-forge_.
 
-All main functions of PLIMBO are set up in a Jupyter Notebook, PLIMBO_Runner.ipynb,
-which is available in the top-level of the PLIMBO repository. Documentation for
-use is supplied in PLIMBO_Runner.ipynb. Jupyter is a free and Open Source
-interactive Python environment available from:
+    .. code-block:: console
 
-https://jupyter.org/
+       conda config --add channels conda-forge
 
+  - Install all mandatory dependencies of PLIMBO.
+
+    .. code-block:: console
+
+       conda install betse scikit-learn
+
+  - Download the `most recent stable release of PLIMBO <tarballs_>`__.**
+
+    .. code-block:: console
+
+       mkdir ~/PLIMBO && cd ~/PLIMBO && curl https://gitlab.com/betse/plimbo/tags
+
+  - Install **PLIMBO.**
+
+    .. code-block:: console
+
+       sudo ln -s plimbo "$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/"
+
+.. [#windows_not]
+   The `Windows Subsystem for Linux (WSL) <WSL_>`__ and – hence BETSE itself –
+   is *only* installable under **Windows 10.** Under older Windows versions,
+   BETSE may be installed from a `virtual Linux guest <VirtualBox_>`__.
+
+.. [#python2_not]
+   Do *not* install the **Python 2.7** variant of Anaconda_. BETSE requires
+   **Python 3.x.**
+
+.. [#anaconda_not]
+   If you prefer *not* to install Anaconda_, BETSE dependencies are also
+   `manually installable <Advanced_>`__ via your platform-specific package
+   manager (e.g., Homebrew_ on macOS, APT_ on Ubuntu Linux). Doing so is
+   non-trivial and, where performed incorrectly, could produce a
+   performance-crippled single-core installation of BETSE. Anaconda_ suffers no
+   such issues and is guaranteed to produce a performance-optimized multicore
+   installation of BETSE on *all* supported platforms. We strongly recommend
+   Anaconda_ – even when you think you know better.
+
+.. [#terminal]
+   To open a `POSIX`_\ -compatible terminal under:
+
+   - **Windows:**
+
+     #. Install **Ubuntu Linux** via the `Windows Subsystem for Linux (WSL) <WSL_>`__.
+     #. Open an *Ubuntu Linux terminal.*
+
+   - **macOS:**
+
+     #. Open the *Finder*.
+     #. Open the *Applications* folder.
+     #. Open the *Utilities* folder.
+     #. Open *Terminal.app*.
+
+   - **Ubuntu Linux:**
+
+     #. Type ``Ctrl``\ +\ ``Alt``\ +\ ``t``.
+
+Usage
+=====
+
+To use the Planaria Interface for Modeling Body Organization (PLIMBO), open the
+installed ``~/PLIMBO/PLIMBO_Runner.ipynb`` file with `Jupyter Notebook`_. This
+file provides all main functions of PLIMBO in a convenient format, complete with
+detailed documentation.
 
 Contact
 =======
@@ -231,6 +295,8 @@ PLIMBO is open-source software `released <license_>`__ under the permissive
    http://www.graphviz.org
 .. _imageio:
    https://imageio.github.io
+.. _Jupyter Notebook:
+   https://jupyter.org
 .. _Libav:
    https://libav.org
 .. _Matplotlib:
