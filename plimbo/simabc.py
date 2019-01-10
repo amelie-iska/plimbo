@@ -64,7 +64,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'r_hh': 5.0e-3,
                 'd_hh': 1.0e-5,
                 'D_hh': 2.5e-11,
-                'u_hh': 1.5e-7,
+                # 'u_hh': 1.5e-7,
 
                 # Wnt parameters
                 'r_wnt': 5.0e-3,
@@ -76,8 +76,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'd_wnt_deg_ptc': 3.5e-5,
                 'K_wnt_hh': 62.5,
                 'n_wnt_hh': 2.0,
-                'K_wnt_camp': 0.5,
-                'n_wnt_camp': 2.0,
+                # 'K_wnt_camp': 0.5,
+                # 'n_wnt_camp': 2.0,
 
                 # NRF parameters
                 'r_nrf': 2.5e-3,
@@ -160,7 +160,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
         # Default RNAi keys:
         self.RNAi_defaults = {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1,
-         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1, 'kinesin':1}
+         'wnt': 1, 'hh': 1, 'camp': 1,'dynein': 1, 'kinesin':1, 'ptc':1}
 
         self.init_plots()
 
@@ -201,7 +201,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.r_hh = self.pdict['r_hh']
         self.d_hh = self.pdict['d_hh']
         self.D_hh = self.pdict['D_hh']
-        self.u_hh = self.pdict['u_hh']
+        # self.u_hh = self.pdict['u_hh']
 
         self.c_HH = np.zeros(self.cdl)
         self.c_HH_time = []
@@ -216,8 +216,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.n_wnt_notum = self.pdict['n_wnt_notum']
         self.K_wnt_hh = self.pdict['K_wnt_hh']
         self.n_wnt_hh = self.pdict['n_wnt_hh']
-        self.K_wnt_camp = self.pdict['K_wnt_camp']
-        self.n_wnt_camp = self.pdict['n_wnt_camp']
+        # self.K_wnt_camp = self.pdict['K_wnt_camp']
+        # self.n_wnt_camp = self.pdict['n_wnt_camp']
 
         self.c_WNT = np.zeros(self.cdl)
         self.c_WNT_time = []
@@ -331,7 +331,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def update_wnt(self, rnai=1.0) -> NumpyArrayType:
+    def update_wnt(self, rnai=1.0, rnai2 = 1.0) -> NumpyArrayType:
         """
         Method describing change in Wnt1 and Wnt 11 levels in space and time.
         """
@@ -438,7 +438,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         for tt in self.time:
 
             delta_bc = self.update_bc(rnai=knockdown['bc']) * self.dt  # time update beta-catenin
-            delta_wnt = self.update_wnt(rnai=knockdown['wnt']) * self.dt  # time update wnt
+            delta_wnt = self.update_wnt(rnai=knockdown['wnt'], rnai2 = knockdown['ptc']) * self.dt  # time update wnt
             delta_hh = self.update_hh(rnai=knockdown['hh'],
                                       kinesin=knockdown['kinesin']) * self.dt  # time update hh
             delta_nrf = self.update_nrf(dynein=knockdown['dynein']) * self.dt  # update NRF
@@ -807,6 +807,9 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 morph_probs[fragn]['0T'] = p0T
                 morph_probs[fragn]['2H'] = p2H
 
+                pBlob = 1.0 - p2T - p0H - p1H - p0T - p2H # Blobs have neither head nor tail...
+                morph_probs[fragn]['00'] = pBlob
+
         # probability of head/tail/fail outcomes at each wound:
         self.frag_probs = frag_probs
 
@@ -821,7 +824,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         """
         morph_data = []
 
-        col_tags = ['2T', '0H', '1H', '0T', '2H']
+        col_tags = ['2T', '0H', '1H', '0T', '2H', '00']
         row_tags = []
 
         for frag_n, hmorphs, in self.morph_probs.items():
@@ -831,8 +834,9 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             p1H = np.round(hmorphs['1H'],2)
             p0T = np.round(hmorphs['0T'],2)
             p2H = np.round(hmorphs['2H'],2)
+            p00 = np.round(hmorphs['00'],2)
 
-            row_data = [p2T, p0H, p1H, p0T, p2H]
+            row_data = [p2T, p0H, p1H, p0T, p2H, p00]
 
             morph_data.append(row_data)
             row_tags.append('Frag ' + str(frag_n))
@@ -843,7 +847,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             morph_data = morph_data.T
             # reassign column and row tags
             col_tags = row_tags
-            row_tags = ['2T', '0H', '1H', '0T', '2H']
+            row_tags = ['2T', '0H', '1H', '0T', '2H', '00']
 
 
 

@@ -536,8 +536,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         iAPC = (self.c_APC / self.K_bc_apc) ** self.n_bc_apc
         term_apc = iAPC / (1 + iAPC)
 
-        icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
-        term_camp = 1 / (1 + icAMP)
+        # icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
+        # term_camp = 1 / (1 + icAMP)
 
         # gradient of concentration:
         _, g_bcx, g_bcy = self.cells.gradient(self.c_BC)
@@ -559,8 +559,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # change of bc:
-        del_bc = (-div_flux + rnai * self.r_bc * self.NerveDensity -
-                  self.d_bc * self.c_BC - self.d_bc_deg * term_apc * self.c_BC * term_camp)
+        del_bc = (-div_flux + rnai * self.r_bc -
+                  self.d_bc * self.c_BC - self.d_bc_deg * term_apc * self.c_BC)
 
         return del_bc  # change in bc
 
@@ -589,7 +589,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # divergence of flux, growth and decay, breakdown in chemical tagging reaction:
-        del_nrf = (-div_flux + self.r_nrf * term_bc - self.d_nrf * self.c_NRF)
+        del_nrf = (-div_flux + self.r_nrf*term_bc*self.NerveDensity - self.d_nrf * self.c_NRF)
 
         return del_nrf  # change in NRF
 
@@ -614,7 +614,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         return del_notum
 
-    def update_wnt(self, rnai=1.0):
+    def update_wnt(self, rnai=1.0, rnai2 = 1.0):
         """
         Method describing change in Wnt1 and Wnt 11 levels in space and time.
         """
@@ -622,11 +622,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
         # Growth and decay
         iNotum = (self.c_Notum / self.K_wnt_notum) ** self.n_wnt_notum
         iHH = (self.c_HH / self.K_wnt_hh) ** self.n_wnt_hh
-        icAMP = (self.c_cAMP / self.K_wnt_camp) ** self.n_wnt_camp
+        # icAMP = (self.c_cAMP / self.K_wnt_camp) ** self.n_wnt_camp
 
         term_hh = 1 / (1 + iHH)
         term_notum = iNotum / (1 + iNotum)
-        term_camp = icAMP / (1 + icAMP)
+        # term_camp = icAMP / (1 + icAMP)
 
         # Gradient of concentration
         _, g_wnt_x, g_wnt_y = self.cells.gradient(self.c_WNT)
@@ -638,9 +638,13 @@ class PlanariaGRN2D(PlanariaGRNABC):
         # divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
 
-        del_wnt = (-div_flux + rnai * self.r_wnt  * term_camp * self.NerveDensity -
-                   self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT* term_hh
-                                           - self.d_wnt_deg_ptc * term_hh * self.c_WNT)
+        del_wnt = (-div_flux + rnai * self.r_wnt  -
+                   self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT
+                                           - self.d_wnt_deg_ptc * term_hh * self.c_WNT*rnai2)
+
+        # del_wnt = (-div_flux + rnai * self.r_wnt  * term_camp * self.NerveDensity -
+        #            self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT* term_hh
+        #                                    - self.d_wnt_deg_ptc * term_hh * self.c_WNT)
 
 
         return del_wnt  # change in Wnt
@@ -654,20 +658,23 @@ class PlanariaGRN2D(PlanariaGRNABC):
         _, g_hh_x, g_hh_y = self.cells.gradient(self.c_HH)
 
         #         Motor transport term:
-        m_hh = self.cells.meanval(self.c_HH)
+        # m_hh = self.cells.meanval(self.c_HH)
 
-        # Motor transport term:
-        conv_term_x = m_hh * self.ux * self.u_hh * kinesin
-        conv_term_y = m_hh * self.uy * self.u_hh * kinesin
+        # # Motor transport term:
+        # conv_term_x = m_hh * self.ux * self.u_hh * kinesin
+        # conv_term_y = m_hh * self.uy * self.u_hh * kinesin
+        #
+        # fx = -g_hh_x * self.D_hh + conv_term_x
+        # fy = -g_hh_y * self.D_hh + conv_term_y
 
-        fx = -g_hh_x * self.D_hh + conv_term_x
-        fy = -g_hh_y * self.D_hh + conv_term_y
+        fx = -g_hh_x * self.D_hh
+        fy = -g_hh_y * self.D_hh
 
         #         divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # final change in hh
-        del_hh = (-div_flux + rnai * self.r_hh * self.NerveDensity - self.d_hh * self.c_HH)
+        del_hh = (-div_flux + rnai * self.r_hh*self.NerveDensity - self.d_hh * self.c_HH)
 
         return del_hh  # change in Hedgehog
 
@@ -698,18 +705,23 @@ class PlanariaGRN2D(PlanariaGRNABC):
         """
 
         iWNT = (self.c_WNT / self.K_apc_wnt) ** self.n_apc_wnt
+        term_wnt = 1 / (1 + iWNT) # Wnts inhibit activity of the APC by inhibiting 'growth'
+        term_wnt2 = iWNT / (1 + iWNT) # Wnts also inhibit activity of the APC by promoting 'decay'
 
-        term_wnt = 1 / (1 + iWNT)
 
-        _, g_apc_x, g_apc_y = self.cells.gradient(self.c_APC)
+        icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
+        term_camp = 1 / (1 + icAMP) # cAMP inhibits activity of the APC by inhibiting 'growth'
+        term_camp2 = icAMP/(1+ icAMP) # cAMP inhibits activity of the APC by promoting 'decay'
 
-        fx = -g_apc_x * self.Do
-        fy = -g_apc_y * self.Do
+        # _, g_apc_x, g_apc_y = self.cells.gradient(self.c_APC)
+        #
+        # fx = -g_apc_x * self.Do
+        # fy = -g_apc_y * self.Do
+        #
+        # #         divergence
+        # div_flux = self.cells.div(fx, fy, cbound=True)
 
-        #         divergence
-        div_flux = self.cells.div(fx, fy, cbound=True)
-
-        del_apc = -div_flux + rnai * self.r_apc * term_wnt - self.d_apc * self.c_APC
+        del_apc = rnai * self.r_apc * term_wnt*term_camp - self.d_apc * self.c_APC*term_camp2*term_wnt2
 
         return del_apc
 

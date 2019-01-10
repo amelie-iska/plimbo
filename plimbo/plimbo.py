@@ -191,8 +191,8 @@ class PlimboRunner(object):
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, plot_frags = True,
                 run_time_reinit = 12.0,  xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SimRNAi_1', reset_clims = True, animate = False, plot = True, axisoff = False,
-                plot_type = 'Triplot', ani_type = 'Triplot', save_harness = False, harness_type='1D',
-                fsize = (6,8), clims = None):
+                plot_type = ['Triplot'], ani_type = 'Triplot', save_harness = False, harness_type='1D',
+                fsize = [(6,8)], clims = None):
 
 
         # Create an instance of the model harness:
@@ -241,8 +241,8 @@ class PlimboRunner(object):
                 run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0, run_type = 'init',
                  xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                 save_dir='Sensitivity_1', reset_clims=True, animate=False, plot=True, axisoff = False,
-                plot_type='Triplot', save_harness=False, harness_type='1D', reference = ['Head','Tail'], fsize = (6,8),
-                    clims = None, paramo_units = None):
+                plot_type=['Triplot'], save_harness=False, harness_type='1D', reference = ['Head','Tail'],
+                    fsize = [(6,8)], clims = None, paramo_units = None):
 
         # Create an instance of the model harness:
 
@@ -277,7 +277,7 @@ class PlimboRunner(object):
                   run_time_init=36000.0, run_time_sim=36000.0, run_time_step=60.0, run_time_sample=50.0,
                run_time_reinit=12.0, xscale=1.0, verbose=True, new_mesh=False, ani_type = 'Triplot',
                save_dir='ScaleRNAi_1', reset_clims=True, animate=False, plot=True, axisoff = False,
-               plot_type='Triplot', save_harness=False, harness_type='1D', fsize = (6,8), clims = None):
+               plot_type=['Triplot'], save_harness=False, harness_type='1D', fsize = [(6,8)], clims = None):
 
         # Create an instance of the model harness:
 
@@ -313,7 +313,7 @@ class PlimboRunner(object):
                 run_time_sim = 36000.0, run_time_step = 60.0, run_time_sample = 50.0, search_style = 'log',
                    factor = 0.8, levels = 1, run_time_reinit = 12.0, xscale = 1.0, verbose = True, new_mesh = False,
                 save_dir = 'SearchRNAi_1', reset_clims = True, animate = False, plot = True, ani_type = 'Triplot',
-                plot_type = 'Triplot', save_harness = True, harness_type='1D', plot_frags = True, fsize = (6,8),
+                plot_type = ['Triplot'], save_harness = True, harness_type='1D', plot_frags = True, fsize = [(6,8)],
                    clims = None, up_only = False):
 
         # Create an instance of the model harness:
@@ -345,8 +345,8 @@ class PlimboRunner(object):
         self.master = master
 
 
-    def after_plot(self, loadpath, save_dir = 'Plots', plot_type = 'Triplot', output_type = 'sim', axisoff = False,
-                   autoscale = False, clims=None, cmaps=None, verbose = True, harness_type = '1D', fsize = (6,8)):
+    def after_plot(self, loadpath, save_dir = 'Plots', plot_type = ['Triplot'], output_type = 'sim', axisoff = False,
+                   autoscale = False, clims=None, cmaps=None, verbose = True, harness_type = '1D', fsize = [(6,8)]):
 
         if verbose:
             print("Plotting simulation...")
