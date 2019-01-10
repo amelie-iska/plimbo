@@ -9,7 +9,10 @@ Top-level Planarian Interface for Modelling Body Organization (PLIMBO) module.
 
 import os
 import os.path
-
+from collections import OrderedDict
+import plimbo
+from betse.util.path import files
+from betse.util.type.decorator.decmemo import property_cached
 from plimbo.harness import ModelHarness
 
 
@@ -19,13 +22,126 @@ class PlimboRunner(object):
 
     """
 
-    def __init__(self, fn_config, verbose = True, head_frags = None, tail_frags = None):
+    def __init__(self, worm_model ='1HWorm_Default', fn_config = None, verbose = True, head_frags = None,
+                 tail_frags = None):
         """
 
         :param fn_config: BETSE config file for model creation and file saving information
         """
 
-        self.fn_config = fn_config # assign path to BETSE config file
+        self.worm_model_keys = OrderedDict({})
+        self.worm_model_keys['1HWorm_Default'] = 'Default 1H Worm model cut into 5 fragments.'
+        self.worm_model_keys['1HWorm1_4Cuts'] = '1H Worm model 1 cut into 5 fragments.'
+        self.worm_model_keys['1HWorm1_2Cuts'] = '1H Worm model 1 cut into 3 fragments.'
+        self.worm_model_keys['1HWorm1_1Cut'] = '1H Worm model 1 cut into 2 fragments.'
+        self.worm_model_keys['1HWorm2_4Cuts'] = '1H Worm model 2 cut into 5 fragments.'
+        self.worm_model_keys['1HWorm2_2Cuts'] = '1H Worm model 2 cut into 3 fragments.'
+        self.worm_model_keys['1HWorm3_4Cuts'] = '1H Worm model 3 cut into 5 fragments.'
+        self.worm_model_keys['1HWorm3_2Cuts'] = '1H Worm model 3 cut into 3 fragments.'
+        self.worm_model_keys['1HWorm5_4Cuts'] = '1H Worm model 5 cut into 5 fragments.'
+        self.worm_model_keys['1HWorm5_2Cuts'] = '1H Worm model 5 cut into 3 fragments.'
+        self.worm_model_keys['1HWorm5_1Cut'] = '1H Worm model 5 cut into 2 fragments.'
+        self.worm_model_keys['2HWorm1_2Cuts_sym'] = '2H Worm model 1 cut into 3 symmetric fragments around midline.'
+        self.worm_model_keys['2HWorm1_2Cuts_asym'] = '2H Worm model 1 cut into 3 asymmetric fragments.'
+        self.worm_model_keys['2HWorm1_1Cut_sym'] = '2H Worm model 1 cut into 2 symmetric fragments at midline.'
+        self.worm_model_keys['2HWorm1_1Cut_asym'] = '2H Worm model 1 cut into 2 asymmetric fragments.'
+        self.worm_model_keys['2HWorm1_1Cut_diag'] = '2H Worm model 1 cut into 2 diagonally-shaped fragments.'
+        self.worm_model_keys['2HWorm2_2Cuts_sym'] = '2H Worm model 2 cut into 3 symmetric fragments around midline.'
+        self.worm_model_keys['2HWorm2_2Cuts_asym'] = '2H Worm model 2 cut into 3 asymmetric fragments.'
+        self.worm_model_keys['2HWorm2_1Cut_sym'] = '2H Worm model 2 cut into 2 symmetric fragments at midline.'
+        self.worm_model_keys['2HWorm2_1Cut_asym'] = '2H Worm model 2 cut into 2 asymmetric fragments.'
+        self.worm_model_keys['2HWorm2_1Cut_diag'] = '2H Worm model 2 cut into 2 diagonally-shaped fragments.'
+        self.worm_model_keys['2HWorm3_2Cuts_sym'] = '2H Worm model 3 cut into 3 symmetric fragments around midline.'
+        self.worm_model_keys['2HWorm3_2Cuts_asym'] = '2H Worm model 3 cut into 3 asymmetric fragments.'
+        self.worm_model_keys['2HWorm3_1Cut_sym'] = '2H Worm model 3 cut into 2 symmetric fragments at midline.'
+        self.worm_model_keys['2HWorm3_1Cut_asym'] = '2H Worm model 3 cut into 2 asymmetric fragments.'
+        self.worm_model_keys['2HWorm3_1Cut_diag'] = '2H Worm model 3 cut into 2 diagonally-shaped fragments.'
+
+        if fn_config is None: # use one of the built-in config file models available:
+
+            if worm_model == '1HWorm_Default':
+                self.fn_config = files.join_or_die(self.data_dirname, 'BasicTesting', '1H1', '1H_ellipse.yaml')
+
+            elif worm_model == '1HWorm1_4Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H1Worm', '1H_ellipse.yaml')
+
+            elif worm_model == '1HWorm1_2Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H1Worm', '1H_ellipse_sim_3Cuts.yaml')
+
+            elif worm_model == '1HWorm1_1Cut':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H1Worm', '1H_ellipse_sim_1Cut.yaml')
+
+            elif worm_model == '1HWorm2_4Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H2Worm', '1H_ellipse.yaml')
+
+            elif worm_model == '1HWorm2_2Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H2Worm', '1H_ellipse_sim_3Cuts.yaml')
+
+            elif worm_model == '1HWorm3_4Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H3Worm', '1H_ellipse.yaml')
+
+            elif worm_model == '1HWorm3_2Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H3Worm', '1H_ellipse_sim_3Cuts.yaml')
+
+            elif worm_model == '1HWorm5_4Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H5Worm', '1H_ellipse.yaml')
+
+            elif worm_model == '1HWorm5_2Cuts':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H5Worm', '1H_ellipse_sim_3Cuts.yaml')
+
+            elif worm_model == '1HWorm5_1Cut':
+                self.fn_config = files.join_or_die(self.data_dirname, '1H5Worm', '1H_ellipse_sim_1Cut.yaml')
+
+            elif worm_model == '2HWorm1_2Cuts_sym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H1Worm', '1H_ellipse_sim_CutsC.yaml')
+
+            elif worm_model == '2HWorm1_2Cuts_asym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H1Worm', '1H_ellipse_sim_CutsB.yaml')
+
+            elif worm_model == '2HWorm1_1Cut_asym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H1Worm', '1H_ellipse_sim_CutsA.yaml')
+
+            elif worm_model == '2HWorm1_1Cut_sym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H1Worm', '1H_ellipse_sim_Diag0.yaml')
+
+            elif worm_model == '2HWorm1_1Cut_diag':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H1Worm', '1H_ellipse_sim_Diag2.yaml')
+
+            elif worm_model == '2HWorm2_2Cuts_sym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H2Worm', '1H_ellipse_sim_CutsC.yaml')
+
+            elif worm_model == '2HWorm2_2Cuts_asym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H2Worm', '1H_ellipse_sim_CutsB.yaml')
+
+            elif worm_model == '2HWorm2_1Cut_asym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H2Worm', '1H_ellipse_sim_CutsA.yaml')
+
+            elif worm_model == '2HWorm2_1Cut_sym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H2Worm', '1H_ellipse_sim_Diag0.yaml')
+
+            elif worm_model == '2HWorm2_1Cut_diag':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H2Worm', '1H_ellipse_sim_Diag2.yaml')
+
+            elif worm_model == '2HWorm3_2Cuts_sym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H3Worm', '1H_ellipse_sim_CutsC.yaml')
+
+            elif worm_model == '2HWorm3_2Cuts_asym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H3Worm', '1H_ellipse_sim_CutsB.yaml')
+
+            elif worm_model == '2HWorm3_1Cut_asym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H3Worm', '1H_ellipse_sim_CutsA.yaml')
+
+            elif worm_model == '2HWorm3_1Cut_sym':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H3Worm', '1H_ellipse_sim_Diag0.yaml')
+
+            elif worm_model == '2HWorm3_1Cut_diag':
+                self.fn_config = files.join_or_die(self.data_dirname, '2H3Worm', '1H_ellipse_sim_Diag2.yaml')
+
+
+        else: # allow the user to supply their own config file
+
+            self.fn_config = fn_config # assign a path to a BETSE config file describing model of choice
+
         self.verbose = verbose
 
         # specify fragments that are heads or tails for the Markov simulation:
@@ -37,6 +153,38 @@ class PlimboRunner(object):
             self.tail_frags = [4]
         else:
             self.tail_frags = tail_frags
+
+    def print_available_models(self):
+
+        print("Here is a list of worm model keys and a brief description: ")
+        print("----------------------------------------------------------")
+
+        for kk, ii in self.worm_model_keys.items():
+            print(kk, '  ', ii)
+
+
+    @property_cached
+    def data_dirname(self) -> str:
+        '''
+        Absolute dirname of this application's top-level data directory if
+        found *or* raise an exception otherwise (i.e., if this directory is
+        *not* found).
+
+        This directory typically contains application-internal resources (e.g.,
+        media files) required at application runtime.
+
+        Raises
+        ----------
+        BetseDirException
+            If this directory does *not* exist.
+        '''
+
+        # Avoid circular import dependencies.
+        from betse.util.app import apppath
+
+        # Return the absolute dirname of this application-relative directory if
+        # this directory exists *OR* raise an exception otherwise.
+        return apppath.get_dirname(package=plimbo, dirname='data')
 
 
     def simRNAi(self, RNAi_vect = None, RNAi_tags = None, params = None, run_time_init = 36000.0,
