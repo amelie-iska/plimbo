@@ -18,7 +18,7 @@ PLIMBO
 **PLIMBO** (**P**\ lanarian **I**\ nterface for **M**\ odelling **B**\ ody
 **O**\ rganization) is an open-source cross-platform simulator of morphogen-
 directed regeneration of planarian head and tail, using a model reported on
-in the manuscript ‘Neural Control of Body-plan Axis in Regenerating Planaria’.
+in the manuscript *Neural Control of Body-plan Axis in Regenerating Planaria.*
 PLIMBO represents a 1D and 2D simulator of the reaction-diffusion-convection
 model for planarian regeneration, with tools for facilitating model discovery
 and sensitivity analysis.
@@ -40,7 +40,6 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 - [\ *Windows*\ ] Emulate **Ubuntu Linux** via the `Windows Subsystem for Linux
   (WSL) <WSL_>`__. [#windows_not]_
 - Install the **Python 3.x** [#python2_not]_ (e.g., 3.6) variant of Anaconda_.
-  [#anaconda_not]_
 - Install `Jupyter Notebook`_.
 - Open a **Bash terminal.** [#terminal]_
 - Run the following commands.
@@ -51,13 +50,13 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 
        conda config --add channels conda-forge
 
-  - Install all mandatory dependencies of PLIMBO.
+  - Install all mandatory dependencies of **PLIMBO.**
 
     .. code-block:: console
 
        conda install betse scikit-learn
 
-  - Download the `most recent stable release of PLIMBO <tarballs_>`__.**
+  - Download the `most recent stable release <tarballs_>`__ of **PLIMBO.**
 
     .. code-block:: console
 
@@ -70,23 +69,13 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
        sudo ln -s plimbo "$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/"
 
 .. [#windows_not]
-   The `Windows Subsystem for Linux (WSL) <WSL_>`__ and – hence BETSE itself –
+   The `Windows Subsystem for Linux (WSL) <WSL_>`__ and – hence PLIMBO itself –
    is *only* installable under **Windows 10.** Under older Windows versions,
-   BETSE may be installed from a `virtual Linux guest <VirtualBox_>`__.
+   PLIMBO may be installed from a `virtual Linux guest <VirtualBox_>`__.
 
 .. [#python2_not]
-   Do *not* install the **Python 2.7** variant of Anaconda_. BETSE requires
+   Do *not* install the **Python 2.7** variant of Anaconda_. PLIMBO requires
    **Python 3.x.**
-
-.. [#anaconda_not]
-   If you prefer *not* to install Anaconda_, BETSE dependencies are also
-   `manually installable <Advanced_>`__ via your platform-specific package
-   manager (e.g., Homebrew_ on macOS, APT_ on Ubuntu Linux). Doing so is
-   non-trivial and, where performed incorrectly, could produce a
-   performance-crippled single-core installation of BETSE. Anaconda_ suffers no
-   such issues and is guaranteed to produce a performance-optimized multicore
-   installation of BETSE on *all* supported platforms. We strongly recommend
-   Anaconda_ – even when you think you know better.
 
 .. [#terminal]
    To open a `POSIX`_\ -compatible terminal under:
