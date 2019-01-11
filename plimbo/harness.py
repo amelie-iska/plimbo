@@ -153,9 +153,6 @@ class ModelHarness(object):
             # units listing for the parameters in the model:
             self.params_units = OrderedDict({
 
-                # Small general diffusion factor:
-                'Do': 'm^2/s',
-
                 # Beta cat parameters
                 'r_bc': 'nM/s',
                 'd_bc': '1/s',
@@ -172,6 +169,7 @@ class ModelHarness(object):
                 'd_erk': '1/s',
                 'K_erk_bc': 'nM',
                 'n_erk_bc': ' ',
+                'D_erk': 'm^2/s',
 
                 # APC parameters
                 'r_apc': 'nM/s',

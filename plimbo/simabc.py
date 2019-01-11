@@ -34,9 +34,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         if pdict is None: # default parameters
             self.pdict = OrderedDict({
 
-                # Small general diffusion factor:
-                'Do': 1.0e-11,
-
                 # Beta cat parameters
                 'r_bc': 1.5e-3,
                 'd_bc': 5.0e-7,
@@ -53,6 +50,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'd_erk': 5.0e-3,
                 'K_erk_bc': 10.0,
                 'n_erk_bc': 2.0,
+                'D_erk': 1.0e-11,
 
                 # APC parameters
                 'r_apc': 5.0e-3,
@@ -64,7 +62,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'r_hh': 5.0e-3,
                 'd_hh': 1.0e-5,
                 'D_hh': 2.5e-11,
-                # 'u_hh': 1.5e-7,
+                'u_hh': 1.5e-7,
 
                 # Wnt parameters
                 'r_wnt': 5.0e-3,
@@ -184,6 +182,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.K_erk_bc = self.pdict['K_erk_bc']
         self.K_erk_bc = self.pdict['K_erk_bc']
         self.n_erk_bc = self.pdict['n_erk_bc']
+        self.D_erk = self.pdict['D_erk']
 
         self.c_ERK = np.zeros(self.cdl)
         self.c_ERK_time = []
@@ -201,7 +200,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.r_hh = self.pdict['r_hh']
         self.d_hh = self.pdict['d_hh']
         self.D_hh = self.pdict['D_hh']
-        # self.u_hh = self.pdict['u_hh']
+        self.u_hh = self.pdict['u_hh']
 
         self.c_HH = np.zeros(self.cdl)
         self.c_HH_time = []
@@ -248,8 +247,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.d_camp = self.pdict['d_camp']
 
         self.c_cAMP = np.ones(self.cdl) * 1.0
-
-        self.Do = self.pdict['Do']
 
         # Markov model parameters:
         self.C1 = self.pdict['C1'] # ERK constant to modulate head formation

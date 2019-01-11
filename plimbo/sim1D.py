@@ -454,10 +454,10 @@ class PlanariaGRN1D(PlanariaGRNABC):
         g_hh, m_hh = self.get_gradient(self.c_HH, self.runtype)
 
         # Motor transport term:
-        # conv_term = m_hh*self.u*self.u_hh*kinesin
+        conv_term = m_hh*self.u*self.u_hh*kinesin
 
-        # flux = -g_hh*self.D_hh + conv_term
-        flux = -g_hh * self.D_hh
+        flux = -g_hh*self.D_hh + conv_term
+        # flux = -g_hh * self.D_hh
 
         #         divergence
         div_flux = self.get_div(flux, self.runtype)
@@ -480,7 +480,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         g_erk, m_erk = self.get_gradient(self.c_ERK, self.runtype)
 
         # Transport flux:
-        flux = -self.Do * g_erk
+        flux = -self.D_erk * g_erk
 
         # divergence
         div_flux = self.get_div(flux, self.runtype)
@@ -496,7 +496,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         iWNT = (self.c_WNT / self.K_apc_wnt) ** self.n_apc_wnt
         term_wnt = 1 / (1 + iWNT) # Wnt inhibits activity of the APC by inhibiting 'growth'
-        term_wnt2 = iWNT / (1 + iWNT) # Wnt inhibits activity of the APC by promoting 'decay'
+        # term_wnt2 = iWNT / (1 + iWNT) # Wnt inhibits activity of the APC by promoting 'decay'
 
         icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
         term_camp = 1 / (1 + icAMP) # cAMP inhibits activity of the APC by inhibiting 'growth'
@@ -511,7 +511,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         # divergence
         # div_flux = self.get_div(flux, self.runtype)
 
-        del_apc = rnai * self.r_apc * term_wnt*term_camp - self.d_apc * self.c_APC*term_camp2*term_wnt2
+        del_apc = rnai * self.r_apc * term_wnt*term_camp - self.d_apc * self.c_APC*term_camp2
 
         return del_apc
 

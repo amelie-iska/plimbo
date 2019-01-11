@@ -658,17 +658,17 @@ class PlanariaGRN2D(PlanariaGRNABC):
         _, g_hh_x, g_hh_y = self.cells.gradient(self.c_HH)
 
         #         Motor transport term:
-        # m_hh = self.cells.meanval(self.c_HH)
+        m_hh = self.cells.meanval(self.c_HH)
 
         # # Motor transport term:
-        # conv_term_x = m_hh * self.ux * self.u_hh * kinesin
-        # conv_term_y = m_hh * self.uy * self.u_hh * kinesin
-        #
-        # fx = -g_hh_x * self.D_hh + conv_term_x
-        # fy = -g_hh_y * self.D_hh + conv_term_y
+        conv_term_x = m_hh * self.ux * self.u_hh * kinesin
+        conv_term_y = m_hh * self.uy * self.u_hh * kinesin
 
-        fx = -g_hh_x * self.D_hh
-        fy = -g_hh_y * self.D_hh
+        fx = -g_hh_x * self.D_hh + conv_term_x
+        fy = -g_hh_y * self.D_hh + conv_term_y
+
+        # fx = -g_hh_x * self.D_hh
+        # fy = -g_hh_y * self.D_hh
 
         #         divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -689,8 +689,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         _, g_erk_x, g_erk_y = self.cells.gradient(self.c_ERK)
 
-        fx = -g_erk_x * self.Do
-        fy = -g_erk_y * self.Do
+        fx = -g_erk_x * self.D_erk
+        fy = -g_erk_y * self.D_erk
 
         #         divergence
         div_flux = self.cells.div(fx, fy, cbound=True)
@@ -706,7 +706,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         iWNT = (self.c_WNT / self.K_apc_wnt) ** self.n_apc_wnt
         term_wnt = 1 / (1 + iWNT) # Wnts inhibit activity of the APC by inhibiting 'growth'
-        term_wnt2 = iWNT / (1 + iWNT) # Wnts also inhibit activity of the APC by promoting 'decay'
+        # term_wnt2 = iWNT / (1 + iWNT) # Wnts also inhibit activity of the APC by promoting 'decay'
 
 
         icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
@@ -721,7 +721,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         # #         divergence
         # div_flux = self.cells.div(fx, fy, cbound=True)
 
-        del_apc = rnai * self.r_apc * term_wnt*term_camp - self.d_apc * self.c_APC*term_camp2*term_wnt2
+        del_apc = rnai * self.r_apc * term_wnt*term_camp - self.d_apc * self.c_APC*term_camp2
 
         return del_apc
 
