@@ -336,25 +336,27 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
     # GRN Updating functions---------------------------------------
 
-    def update_bc(self, rnai=1.0, kinesin=1.0):
+    def update_bc(self, rnai_bc=1.0, rnai_apc=1.0, rnai_camp = 1.0, rnai_erk =1.0):
         """
         Method describing change in beta-cat levels in space and time.
         """
 
-        # Growth and decay
-        iAPC = (self.c_APC / self.K_bc_apc) ** self.n_bc_apc
-        term_apc = iAPC / (1 + iAPC)
+        iWNT = (self.c_WNT / self.K_apc_wnt) ** self.n_apc_wnt
+        term_wnt_i = 1 / (1 + iWNT) # Wnt inhibits activation of the APC-based degradation complex
 
-        # icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
-        # term_camp = 1 / (1 + icAMP)
+        icAMP = ((rnai_camp*self.c_cAMP)/self.K_bc_camp) ** self.n_bc_camp
+        term_camp_i = 1 / (1 + icAMP) # cAMP inhibits activity of the APC by inhibiting activation of APC
+        term_camp_g = icAMP / (1 + icAMP) # cAMP inhibits activity of the APC by promoting deactivation of APC
+
+        # calculate steady-state of APC activation:
+        cAPC = (term_wnt_i*term_camp_i)/term_camp_g
+
+        # calculate APC-mediated degradation of beta-Cat:
+        apci = (cAPC/self.K_bc_apc)**self.n_bc_apc
+        term_apc = apci/(1 + apci)
 
         # gradient and midpoint mean concentration:
         g_bc, m_bc = self.get_gradient(self.c_BC, self.runtype)
-
-        # Motor transport term:
-        # conv_term = m_bc*self.u*self.u_bc*kinesin
-
-        # flux = -g_bc*self.D_bc + conv_term
 
         flux = -g_bc * self.D_bc
 
@@ -362,8 +364,14 @@ class PlanariaGRN1D(PlanariaGRNABC):
         div_flux = self.get_div(flux, self.runtype)
 
         # change of bc:
-        del_bc = (-div_flux + rnai * self.r_bc  -
-                  self.d_bc * self.c_BC - self.d_bc_deg * term_apc * self.c_BC)
+        del_bc = (-div_flux + rnai_bc*self.r_bc  - self.d_bc*self.c_BC
+                  - rnai_apc*self.d_bc_deg*term_apc*self.c_BC)
+
+        # update ERK, assuming rapid change in signalling compared to gene expression:
+        iBC = (self.c_BC / self.K_erk_bc) ** self.n_erk_bc
+        term_bc = 1 / (1 + iBC)
+
+        self.c_ERK = rnai_erk*term_bc
 
         return del_bc  # change in bc
 
@@ -388,7 +396,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         div_flux = self.get_div(flux, self.runtype)
 
         # divergence of flux, growth and decay, breakdown in chemical tagging reaction:
-        del_nrf = (-div_flux + self.r_nrf * term_bc*self.NerveDensity - self.d_nrf * self.c_NRF)
+        del_nrf = (-div_flux + self.r_nrf * term_bc - self.d_nrf * self.c_NRF)
 
         return del_nrf  # change in NRF
 
@@ -412,19 +420,23 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return del_notum
 
-    def update_wnt(self, rnai=1.0, rnai2 = 1.0):
+    def update_wnt(self, rnai_wnt=1.0, rnai_ptc = 1.0):
         """
         Method describing combined change in Wnt1 and Wnt 11 levels in space and time.
         """
 
         # Growth and decay
         iNotum = (self.c_Notum / self.K_wnt_notum) ** self.n_wnt_notum
-        iHH = (self.c_HH / self.K_wnt_hh) ** self.n_wnt_hh
-        # icAMP = (self.c_cAMP / self.K_wnt_camp) ** self.n_wnt_camp
+        term_notum = iNotum / (1 + iNotum) # Notum promotes decay of Wnt1
 
-        term_hh = 1 / (1 + iHH)
-        term_notum = iNotum / (1 + iNotum)
-        # term_camp = icAMP / (1 + icAMP)
+        iHH = (self.c_HH / self.K_wnt_hh) ** self.n_wnt_hh
+        term_hh = 1 / (1 + iHH) # HH inhibits decay of Wnt11 via Ptc
+
+        dptc = self.d_wnt_deg_ptc*term_hh*rnai_ptc # decay of Wnt11 via Ptc
+        dnot = self.d_wnt_deg_notum*term_notum # decay of Wnt1 via Notum
+
+        # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
+        effective_d = ((dnot + self.d_wnt)*dptc + self.d_wnt*dnot + self.d_wnt**2)/(dptc + dnot + 2*self.d_wnt)
 
         # Gradient and mean of concentration
         g_wnt, m_wnt = self.get_gradient(self.c_WNT, self.runtype)
@@ -435,13 +447,8 @@ class PlanariaGRN1D(PlanariaGRNABC):
         # divergence
         div_flux = self.get_div(flux, self.runtype)
 
-        # del_wnt = (-div_flux + rnai * self.r_wnt * term_camp * self.NerveDensity -
-        #            self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT
-        #                                    - self.d_wnt_deg_ptc*term_hh*self.c_WNT)
-
-        del_wnt = (-div_flux + rnai * self.r_wnt  -
-                   self.d_wnt * self.c_WNT - self.d_wnt_deg_notum * term_notum * self.c_WNT
-                                           - self.d_wnt_deg_ptc*term_hh*self.c_WNT*rnai2)
+        # effective change in the combined concentration of Wnt1 and Wnt11:
+        del_wnt = -div_flux + rnai_wnt*self.r_wnt*self.NerveDensity - effective_d*self.c_WNT
 
         return del_wnt  # change in Wnt
 
@@ -467,64 +474,28 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return del_hh  # change in Hedgehog
 
-    def update_erk(self, rnai=1.0):
-        """
-        Method describing change in ERK levels in space and time.
-        """
+    # def update_erk(self, rnai=1.0):
+    #     """
+    #     Method describing change in ERK levels in space and time.
+    #     """
+    #
+    #     iBC = (self.c_BC / self.K_erk_bc) ** self.n_erk_bc
+    #
+    #     term_bc = 1 / (1 + iBC)
+    #
+    #     # Gradient and mean of concentration
+    #     g_erk, m_erk = self.get_gradient(self.c_ERK, self.runtype)
+    #
+    #     # Transport flux:
+    #     flux = -self.D_erk * g_erk
+    #
+    #     # divergence
+    #     div_flux = self.get_div(flux, self.runtype)
+    #
+    #     del_erk = -div_flux + rnai * self.r_erk * term_bc - self.d_erk * self.c_ERK
+    #
+    #     return del_erk
 
-        iBC = (self.c_BC / self.K_erk_bc) ** self.n_erk_bc
-
-        term_bc = 1 / (1 + iBC)
-
-        # Gradient and mean of concentration
-        g_erk, m_erk = self.get_gradient(self.c_ERK, self.runtype)
-
-        # Transport flux:
-        flux = -self.D_erk * g_erk
-
-        # divergence
-        div_flux = self.get_div(flux, self.runtype)
-
-        del_erk = -div_flux + rnai * self.r_erk * term_bc - self.d_erk * self.c_ERK
-
-        return del_erk
-
-    def update_apc(self, rnai=1.0):
-        """
-        Method describing change in APC levels in space and time.
-        """
-
-        iWNT = (self.c_WNT / self.K_apc_wnt) ** self.n_apc_wnt
-        term_wnt = 1 / (1 + iWNT) # Wnt inhibits activity of the APC by inhibiting 'growth'
-        # term_wnt2 = iWNT / (1 + iWNT) # Wnt inhibits activity of the APC by promoting 'decay'
-
-        icAMP = (self.c_cAMP / self.K_bc_camp) ** self.n_bc_camp
-        term_camp = 1 / (1 + icAMP) # cAMP inhibits activity of the APC by inhibiting 'growth'
-        term_camp2 = icAMP / (1 + icAMP) # cAMP inhibits activity of the APC by promoting 'decay'
-
-        # # Gradient and mean of concentration
-        # g_apc, m_apc = self.get_gradient(self.c_APC, self.runtype)
-        #
-        # # Transport flux:
-        # flux = -self.Do * g_apc
-
-        # divergence
-        # div_flux = self.get_div(flux, self.runtype)
-
-        del_apc = rnai * self.r_apc * term_wnt*term_camp - self.d_apc * self.c_APC*term_camp2
-
-        return del_apc
-
-    def update_camp(self, rnai=1.0):
-        """
-        Method describing change in cAMP levels in space and time.
-        """
-
-        del_cAMP = rnai * self.r_camp - self.d_camp * self.c_cAMP
-
-        return del_cAMP
-
-    # Markov Model processing functions------------------------
     def get_tops(self, cinds):
         """
         Collects the sample at the wound indices and averages it.

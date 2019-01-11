@@ -111,7 +111,7 @@ class ModelHarness(object):
 
         # default RNAi testing sequence vector:
         self.RNAi_vect_default = [
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.25,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
@@ -156,24 +156,17 @@ class ModelHarness(object):
                 # Beta cat parameters
                 'r_bc': 'nM/s',
                 'd_bc': '1/s',
-                'K_bc_apc': 'nM',
-                'n_bc_apc': ' ',
                 'd_bc_deg': '1/s',
                 'K_bc_camp': 'nM',
                 'n_bc_camp': ' ',
                 'D_bc': 'm^2/s',
-                # 'u_bc': 'm/s',
 
                 # ERK parameters
-                'r_erk': 'nM/s',
-                'd_erk': '1/s',
                 'K_erk_bc': 'nM',
                 'n_erk_bc': ' ',
                 'D_erk': 'm^2/s',
 
                 # APC parameters
-                'r_apc': 'nM/s',
-                'd_apc': '1/s',
                 'K_apc_wnt': 'nM',
                 'n_apc_wnt': ' ',
 
@@ -210,10 +203,6 @@ class ModelHarness(object):
                 'K_notum_nrf': 'nM',
                 'n_notum_nrf': ' ',
                 'D_notum': 'm^2/s',
-
-                # cAMP parameters:
-                'r_camp': 'nM/s',
-                'd_camp': '1/s',
 
                 # Markov model parameters:
                 'C1': 'nM',  # ERK constant to modulate head formation
@@ -947,7 +936,9 @@ class ModelHarness(object):
             print('No outputs to plot.')
 
     def ani_all_output(self, loadpath, save_dir = 'Animations', ani_type='Triplot', output_type='sim',
-                       autoscale = False, cmaps = None, clims = None, axisoff = False, fsize=(6,8)):
+                       autoscale = False, cmaps = None, clims = None, axisoff = False, fsize=[(6,8)]):
+
+        fsize = fsize[0]
 
         load_fname = os.path.join(loadpath, "Master.gz")
         master = self.load(load_fname)
@@ -1100,7 +1091,9 @@ class ModelHarness(object):
                                        ref_data = ref_data, extra_text = extra_text)
 
     def ani_single(self, tagi, ri, harness_type=None, ani_type='Triplot', output_type='sim', axisoff = True,
-                   ref_data = None, extra_text = None, fsize=(6,8), clims = None):
+                   ref_data = None, extra_text = None, fsize=[(6,8)], clims = None):
+
+        fsize = fsize[0]
 
         if harness_type is None:
             harness_type = ''

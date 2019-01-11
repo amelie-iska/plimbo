@@ -35,80 +35,68 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             self.pdict = OrderedDict({
 
                 # Beta cat parameters
-                'r_bc': 1.5e-3,
-                'd_bc': 5.0e-7,
+                'r_bc': 2.5e-3,
+                'd_bc': 2.5e-6,
+                'd_bc_deg': 1.0e-3,
                 'K_bc_apc': 0.5,
-                'n_bc_apc': 1.0,
-                'd_bc_deg': 3.0e-3,
+                'n_bc_apc': 2.0,
                 'K_bc_camp': 1.0,
                 'n_bc_camp': 2.0,
-                'D_bc': 1.5e-12,
-                # 'u_bc': 2.0e-8,
+                'D_bc': 1.0e-12,
 
                 # ERK parameters
-                'r_erk': 5.0e-3,
-                'd_erk': 5.0e-3,
-                'K_erk_bc': 10.0,
+                'K_erk_bc': 50.0,
                 'n_erk_bc': 2.0,
-                'D_erk': 1.0e-11,
 
                 # APC parameters
-                'r_apc': 5.0e-3,
-                'd_apc': 5.0e-3,
-                'K_apc_wnt': 5.0,
+                'K_apc_wnt': 25.0,
                 'n_apc_wnt': 2.0,
 
                 # Hedgehog parameters:
                 'r_hh': 5.0e-3,
-                'd_hh': 1.0e-5,
-                'D_hh': 2.5e-11,
-                'u_hh': 1.5e-7,
+                'd_hh': 5.0e-6,
+                'D_hh': 1.5e-11,
+                'u_hh': 5.0e-8,  # 5.0e-8 and K_wnt_hh at 250 work
 
-                # Wnt parameters
-                'r_wnt': 5.0e-3,
-                'd_wnt': 5.0e-6,
-                'K_wnt_notum': 0.5,
+                # Wnt1 parameters
+                'r_wnt': 1.0e-2,
+                'd_wnt': 1.0e-5,
+                'K_wnt_notum': 0.75,
                 'n_wnt_notum': 2.0,
                 'D_wnt': 0.75e-11,
-                'd_wnt_deg_notum': 5.0e-3,
-                'd_wnt_deg_ptc': 3.5e-5,
-                'K_wnt_hh': 62.5,
+                'd_wnt_deg_notum': 5.0e-4,
+                'd_wnt_deg_ptc': 5.0e-4,
+                'K_wnt_hh': 250.0,  # 600 for u_hh = 0.0
                 'n_wnt_hh': 2.0,
-                # 'K_wnt_camp': 0.5,
-                # 'n_wnt_camp': 2.0,
 
                 # NRF parameters
-                'r_nrf': 2.5e-3,
-                'd_nrf': 1.0e-5,
-                'K_nrf_bc': 100.0,
-                'n_nrf_bc': 1.0,
-                'D_nrf': 2.5e-11,
-                'u_nrf': -1.0e-7,
+                'r_nrf': 1.0e-2,  #
+                'd_nrf': 1.0e-5,  #
+                'K_nrf_bc': 100.0,  #
+                'n_nrf_bc': 2.0,  #
+                'D_nrf': 1.5e-11,
+                'u_nrf': -5.0e-8,
 
                 # Notum parameters
-                'r_notum': 5.0e-3,
-                'd_notum': 5.0e-3,
-                'K_notum_nrf': 300.0,
-                'n_notum_nrf': 3.0,
-                'D_notum': 2.5e-11,
-
-                #cAMP parameters:
-                'r_camp': 5.0e-3,
-                'd_camp': 5.0e-3,
+                'r_notum': 1.0e-2,  #
+                'd_notum': 1.0e-2,  #
+                'K_notum_nrf': 500.0,  #
+                'n_notum_nrf': 3.0,  #
+                'D_notum': 1.0e-11,
 
                 # Markov model parameters:
-                'C1': 0.50, # ERK constant to modulate head formation
+                'C1': 0.50,  # ERK constant to modulate head formation
                 'K1': 0.05,
 
-                'C2': 75.0, # Beta-catenin concentration to modulate tail formation
+                'C2': 75.0,  # Beta-catenin concentration to modulate tail formation
                 'K2': 4.0,
-                'Beta_B': 5.0e-3, # head/tail tissue decay time constant
+                'Beta_B': 5.0e-3,  # head/tail tissue decay time constant
 
                 'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
                 'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
-                'D_hdac': 1.0e-11, # diffusion constant for hdac remodeling molecule
-                'hdac_to': 72.0*3600,  # time at which hdac stops growing
-                'hdac_ts': 12.0*3600 # time period over which hdac stops growing
+                'D_hdac': 1.0e-11,  # diffusion constant for hdac remodeling molecule
+                'hdac_to': 72.0 * 3600,  # 72  # time at which hdac stops growing
+                'hdac_ts': 12.0 * 3600  # time period over which hdac stops growing
 
 
             })
@@ -177,24 +165,16 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_BC_time = []
 
         # ERK parameters
-        self.r_erk = self.pdict['r_erk']
-        self.d_erk = self.pdict['d_erk']
         self.K_erk_bc = self.pdict['K_erk_bc']
         self.K_erk_bc = self.pdict['K_erk_bc']
         self.n_erk_bc = self.pdict['n_erk_bc']
-        self.D_erk = self.pdict['D_erk']
 
         self.c_ERK = np.zeros(self.cdl)
         self.c_ERK_time = []
 
         # APC parameters
-        self.r_apc = self.pdict['r_apc']
-        self.d_apc = self.pdict['d_apc']
         self.K_apc_wnt = self.pdict['K_apc_wnt']
         self.n_apc_wnt = self.pdict['n_apc_wnt']
-
-        self.c_APC = np.zeros(self.cdl)
-        self.c_APC_time = []
 
         # Hedgehog parameters:
         self.r_hh = self.pdict['r_hh']
@@ -243,10 +223,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_Notum_time = []
 
         # cAMP parameters
-        self.r_camp = self.pdict['r_camp']
-        self.d_camp = self.pdict['d_camp']
-
-        self.c_cAMP = np.ones(self.cdl) * 1.0
+        self.c_cAMP = np.ones(self.cdl)
 
         # Markov model parameters:
         self.C1 = self.pdict['C1'] # ERK constant to modulate head formation
@@ -304,7 +281,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
     # GRN Running functions---------------------------------------
     @abstractmethod
-    def update_bc(self, rnai=1.0, kinesin=1.0) -> NumpyArrayType:
+    def update_bc(self, rnai_bc=1.0, rnai_apc=1.0, rnai_camp = 1.0, rnai_erk=1.0) -> NumpyArrayType:
         """
         Method describing change in beta-cat levels in space and time.
         """
@@ -343,30 +320,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
         pass
 
-    @abstractmethod
-    def update_erk(self, rnai=1.0)-> NumpyArrayType:
-        """
-        Method describing change in ERK levels in space and time.
-        """
-
-        pass
-
-    @abstractmethod
-    def update_apc(self, rnai=1.0)-> NumpyArrayType:
-        """
-        Method describing change in APC levels in space and time.
-        """
-
-        pass
-
-    @abstractmethod
-    def update_camp(self, rnai=1.0)-> NumpyArrayType:
-        """
-        Method describing change in cAMP levels in space and time.
-        """
-
-        pass
-
     #-----------------------------------
 
     def clear_cache_init(self):
@@ -377,16 +330,12 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_HH_time = []
         self.c_NRF_time = []
         self.c_Notum_time = []
-        self.c_APC_time = []
-        self.c_cAMP_time = []
 
         self.Head_time = []
         self.Tail_time = []
         self.Blast_time = []
 
         self.hdac_time = []
-
-        self.delta_ERK_time = []
 
     def clear_cache_reinit(self):
 
@@ -396,16 +345,12 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_HH_time2 = []
         self.c_NRF_time2 = []
         self.c_Notum_time2 = []
-        self.c_APC_time2 = []
-        self.c_cAMP_time2 = []
 
         self.hdac_time2 = []
 
         self.Head_time2 = []
         self.Tail_time2 = []
         self.Blast_time2 = []
-
-        self.delta_ERK_time2 = []
 
     def clear_cache_sim(self):
 
@@ -415,16 +360,12 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_HH_sim_time = []
         self.c_NRF_sim_time = []
         self.c_Notum_sim_time = []
-        self.c_APC_sim_time = []
-        self.c_cAMP_sim_time = []
 
         self.hdac_sim_time = []
 
         self.Head_sim_time = []
         self.Tail_sim_time = []
         self.Blast_sim_time = []
-
-        self.delta_ERK_sim_time = []
 
     def run_loop(self,
                  knockdown=None):
@@ -433,25 +374,24 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             knockdown = self.RNAi_defaults
 
         for tt in self.time:
+            # time update beta-catenin and erk signalling:
+            delta_bc = self.update_bc(rnai_bc=knockdown['bc'], rnai_camp = knockdown['camp'],
+                                      rnai_apc =knockdown['apc'], rnai_erk=knockdown['erk']) * self.dt
 
-            delta_bc = self.update_bc(rnai=knockdown['bc']) * self.dt  # time update beta-catenin
-            delta_wnt = self.update_wnt(rnai=knockdown['wnt'], rnai2 = knockdown['ptc']) * self.dt  # time update wnt
+            delta_wnt = self.update_wnt(rnai_wnt=knockdown['wnt'], rnai_ptc = knockdown['ptc'])*self.dt  # time update wnt
+
             delta_hh = self.update_hh(rnai=knockdown['hh'],
                                       kinesin=knockdown['kinesin']) * self.dt  # time update hh
+
             delta_nrf = self.update_nrf(dynein=knockdown['dynein']) * self.dt  # update NRF
+
             delta_notum = self.update_notum(rnai=knockdown['notum']) * self.dt  # time update Notum
-            delta_erk = self.update_erk(rnai=knockdown['erk']) * self.dt  # time update ERK
-            delta_apc = self.update_apc(rnai=knockdown['apc']) * self.dt  # time update APC
-            delta_camp = self.update_camp(rnai=knockdown['camp']) * self.dt  # time update cAMP
 
             self.c_BC += delta_bc  # time update beta-catenin
             self.c_WNT += delta_wnt  # time update Wnt
             self.c_HH += delta_hh  # time update Hh
             self.c_NRF += delta_nrf  # time update NRF
             self.c_Notum += delta_notum  # time update Notum
-            self.c_ERK += delta_erk  # time update ERK
-            self.c_APC += delta_apc  # time update APC
-            self.c_cAMP += delta_camp  # time update cAMP
 
             # update the Markov model:
             self.run_markov(tt)
@@ -466,16 +406,12 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.c_Notum_time.append(self.c_Notum * 1)
                     self.c_NRF_time.append(self.c_NRF * 1)
                     self.c_ERK_time.append(self.c_ERK * 1)
-                    self.c_APC_time.append(self.c_APC * 1)
-                    self.c_cAMP_time.append(self.c_cAMP * 1)
 
                     self.hdac_time.append(self.hdac*1)
 
                     self.Head_time.append(self.Head*1)
                     self.Tail_time.append(self.Tail*1)
                     self.Blast_time.append(self.Blast*1)
-
-                    self.delta_ERK_time.append(delta_erk.mean() * 1)
 
                 elif self.runtype == 'reinit':
 
@@ -485,16 +421,12 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.c_Notum_time2.append(self.c_Notum * 1)
                     self.c_NRF_time2.append(self.c_NRF * 1)
                     self.c_ERK_time2.append(self.c_ERK * 1)
-                    self.c_APC_time2.append(self.c_APC * 1)
-                    self.c_cAMP_time2.append(self.c_cAMP * 1)
 
                     self.Head_time2.append(self.Head*1)
                     self.Tail_time2.append(self.Tail*1)
                     self.Blast_time2.append(self.Blast*1)
 
                     self.hdac_time2.append(self.hdac * 1)
-
-                    self.delta_ERK_time2.append(delta_erk.mean() * 1)
 
 
                 elif self.runtype == 'sim':
@@ -505,8 +437,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.c_Notum_sim_time.append(self.c_Notum * 1)
                     self.c_NRF_sim_time.append(self.c_NRF * 1)
                     self.c_ERK_sim_time.append(self.c_ERK * 1)
-                    self.c_APC_sim_time.append(self.c_APC * 1)
-                    self.c_cAMP_sim_time.append(self.c_cAMP * 1)
 
                     self.hdac_sim_time.append(self.hdac * 1)
 
@@ -514,7 +444,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.Tail_sim_time.append(self.Tail*1)
                     self.Blast_sim_time.append(self.Blast*1)
 
-                    self.delta_ERK_sim_time.append(delta_erk.mean() * 1)
 
     def initialize(self,
                    knockdown= None,
@@ -554,8 +483,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.molecules_time['Hh'] = self.c_HH_time
         self.molecules_time['NRF'] = self.c_NRF_time
         self.molecules_time['Notum'] = self.c_Notum_time
-        self.molecules_time['APC'] = self.c_APC_time
-        self.molecules_time['cAMP'] = self.c_cAMP_time
         self.molecules_time['Head'] = self.Head_time
         self.molecules_time['Tail'] = self.Tail_time
 
@@ -612,8 +539,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.molecules_time2['Hh'] = self.c_HH_time2
         self.molecules_time2['NRF'] = self.c_NRF_time2
         self.molecules_time2['Notum'] = self.c_Notum_time2
-        self.molecules_time2['APC'] = self.c_APC_time2
-        self.molecules_time2['cAMP'] = self.c_cAMP_time2
         self.molecules_time2['Head'] = self.Head_time2
         self.molecules_time2['Tail'] = self.Tail_time2
 
@@ -655,8 +580,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.molecules_sim_time['Hh'] = self.c_HH_sim_time
         self.molecules_sim_time['NRF'] = self.c_NRF_sim_time
         self.molecules_sim_time['Notum'] = self.c_Notum_sim_time
-        self.molecules_sim_time['APC'] = self.c_APC_sim_time
-        self.molecules_sim_time['cAMP'] = self.c_cAMP_sim_time
         self.molecules_sim_time['Head'] = self.Head_sim_time
         self.molecules_sim_time['Tail'] = self.Tail_sim_time
 
