@@ -37,7 +37,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 # Beta cat parameters
                 'r_bc': 2.5e-3,
                 'd_bc': 2.5e-6,
-                'd_bc_deg': 1.0e-3,
+                'd_bc_deg': 5.0e-3,
                 'K_bc_apc': 0.5,
                 'n_bc_apc': 2.0,
                 'K_bc_camp': 1.0,
@@ -45,58 +45,61 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'D_bc': 1.0e-12,
 
                 # ERK parameters
-                'K_erk_bc': 50.0,
+                'K_erk_bc': 15.0,
                 'n_erk_bc': 2.0,
 
                 # APC parameters
-                'K_apc_wnt': 25.0,
+                'K_apc_wnt': 15.0,
                 'n_apc_wnt': 2.0,
 
                 # Hedgehog parameters:
-                'r_hh': 5.0e-3,
-                'd_hh': 5.0e-6,
-                'D_hh': 1.5e-11,
-                'u_hh': 5.0e-8,  # 5.0e-8 and K_wnt_hh at 250 work
+                'r_hh': 1.0e-2,
+                'd_hh': 1.0e-5,
+                'D_hh': 1.0e-11,
+                'u_hh': 5.0e-8,
 
                 # Wnt1 parameters
                 'r_wnt': 1.0e-2,
                 'd_wnt': 1.0e-5,
                 'K_wnt_notum': 0.75,
-                'n_wnt_notum': 2.0,
-                'D_wnt': 0.75e-11,
-                'd_wnt_deg_notum': 5.0e-4,
-                'd_wnt_deg_ptc': 5.0e-4,
-                'K_wnt_hh': 250.0,  # 600 for u_hh = 0.0
-                'n_wnt_hh': 2.0,
+                'n_wnt_notum': 1.5,
+                'D_wnt': 5.0e-12,
+                'd_wnt_deg_notum': 2.0e-3,  # 1.0e-3
+                'd_wnt_deg_ptc': 1.0e-3,  # 1.0e-3
+                'K_wnt_hh': 250.0,  #
+                'n_wnt_hh': 3.0,  #
 
                 # NRF parameters
-                'r_nrf': 1.0e-2,  #
-                'd_nrf': 1.0e-5,  #
-                'K_nrf_bc': 100.0,  #
-                'n_nrf_bc': 2.0,  #
+                'r_nrf': 5.0e-3,
+                'd_nrf': 5.0e-6,
+                'K_nrf_bc': 250.0,
+                'n_nrf_bc': 1.0,
                 'D_nrf': 1.5e-11,
-                'u_nrf': -5.0e-8,
+                'u_nrf': -2.0e-8,
 
                 # Notum parameters
-                'r_notum': 1.0e-2,  #
-                'd_notum': 1.0e-2,  #
-                'K_notum_nrf': 500.0,  #
-                'n_notum_nrf': 3.0,  #
+                'r_notum': 5.0e-3,
+                'd_notum': 5.0e-3,
+                'K_notum_nrf': 500.0,
+                'n_notum_nrf': 2.0,
                 'D_notum': 1.0e-11,
 
                 # Markov model parameters:
-                'C1': 0.50,  # ERK constant to modulate head formation
-                'K1': 0.05,
+                'C1': 0.75,  # 0.75 # ERK constant to modulate head formation
+                'K1': 0.025,  # 0.025
 
-                'C2': 75.0,  # Beta-catenin concentration to modulate tail formation
-                'K2': 4.0,
-                'Beta_B': 5.0e-3,  # head/tail tissue decay time constant
+                'C2': 300.0,  # 300.0  # Beta-catenin concentration to modulate tail formation
+                'K2': 10.0,  # 10.0
+
+                'Beta_B': 1.0e-2,  # head/tail tissue decay time constant
 
                 'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
-                'hdac_growth': 1.0e-3,  # growth and decay constant for hdac remodeling molecule
+                'hdac_growth': 5.0e-3,  # growth and decay constant for hdac remodeling molecule
                 'D_hdac': 1.0e-11,  # diffusion constant for hdac remodeling molecule
-                'hdac_to': 72.0 * 3600,  # 72  # time at which hdac stops growing
-                'hdac_ts': 12.0 * 3600  # time period over which hdac stops growing
+                'hdac_to': 84.0 * 3600,  # 72  # time at which hdac stops growing
+                'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
+
+                'no': 0.5  # nerve map offset (only used in 2D)
 
 
             })
@@ -247,6 +250,9 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.D_hdac = self.pdict['D_hdac']
         self.hdac_to = self.pdict['hdac_to']
         self.hdac_ts = self.pdict['hdac_ts']
+
+        # offset to nerve map (only used in 2D):
+        self.no = self.pdict['no']
 
 
     @abstractmethod

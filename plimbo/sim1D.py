@@ -474,28 +474,6 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         return del_hh  # change in Hedgehog
 
-    # def update_erk(self, rnai=1.0):
-    #     """
-    #     Method describing change in ERK levels in space and time.
-    #     """
-    #
-    #     iBC = (self.c_BC / self.K_erk_bc) ** self.n_erk_bc
-    #
-    #     term_bc = 1 / (1 + iBC)
-    #
-    #     # Gradient and mean of concentration
-    #     g_erk, m_erk = self.get_gradient(self.c_ERK, self.runtype)
-    #
-    #     # Transport flux:
-    #     flux = -self.D_erk * g_erk
-    #
-    #     # divergence
-    #     div_flux = self.get_div(flux, self.runtype)
-    #
-    #     del_erk = -div_flux + rnai * self.r_erk * term_bc - self.d_erk * self.c_ERK
-    #
-    #     return del_erk
-
     def get_tops(self, cinds):
         """
         Collects the sample at the wound indices and averages it.

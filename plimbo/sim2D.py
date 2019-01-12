@@ -90,7 +90,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         """
 
-        self.no = 0.5  # offset to nerve density map
+        # self.no = 0.5  # offset to nerve density map
         # Load in nerve density estimate:
         raw_nerves, _ = modulate.gradient_bitmap(self.cells.cell_i,
                                                  self.cells, self.p)
@@ -355,7 +355,6 @@ class PlanariaGRN2D(PlanariaGRNABC):
             self.c_WNT = np.delete(self.c_WNT, self.target_inds_cell)
             self.c_Notum = np.delete(self.c_Notum, self.target_inds_cell)
             self.c_NRF = np.delete(self.c_NRF, self.target_inds_cell)
-            self.c_APC = np.delete(self.c_APC, self.target_inds_cell)
             self.c_cAMP = np.delete(self.c_cAMP, self.target_inds_cell)
 
             self.Head = np.delete(self.Head, self.target_inds_cell)
@@ -533,14 +532,14 @@ class PlanariaGRN2D(PlanariaGRNABC):
         """
 
         iWNT = (self.c_WNT / self.K_apc_wnt) ** self.n_apc_wnt
-        term_wnt = 1 / (1 + iWNT) # Wnt inhibits activation of the APC-based degradation complex
+        term_wnt_i = 1 / (1 + iWNT) # Wnt inhibits activation of the APC-based degradation complex
 
         icAMP = ((rnai_camp*self.c_cAMP)/self.K_bc_camp) ** self.n_bc_camp
         term_camp_i = 1 / (1 + icAMP) # cAMP inhibits activity of the APC by inhibiting activation of APC
         term_camp_g = icAMP / (1 + icAMP) # cAMP inhibits activity of the APC by promoting deactivation of APC
 
         # calculate steady-state of APC activation:
-        cAPC = (term_wnt*term_camp_i)/term_camp_g
+        cAPC = (term_wnt_i*term_camp_i)/term_camp_g
 
         # calculate APC-mediated degradation of beta-Cat:
         apci = (cAPC/self.K_bc_apc)**self.n_bc_apc
@@ -557,7 +556,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # change of bc:
-        del_bc = (-div_flux + rnai_bc*self.r_bc*self.NerveDensity  - self.d_bc*self.c_BC
+        del_bc = (-div_flux + rnai_bc*self.r_bc  - self.d_bc*self.c_BC
                   - rnai_apc*self.d_bc_deg*term_apc*self.c_BC)
 
 
@@ -630,16 +629,17 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         # Growth and decay
         iNotum = (self.c_Notum / self.K_wnt_notum) ** self.n_wnt_notum
-        term_notum = iNotum / (1 + iNotum) # Notum promotes decay of Wnt1
+        term_notum = iNotum / (1 + iNotum)  # Notum promotes decay of Wnt1
 
         iHH = (self.c_HH / self.K_wnt_hh) ** self.n_wnt_hh
-        term_hh = 1 / (1 + iHH) # HH inhibits decay of Wnt11 via Ptc
+        term_hh = 1 / (1 + iHH)  # HH inhibits decay of Wnt11 via Ptc
 
-        dptc = self.d_wnt_deg_ptc*term_hh*rnai_ptc # decay of Wnt11 via Ptc
-        dnot = self.d_wnt_deg_notum*term_notum # decay of Wnt1 via Notum
+        dptc = self.d_wnt_deg_ptc * term_hh * rnai_ptc  # decay of Wnt11 via Ptc
+        dnot = self.d_wnt_deg_notum * term_notum  # decay of Wnt1 via Notum
 
         # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        effective_d = ((dnot + self.d_wnt)*dptc + self.d_wnt*dnot + self.d_wnt**2)/(dptc + dnot + 2*self.d_wnt)
+        effective_d = ((dnot + self.d_wnt) * dptc + self.d_wnt * dnot + self.d_wnt ** 2) / (
+        dptc + dnot + 2 * self.d_wnt)
 
         # Gradient of concentration
         _, g_wnt_x, g_wnt_y = self.cells.gradient(self.c_WNT)
@@ -652,7 +652,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # change in the combined concentration of Wnt1 and Wnt11:
-        del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
+        del_wnt = -div_flux + rnai_wnt*self.r_wnt*self.NerveDensity - effective_d*self.c_WNT
 
         return del_wnt  # change in Wnt
 
@@ -685,26 +685,6 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         return del_hh  # change in Hedgehog
 
-    # def update_erk(self, rnai=1.0):
-    #     """
-    #     Method describing change in ERK levels in space and time.
-    #     """
-    #
-    #     iBC = (self.c_BC / self.K_erk_bc) ** self.n_erk_bc
-    #
-    #     term_bc = 1 / (1 + iBC)
-    #
-    #     _, g_erk_x, g_erk_y = self.cells.gradient(self.c_ERK)
-    #
-    #     fx = -g_erk_x * self.D_erk
-    #     fy = -g_erk_y * self.D_erk
-    #
-    #     #         divergence
-    #     div_flux = self.cells.div(fx, fy, cbound=True)
-    #
-    #     del_erk = -div_flux + rnai * self.r_erk * term_bc - self.d_erk * self.c_ERK
-    #
-    #     return del_erk
 
     def test_runA(self, run_time=96.0*3600,
                  run_time_step=60.0,
