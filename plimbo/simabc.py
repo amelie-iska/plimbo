@@ -64,8 +64,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'K_wnt_notum': 0.75,
                 'n_wnt_notum': 1.5,
                 'D_wnt': 5.0e-12,
-                'd_wnt_deg_notum': 2.0e-3,  # 1.0e-3
-                'd_wnt_deg_ptc': 1.0e-3,  # 1.0e-3
+                'd_wnt_deg_notum': 2.0e-3,  #
+                'd_wnt_deg_ptc': 1.0e-3,  #
                 'K_wnt_hh': 250.0,  #
                 'n_wnt_hh': 3.0,  #
 
@@ -93,13 +93,11 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 'Beta_B': 1.0e-2,  # head/tail tissue decay time constant
 
-                'max_remod': 1.0e-2,  # maximum rate at which tissue remodelling occurs
-                'hdac_growth': 5.0e-3,  # growth and decay constant for hdac remodeling molecule
-                'D_hdac': 1.0e-11,  # diffusion constant for hdac remodeling molecule
                 'hdac_to': 84.0 * 3600,  # 72  # time at which hdac stops growing
                 'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
 
-                'no': 0.5  # nerve map offset (only used in 2D)
+                'n_min': 0.4,  # nerve map min val (only used in 2D Nerve map contrast adjustment)
+                'n_max': 1.0,  # nerve map max val (only used in 2D Nerve map contrast adjustment)
 
 
             })
@@ -237,22 +235,18 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 
-        self.max_remod = self.pdict['max_remod']  # maximum rate of tissue remodelling
-
         # initialize Markov model probabilities:
         self.Head = np.zeros(self.cdl) # head
         self.Tail = np.zeros(self.cdl) # tail
         self.Blast = np.ones(self.cdl) # blastema or stem cells
 
-        # initialize remodeling molecule concentration:
-        self.hdac =  np.zeros(self.cdl)
-        self.hdac_growth = self.pdict['hdac_growth']
-        self.D_hdac = self.pdict['D_hdac']
+        # Remodeling time window parameters:
         self.hdac_to = self.pdict['hdac_to']
         self.hdac_ts = self.pdict['hdac_ts']
 
         # offset to nerve map (only used in 2D):
-        self.no = self.pdict['no']
+        self.n_min = self.pdict['n_min']  # nerve map min val (only used in 2D Nerve map contrast adjustment)
+        self.n_max = self.pdict['n_max']  # nerve map max val (only used in 2D Nerve map contrast adjustment)
 
 
     @abstractmethod
@@ -341,7 +335,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.Tail_time = []
         self.Blast_time = []
 
-        self.hdac_time = []
+        # self.hdac_time = []
 
     def clear_cache_reinit(self):
 
@@ -352,7 +346,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_NRF_time2 = []
         self.c_Notum_time2 = []
 
-        self.hdac_time2 = []
+        # self.hdac_time2 = []
 
         self.Head_time2 = []
         self.Tail_time2 = []
@@ -367,7 +361,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.c_NRF_sim_time = []
         self.c_Notum_sim_time = []
 
-        self.hdac_sim_time = []
+        # self.hdac_sim_time = []
 
         self.Head_sim_time = []
         self.Tail_sim_time = []
@@ -413,7 +407,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.c_NRF_time.append(self.c_NRF * 1)
                     self.c_ERK_time.append(self.c_ERK * 1)
 
-                    self.hdac_time.append(self.hdac*1)
+                    # self.hdac_time.append(self.hdac*1)
 
                     self.Head_time.append(self.Head*1)
                     self.Tail_time.append(self.Tail*1)
@@ -432,7 +426,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.Tail_time2.append(self.Tail*1)
                     self.Blast_time2.append(self.Blast*1)
 
-                    self.hdac_time2.append(self.hdac * 1)
+                    # self.hdac_time2.append(self.hdac * 1)
 
 
                 elif self.runtype == 'sim':
@@ -444,7 +438,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                     self.c_NRF_sim_time.append(self.c_NRF * 1)
                     self.c_ERK_sim_time.append(self.c_ERK * 1)
 
-                    self.hdac_sim_time.append(self.hdac * 1)
+                    # self.hdac_sim_time.append(self.hdac * 1)
 
                     self.Head_sim_time.append(self.Head*1)
                     self.Tail_sim_time.append(self.Tail*1)

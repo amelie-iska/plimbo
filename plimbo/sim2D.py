@@ -48,39 +48,31 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         # update the remodelling-allowance molecule, hdac:
         # gradient of concentration:
-        _, g_hdacx, g_hdacy = self.cells.gradient(self.hdac)
-
-        fx = -g_hdacx*self.D_hdac
-        fy = -g_hdacy*self.D_hdac
-
-        # divergence of the flux
-        div_flux = self.cells.div(fx, fy, cbound=True)
-
-        # growth characteristics for mode masked to certain areas, depending on run type:
-        gmod = np.ones(self.cdl)
         gpulse = 1.0
 
         if self.runtype == 'sim': # limit growth to wounds for a timed process:
-            gmod = np.zeros(self.cdl)
-            gmod[self.target_inds_wound] = 1.0
             gpulse = 1.0 - tb.step(ti, self.hdac_to, self.hdac_ts)
 
         elif self.runtype == 'reinit':
             gpulse = 0.0 # inhibit grwoth of hdac
 
-        self.hdac += (-div_flux + gmod*gpulse*self.hdac_growth -self.hdac_growth*self.hdac)*self.dt
 
         # update transition constants based on new value of ERK and beta-Cat:
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 
-        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_B + self.alpha_BH)
-        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_B + self.alpha_BT)
+        # update probabilities using an Implicit Euler Scheme:
+        dt = self.dt*gpulse
+
+        denom = (self.beta_B*dt + 1)*(self.beta_B*dt + self.alpha_BT*dt + self.alpha_BH*dt + 1)
+
+        self.Tail = (self.alpha_BT*self.beta_B*dt**2 + self.Tail*self.beta_B*dt - self.Head*self.alpha_BT*dt +
+                     self.alpha_BT*dt + self.Tail*self.alpha_BH*dt + self.Tail)/denom
+
+        self.Head = (self.alpha_BH*self.beta_B*dt**2 + self.Head*self.beta_B*dt + self.Head*self.alpha_BT*dt -
+                     self.Tail*self.alpha_BH*dt + self.alpha_BH*dt + self.Head)/denom
 
 
-        # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.max_remod*self.hdac
-        self.Tail += delta_T*self.dt*self.max_remod*self.hdac
         self.Blast = 1.0 - self.Head - self.Tail
 
     def load_transport_field(self):
@@ -95,9 +87,13 @@ class PlanariaGRN2D(PlanariaGRNABC):
         raw_nerves, _ = modulate.gradient_bitmap(self.cells.cell_i,
                                                  self.cells, self.p)
 
-        raw_nerves += self.no  # Factor added as an offset
+        NerveDensity = raw_nerves / raw_nerves.max()
 
-        self.NerveDensity = raw_nerves / raw_nerves.max()
+        NDmin = NerveDensity.min()
+        NDmax = NerveDensity.max()
+
+        # Normalize the nerve map so that it ranges from user-specified  min to max values:
+        self.NerveDensity = (NerveDensity - NDmin) * ((self.n_max - self.n_min) / (NDmax - NDmin)) + self.n_min
 
         mean_nerve = self.cells.meanval(self.NerveDensity)
 
@@ -360,7 +356,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
             self.Head = np.delete(self.Head, self.target_inds_cell)
             self.Tail = np.delete(self.Tail, self.target_inds_cell)
             self.Blast = np.delete(self.Blast, self.target_inds_cell)
-            self.hdac = np.delete(self.hdac, self.target_inds_cell)
+            # self.hdac = np.delete(self.hdac, self.target_inds_cell)
 
             self.NerveDensity = np.delete(self.NerveDensity, self.target_inds_cell)
             self.ux = np.delete(self.ux, self.target_inds_mem)
@@ -593,7 +589,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # divergence of flux, growth and decay, breakdown in chemical tagging reaction:
-        del_nrf = (-div_flux + self.r_nrf*term_bc - self.d_nrf * self.c_NRF)
+        del_nrf = (-div_flux + self.r_nrf*term_bc*self.NerveDensity - self.d_nrf * self.c_NRF)
 
         return del_nrf  # change in NRF
 

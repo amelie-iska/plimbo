@@ -80,38 +80,30 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
         """
 
-        # update the remodelling-allowance molecule, hdac:
-        # gradient and midpoint mean concentration:
-        g_hdac, _ = self.get_gradient(self.hdac, self.runtype)
-
-        flux = -g_hdac*self.D_hdac
-        # divergence of the flux
-        div_flux = self.get_div(flux, self.runtype)
-
-        # growth characteristics for mode masked to certain areas, depending on run type:
-        gmod = np.ones(self.cdl)
         gpulse = 1.0
 
         if self.runtype == 'sim': # limit growth to wounds for a timed process:
-            gmod = np.zeros(self.cdl)
-            gmod[self.target_inds_wound] = 1.0
             gpulse = 1.0 - tb.step(ti, self.hdac_to, self.hdac_ts)
 
         elif self.runtype == 'reinit':
             gpulse = 0.0 # inhibit growth of hdac
 
-        self.hdac += (-div_flux + gmod*gpulse*self.hdac_growth -self.hdac_growth*self.hdac)*self.dt
-
         # update transition constants based on new value of ERK and beta-Cat:
         self.alpha_BH = 1/(1 + np.exp(-(self.c_ERK - self.C1)/self.K1)) # init transition constant blastema to head
         self.alpha_BT = 1/(1 + np.exp(-(self.c_BC - self.C2)/self.K2)) # init transition constant blastema to tail
 
-        delta_H = self.alpha_BH - self.Tail*self.alpha_BH - self.Head*(self.beta_B + self.alpha_BH)
-        delta_T = self.alpha_BT - self.Head*self.alpha_BT - self.Tail*(self.beta_B + self.alpha_BT)
+        # update probabilities using an Implicit Euler Scheme:
+        dt = self.dt * gpulse
 
-        # Update probabilities in time:
-        self.Head += delta_H*self.dt*self.max_remod*self.hdac
-        self.Tail += delta_T*self.dt*self.max_remod*self.hdac
+        denom = (self.beta_B * dt + 1) * (self.beta_B * dt + self.alpha_BT * dt + self.alpha_BH * dt + 1)
+
+        self.Tail = (
+                    self.alpha_BT * self.beta_B * dt ** 2 + self.Tail * self.beta_B * dt - self.Head * self.alpha_BT * dt +
+                    self.alpha_BT * dt + self.Tail * self.alpha_BH * dt + self.Tail) / denom
+
+        self.Head = (
+                    self.alpha_BH * self.beta_B * dt ** 2 + self.Head * self.beta_B * dt + self.Head * self.alpha_BT * dt -
+                    self.Tail * self.alpha_BH * dt + self.alpha_BH * dt + self.Head) / denom
 
         self.Blast = 1.0 - self.Head - self.Tail
 
@@ -396,7 +388,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         div_flux = self.get_div(flux, self.runtype)
 
         # divergence of flux, growth and decay, breakdown in chemical tagging reaction:
-        del_nrf = (-div_flux + self.r_nrf * term_bc - self.d_nrf * self.c_NRF)
+        del_nrf = (-div_flux + self.r_nrf * term_bc*self.NerveDensity - self.d_nrf * self.c_NRF)
 
         return del_nrf  # change in NRF
 

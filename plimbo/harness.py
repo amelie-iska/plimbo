@@ -164,14 +164,13 @@ class ModelHarness(object):
                 # ERK parameters
                 'K_erk_bc': 'nM',
                 'n_erk_bc': ' ',
-                'D_erk': 'm^2/s',
 
                 # APC parameters
                 'K_apc_wnt': 'nM',
                 'n_apc_wnt': ' ',
 
                 # Hedgehog parameters:
-                'r_hh': 'nM/s',  # 2.5e-3
+                'r_hh': 'nM/s',
                 'd_hh': '1/s',
                 'D_hh': 'm^2/s',
                 'u_hh': 'm/s',
@@ -186,8 +185,6 @@ class ModelHarness(object):
                 'd_wnt_deg_ptc': '1/s',
                 'K_wnt_hh': 'nM',
                 'n_wnt_hh': ' ',
-                # 'K_wnt_camp': 'uM',
-                # 'n_wnt_camp':' ',
 
                 # NRF parameters
                 'r_nrf': 'nM/s',
@@ -210,13 +207,15 @@ class ModelHarness(object):
 
                 'C2': 'nM',  # Beta-catenin concentration to modulate tail formation
                 'K2': 'nM',
+
                 'Beta_B': '1/s',  # head/tail tissue decay time constant
 
-                'max_remod': 's',  # maximum rate at which tissue remodelling occurs
-                'hdac_growth': '1/s',  # growth and decay constant for hdac remodeling molecule
-                'D_hdac': 'm^2/s',  # diffusion constant for hdac remodeling molecule
                 'hdac_to': 's',  # time at which hdac stops growing
-                'hdac_ts': 's'  # time period over which hdac stops growing
+                'hdac_ts': 's',  # time period over which hdac stops growing
+
+                'n_min': '',  # nerve map min val (only used in 2D Nerve map contrast adjustment)
+                'n_max': '',  # nerve map max val (only used in 2D Nerve map contrast adjustment)
+
             })
 
         else:
@@ -327,7 +326,7 @@ class ModelHarness(object):
             self.output_delta_table(substance=reference, run_type=run_type, save_dir=self.savedir_sensitivity)
             self.output_summary_table(substance=reference, run_type=run_type, save_dir=self.savedir_sensitivity)
             self.output_heteromorphs(save_dir=self.savedir_sensitivity)
-            self.model.plot_frags(dir_save=self.savedir_sensitivity, fsize=fsize)
+            self.model.plot_frags(dir_save=self.savedir_sensitivity, fsize=fsize[0])
 
         if save_all:
             fsave = os.path.join(self.savedir_sensitivity, "Master.gz")
@@ -514,7 +513,7 @@ class ModelHarness(object):
             self.output_delta_table(substance=['Head', 'Tail'], run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_summary_table(substance=['Head','Tail'], run_type='init', save_dir=self.savedir_searchRNAi)
             self.output_heteromorphs(save_dir=self.savedir_searchRNAi)
-            self.model.plot_frags(dir_save=self.savedir_searchRNAi, fsize=fsize)
+            self.model.plot_frags(dir_save=self.savedir_searchRNAi, fsize=fsize[0])
 
         if save_all:
             fsave = os.path.join(self.savedir_searchRNAi, "Master.gz")
@@ -674,7 +673,7 @@ class ModelHarness(object):
 
         if data_output:
             self.output_heteromorphs(save_dir=self.savedir_scaleRNAi)
-            self.model.plot_frags(dir_save=self.savedir_scaleRNAi, fsize=fsize)
+            self.model.plot_frags(dir_save=self.savedir_scaleRNAi, fsize=fsize[0])
 
 
         if save_all:
@@ -825,7 +824,7 @@ class ModelHarness(object):
 
         if data_output:
             self.output_heteromorphs(save_dir=self.savedir_simRNAi)
-            self.model.plot_frags(dir_save=self.savedir_simRNAi, fsize=fsize)
+            self.model.plot_frags(dir_save=self.savedir_simRNAi, fsize=fsize[0])
 
         if save_all:
 
