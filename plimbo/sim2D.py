@@ -13,6 +13,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
 from matplotlib import rcParams
+from matplotlib import ticker
 
 from collections import OrderedDict
 import copy
@@ -979,16 +980,33 @@ class PlanariaGRN2D(PlanariaGRNABC):
             ax1.axis('off')
             ax2.axis('off')
             ax3.axis('off')
-        #
-        # fig.colorbar(col1, ax=ax1, orientation = 'horizontal')
-        # fig.colorbar(col2, ax=ax2, orientation = 'horizontal')
-        # fig.colorbar(col3, ax=ax3, orientation ='horizontal')
+
+        cb1 = fig.colorbar(col1, ax=ax1, orientation = 'horizontal', fraction = 0.010, pad = 0.02)
+        cb2 = fig.colorbar(col2, ax=ax2, orientation = 'horizontal', fraction = 0.010, pad = 0.02)
+        cb3 = fig.colorbar(col3, ax=ax3, orientation ='horizontal', fraction = 0.010, pad = 0.02)
+
+        tick_locator = ticker.MaxNLocator(nbins=1)
+        cb1.locator = tick_locator
+        cb1.update_ticks()
+
+        cb2.locator = tick_locator
+        cb2.update_ticks()
+
+        cb3.locator = tick_locator
+        cb3.update_ticks()
+
+        cb1.ax.tick_params(labelsize=12.0)
+        cb1.set_label('ERK [nM]', fontsize = 12.0)
+        cb2.ax.tick_params(labelsize=12.0)
+        cb2.set_label('β-Cat [nM]', fontsize = 12.0)
+        cb3.ax.tick_params(labelsize=12.0)
+        cb3.set_label('Notum [nM]', fontsize = 12.0)
 
         tt = tsample[ti]
 
         tdays = np.round(tt / (3600), 1)
         tit_string = str(tdays) + ' Hours'
-        fig.suptitle(tit_string, x=0.5, y=0.1)
+        fig.suptitle(tit_string, x=0.5, y=0.98)
 
         if extra_text is not None:
             fig.text(txt_x, txt_y, extra_text, transform=ax1.transAxes)
@@ -1125,46 +1143,81 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
 
         axarr[0,0].add_collection(col1)
-        # fig.colorbar(col1, ax=axarr[0,0])
+        cb1 = fig.colorbar(col1, ax=axarr[0,0], orientation = 'horizontal', fraction = 0.012, pad = 0.02)
         axarr[0, 0].set_title('Erk')
         axarr[0, 0].axis('tight')
         axarr[0, 0].axis('off')
 
         axarr[0, 1].add_collection(col2)
-        # fig.colorbar(col2, ax=axarr[0,1])
+        cb2 = fig.colorbar(col2, ax=axarr[0,1], orientation = 'horizontal', fraction = 0.012, pad = 0.02)
         axarr[0, 1].set_title('β-Cat')
         axarr[0, 1].axis('tight')
         axarr[0, 1].axis('off')
 
         axarr[0, 2].add_collection(col3)
-        # fig.colorbar(col3, ax=axarr[0,2])
+        cb3 = fig.colorbar(col3, ax=axarr[0,2], orientation = 'horizontal', fraction = 0.012, pad = 0.02)
         axarr[0, 2].set_title('Notum')
         axarr[0, 2].axis('tight')
         axarr[0, 2].axis('off')
 
         axarr[1,0].add_collection(col4)
-        # fig.colorbar(col4, ax=axarr[1,0])
+        cb4 = fig.colorbar(col4, ax=axarr[1,0], orientation = 'horizontal', fraction = 0.012, pad = 0.02)
         axarr[1, 0].set_title('Hh')
         axarr[1, 0].axis('tight')
         axarr[1, 0].axis('off')
 
         axarr[1, 1].add_collection(col5)
-        # fig.colorbar(col5, ax=axarr[1,1])
+        cb5 = fig.colorbar(col5, ax=axarr[1,1], orientation = 'horizontal', fraction = 0.012, pad = 0.02)
         axarr[1, 1].set_title('Wnt')
         axarr[1, 1].axis('tight')
         axarr[1, 1].axis('off')
 
         axarr[1, 2].add_collection(col6)
-        # fig.colorbar(col6, ax=axarr[1,2])
+        cb6 = fig.colorbar(col6, ax=axarr[1,2], orientation = 'horizontal', fraction = 0.012, pad = 0.02)
         axarr[1, 2].set_title('NRF')
         axarr[1, 2].axis('tight')
         axarr[1, 2].axis('off')
+
+        tick_locator = ticker.MaxNLocator(nbins=1)
+
+        cb1.locator = tick_locator
+        cb1.update_ticks()
+
+        cb2.locator = tick_locator
+        cb2.update_ticks()
+
+        cb3.locator = tick_locator
+        cb3.update_ticks()
+
+        cb4.locator = tick_locator
+        cb4.update_ticks()
+
+        cb5.locator = tick_locator
+        cb5.update_ticks()
+
+        cb6.locator = tick_locator
+        cb6.update_ticks()
+
+        cb1.ax.tick_params(labelsize=14.0)
+        cb1.set_label('ERK [nM]', fontsize=14.0)
+        cb2.ax.tick_params(labelsize=14.0)
+        cb2.set_label('β-Cat [nM]', fontsize=14.0)
+        cb3.ax.tick_params(labelsize=14.0)
+        cb3.set_label('Notum [nM]', fontsize=14.0)
+
+        cb4.ax.tick_params(labelsize=14.0)
+        cb4.set_label('Hh [nM]', fontsize=14.0)
+        cb5.ax.tick_params(labelsize=14.0)
+        cb5.set_label('Wnt [nM]', fontsize=14.0)
+        cb6.ax.tick_params(labelsize=14.0)
+        cb6.set_label('NRF [nM]', fontsize=14.0)
+
 
         tt = tsample[ti]
 
         tdays = np.round(tt / (3600), 1)
         tit_string = str(tdays) + ' Hours'
-        fig.suptitle(tit_string, x=0.5, y=0.1)
+        fig.suptitle(tit_string, x=0.5, y=0.96)
 
         if extra_text is not None:
             fig.text(txt_x, txt_y, extra_text, transform=axarr[0,0].transAxes)

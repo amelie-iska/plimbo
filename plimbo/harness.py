@@ -113,7 +113,7 @@ class ModelHarness(object):
         self.RNAi_vect_default = [
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 2.5,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
             {'bc': 0.0, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
@@ -123,6 +123,8 @@ class ModelHarness(object):
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 0.0, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
+             'dynein': 1, 'kinesin': 1, 'ptc': 0.0},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 0.0, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 0.0, 'camp': 1,
@@ -130,11 +132,12 @@ class ModelHarness(object):
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 0.0, 'kinesin': 1, 'ptc': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
-             'dynein': 1, 'kinesin':1, 'ptc': 0.0}
+             'dynein': 1, 'kinesin': 0.0, 'ptc': 1},
+
         ]
 
         self.RNAi_tags_default = ['cAMP_Down', 'cAMP_Up', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
-                                  'RNAi_Notum', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'RNAi_Ptc']
+                                  'RNAi_Notum', 'RNAi_Ptc', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'Kinesin']
 
         self.xscales_default = [0.5, 1.5, 3.0]
 

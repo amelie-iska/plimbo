@@ -42,7 +42,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'n_bc_apc': 2.0,
                 'K_bc_camp': 1.0,
                 'n_bc_camp': 2.0,
-                'D_bc': 1.0e-12,
+                'D_bc': 1.0e-12,  #
 
                 # ERK parameters
                 'K_erk_bc': 15.0,
@@ -55,27 +55,27 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 # Hedgehog parameters:
                 'r_hh': 1.0e-2,
                 'd_hh': 1.0e-5,
-                'D_hh': 1.0e-11,
-                'u_hh': 5.0e-8,
+                'D_hh': 1.5e-11,  #
+                'u_hh': 5.0e-8,  #
 
                 # Wnt1 parameters
                 'r_wnt': 1.0e-2,
                 'd_wnt': 1.0e-5,
-                'K_wnt_notum': 0.75,
-                'n_wnt_notum': 1.5,
-                'D_wnt': 5.0e-12,
+                'K_wnt_notum': 0.75,  #
+                'n_wnt_notum': 1.0,  # 1.5
+                'D_wnt': 5.0e-12,  #
                 'd_wnt_deg_notum': 2.0e-3,  #
-                'd_wnt_deg_ptc': 1.0e-3,  #
-                'K_wnt_hh': 250.0,  #
-                'n_wnt_hh': 3.0,  #
+                'd_wnt_deg_ptc': 1.0e-3,  # 1.5e-3 in 2d
+                'K_wnt_hh': 200.0,  # 250.0
+                'n_wnt_hh': 3.0,  # 3.0,
 
                 # NRF parameters
                 'r_nrf': 5.0e-3,
-                'd_nrf': 5.0e-6,
+                'd_nrf': 5.0e-6,  #
                 'K_nrf_bc': 250.0,
                 'n_nrf_bc': 1.0,
                 'D_nrf': 1.5e-11,
-                'u_nrf': -2.0e-8,
+                'u_nrf': -2.5e-8,  #
 
                 # Notum parameters
                 'r_notum': 5.0e-3,
@@ -86,14 +86,14 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 # Markov model parameters:
                 'C1': 0.75,  # 0.75 # ERK constant to modulate head formation
-                'K1': 0.025,  # 0.025
+                'K1': 0.05,  # 0.05
 
                 'C2': 300.0,  # 300.0  # Beta-catenin concentration to modulate tail formation
-                'K2': 10.0,  # 10.0
+                'K2': 20.0,  # 20.0
 
-                'Beta_B': 1.0e-2,  # head/tail tissue decay time constant
+                'Beta_B': 5.0e-3,  # head/tail tissue decay time constant
 
-                'hdac_to': 84.0 * 3600,  # 72  # time at which hdac stops growing
+                'hdac_to': 96.0 * 3600,  # time at which hdac stops growing
                 'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
 
                 'n_min': 0.4,  # nerve map min val (only used in 2D Nerve map contrast adjustment)
