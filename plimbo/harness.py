@@ -157,6 +157,8 @@ class ModelHarness(object):
                 'r_bc': 'nM/s',
                 'd_bc': '1/s',
                 'd_bc_deg': '1/s',
+                'K_bc_apc': 'nM',
+                'n_bc_apc': '',
                 'K_bc_camp': 'nM',
                 'n_bc_camp': ' ',
                 'D_bc': 'm^2/s',

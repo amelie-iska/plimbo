@@ -979,6 +979,10 @@ class PlanariaGRN2D(PlanariaGRNABC):
             ax1.axis('off')
             ax2.axis('off')
             ax3.axis('off')
+        #
+        # fig.colorbar(col1, ax=ax1, orientation = 'horizontal')
+        # fig.colorbar(col2, ax=ax2, orientation = 'horizontal')
+        # fig.colorbar(col3, ax=ax3, orientation ='horizontal')
 
         tt = tsample[ti]
 
@@ -1121,31 +1125,37 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
 
         axarr[0,0].add_collection(col1)
+        # fig.colorbar(col1, ax=axarr[0,0])
         axarr[0, 0].set_title('Erk')
         axarr[0, 0].axis('tight')
         axarr[0, 0].axis('off')
 
         axarr[0, 1].add_collection(col2)
+        # fig.colorbar(col2, ax=axarr[0,1])
         axarr[0, 1].set_title('β-Cat')
         axarr[0, 1].axis('tight')
         axarr[0, 1].axis('off')
 
         axarr[0, 2].add_collection(col3)
+        # fig.colorbar(col3, ax=axarr[0,2])
         axarr[0, 2].set_title('Notum')
         axarr[0, 2].axis('tight')
         axarr[0, 2].axis('off')
 
         axarr[1,0].add_collection(col4)
+        # fig.colorbar(col4, ax=axarr[1,0])
         axarr[1, 0].set_title('Hh')
         axarr[1, 0].axis('tight')
         axarr[1, 0].axis('off')
 
         axarr[1, 1].add_collection(col5)
+        # fig.colorbar(col5, ax=axarr[1,1])
         axarr[1, 1].set_title('Wnt')
         axarr[1, 1].axis('tight')
         axarr[1, 1].axis('off')
 
         axarr[1, 2].add_collection(col6)
+        # fig.colorbar(col6, ax=axarr[1,2])
         axarr[1, 2].set_title('NRF')
         axarr[1, 2].axis('tight')
         axarr[1, 2].axis('off')
@@ -1246,6 +1256,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
             col2.set_clim(clims['β-Cat'])
 
         ax1.add_collection(col1)
+        # fig.colorbar(col1, ax=ax1)
         ax1.axis('tight')
         ax1.set_title('Erk')
 
@@ -1253,6 +1264,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
             ax1.axis('off')
 
         ax2.add_collection(col2)
+        # fig.colorbar(col2, ax=ax2)
         ax2.axis('tight')
         ax2.set_title('β-Cat')
 
