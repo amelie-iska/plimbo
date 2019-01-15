@@ -98,6 +98,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         mean_nerve = self.cells.meanval(self.NerveDensity)
 
+        # print("The mean nerve density is: ", self.NerveDensity.mean())
+
         # Load in raw transport field from image:
         ux, _ = modulate.gradient_bitmap(self.cells.mem_i,
                                          self.cells, self.p,
@@ -561,7 +563,13 @@ class PlanariaGRN2D(PlanariaGRNABC):
         iBC = (self.c_BC / self.K_erk_bc) ** self.n_erk_bc
         term_bc = 1 / (1 + iBC)
 
-        self.c_ERK = rnai_erk*term_bc
+        c_ERK = rnai_erk*term_bc
+
+        # apply cosmetic smoothing to ERK gradient (this is for smoother plotting and doesn't affect results)
+        # gradient of concentration:
+        c_ERK = self.cells.meanval(c_ERK)
+        self.c_ERK = np.dot(self.cells.M_sum_mems, c_ERK * self.cells.mem_sa) / self.cells.cell_sa
+
 
         return del_bc  # change in bc
 

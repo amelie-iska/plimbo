@@ -123,6 +123,8 @@ class PlanariaGRN1D(PlanariaGRNABC):
         # Normalize the nerve map so that it ranges from user-specified  min to max values:
         self.NerveDensity = (NerveDensity - NDmin) * ((self.n_max - self.n_min) / (NDmax - NDmin)) + self.n_min
 
+        # print("The mean nerve density is: ", self.NerveDensity.mean())
+
     def log_details(self):
 
         print("Spatial points: ", self.cdl)

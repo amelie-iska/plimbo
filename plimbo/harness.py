@@ -113,7 +113,7 @@ class ModelHarness(object):
         self.RNAi_vect_default = [
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 2.5,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
             {'bc': 0.0, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 1,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
@@ -217,9 +217,6 @@ class ModelHarness(object):
 
                 'hdac_to': 's',  # time at which hdac stops growing
                 'hdac_ts': 's',  # time period over which hdac stops growing
-
-                'n_min': '',  # nerve map min val (only used in 2D Nerve map contrast adjustment)
-                'n_max': '',  # nerve map max val (only used in 2D Nerve map contrast adjustment)
 
             })
 
@@ -814,12 +811,12 @@ class ModelHarness(object):
 
                 if plot:
                     self.plot_single(rnai_n, 0, harness_type='simRNAi', plot_type=plot_type, axisoff = axisoff,
-                                     output_type='sim', ref_data=self.ref_data[1], fsize=fsize)
+                                     output_type='sim', ref_data=self.ref_data[1], fsize=fsize, clims = clims)
 
 
                 if animate:
                     self.ani_single(rnai_n, 0, harness_type='simRNAi', ani_type=ani_type, axisoff = axisoff,
-                                    output_type='sim', ref_data=self.ref_data[1], fsize=fsize)
+                                    output_type='sim', ref_data=self.ref_data[1], fsize=fsize, clims = clims)
 
                 if verbose is True:
                     print('----------------')
