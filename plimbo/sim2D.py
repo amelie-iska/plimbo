@@ -868,7 +868,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_cmaps['Wnt'] = cm.magma
         mol_cmaps['Hh'] = cm.magma
         mol_cmaps['NRF'] = cm.magma
-        mol_cmaps['Notum'] = cm.PiYG_r
+        mol_cmaps['Notum'] = cm.afmhot
         mol_cmaps['APC'] = cm.magma
         mol_cmaps['cAMP'] = cm.magma
         mol_cmaps['Head'] = cm.RdBu_r
