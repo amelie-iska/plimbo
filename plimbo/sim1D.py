@@ -436,7 +436,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         dnot = self.d_wnt_deg_notum*term_notum # decay of Wnt1 via Notum
 
         # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        effective_d = ((dnot + self.d_wnt)*dptc + self.d_wnt*dnot + self.d_wnt**2)/(dptc + dnot + 2*self.d_wnt)
+        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(dptc + dnot + 2*self.d_wnt)
 
         # Gradient and mean of concentration
         g_wnt, m_wnt = self.get_gradient(self.c_WNT, self.runtype)
@@ -448,7 +448,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         div_flux = self.get_div(flux, self.runtype)
 
         # effective change in the combined concentration of Wnt1 and Wnt11:
-        del_wnt = -div_flux + rnai_wnt*self.r_wnt*self.NerveDensity - effective_d*self.c_WNT
+        del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
 
         return del_wnt  # change in Wnt
 
@@ -504,6 +504,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         mol_clims['Hh'] = [0, 650.0]
         mol_clims['NRF'] = [0, 3000.0]
         mol_clims['Notum'] = [0, 1.0]
+        mol_clims['NotumRNA'] = [0, 1.0]
         mol_clims['APC'] = [0, 1.0]
         mol_clims['cAMP'] = [0, 1.0]
         mol_clims['Head'] = [0, 1.0]
@@ -519,6 +520,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         mol_cmaps['Hh'] = 'DarkCyan'
         mol_cmaps['NRF'] = 'Blue'
         mol_cmaps['Notum'] = 'Green'
+        mol_cmaps['NotumRNA'] = 'Green'
         mol_cmaps['APC'] = 'OrangeRed'
         mol_cmaps['cAMP'] = 'DeepSkyBlue'
         mol_cmaps['Tail'] = 'Blue'
@@ -562,20 +564,32 @@ class PlanariaGRN1D(PlanariaGRNABC):
             tsample = self.tsample_init
             carray1 = self.molecules_time['Erk'][ti]
             carray2 = self.molecules_time['β-Cat'][ti]
-            carray3 = self.molecules_time['Notum'][ti]
+
+            # plot the relative rate of Notum transcription instead of Notum
+            iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            carray3 = iNRF / (1 + iNRF)
+            # carray3 = self.molecules_time['Notum'][ti]
 
         elif plot_type == 'reinit':
 
             tsample = self.tsample_reinit
             carray1 = self.molecules_time2['Erk'][ti]
             carray2 = self.molecules_time2['β-Cat'][ti]
-            carray3 = self.molecules_time2['Notum'][ti]
+
+            # plot the relative rate of Notum transcription instead of Notum
+            iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            carray3 = iNRF / (1 + iNRF)
+            # carray3 = self.molecules_time2['Notum'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
             carray1 = self.molecules_sim_time['Erk'][ti]
             carray2 = self.molecules_sim_time['β-Cat'][ti]
-            carray3 = self.molecules_sim_time['Notum'][ti]
+
+            # plot the relative rate of Notum transcription instead of Notum
+            iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            carray3 = iNRF / (1 + iNRF)
+            # carray3 = self.molecules_sim_time['Notum'][ti]
 
             xs, cs1 = self.get_plot_segs(carray1)
             _, cs2 = self.get_plot_segs(carray2)
@@ -593,7 +607,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
             # main plot data:
             axarr[0].plot(self.X*1e3, carray1, color=cmaps['Erk'], linewidth=linew)
             axarr[1].plot(self.X*1e3, carray2, color=cmaps['β-Cat'], linewidth=linew)
-            axarr[2].plot(self.X*1e3, carray3, color=cmaps['Notum'], linewidth=linew)
+            axarr[2].plot(self.X*1e3, carray3, color=cmaps['NotumRNA'], linewidth=linew)
 
             if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
 
@@ -601,7 +615,10 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
                 carray1r = ref_data['Erk'][ti]
                 carray2r = ref_data['β-Cat'][ti]
-                carray3r = ref_data['Notum'][ti]
+
+                cNRFr = ref_data['NRF'][ti]
+                iNRF = (cNRFr / self.K_notum_nrf) ** self.n_notum_nrf
+                carray3r = iNRF / (1 + iNRF)
 
                 axarr[0].plot(self.X * 1e3, carray1r, color='Black', linewidth=linewr, linestyle='dashed', zorder =10)
                 axarr[1].plot(self.X * 1e3, carray2r, color='Black', linewidth=linewr, linestyle='dashed', zorder =10)
@@ -617,7 +634,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
                 axarr[1].plot(xi, ci, color=cmaps['β-Cat'], linewidth=linew)
 
             for xi, ci in zip(xs, cs3):
-                axarr[2].plot(xi, ci, color=cmaps['Notum'], linewidth=linew)
+                axarr[2].plot(xi, ci, color=cmaps['NotumRNA'], linewidth=linew)
 
             if ref_data is not None:  # if a reference line is supplied, prepare it for the plot
 
@@ -625,7 +642,10 @@ class PlanariaGRN1D(PlanariaGRNABC):
 
                 carray1r = ref_data['Erk'][ti]
                 carray2r = ref_data['β-Cat'][ti]
-                carray3r = ref_data['Notum'][ti]
+
+                cNRFr = ref_data['NRF'][ti]
+                iNRF = (cNRFr / self.K_notum_nrf) ** self.n_notum_nrf
+                carray3r = iNRF / (1 + iNRF)
 
                 xsr, cs1r = self.get_plot_segs(carray1r)
                 _, cs2r = self.get_plot_segs(carray2r)
@@ -651,10 +671,10 @@ class PlanariaGRN1D(PlanariaGRNABC):
         if autoscale is False:
             axarr[1].set_ylim(clims['β-Cat'][0], clims['β-Cat'][1])
 
-        axarr[2].set_title("Notum")
+        axarr[2].set_title("Notum RNA")
         axarr[2].set_ylabel('Concentration [nM]')
         if autoscale is False:
-            axarr[2].set_ylim(clims['Notum'][0], clims['Notum'][1])
+            axarr[2].set_ylim(clims['NotumRNA'][0], clims['NotumRNA'][1])
 
         axarr[2].set_xlabel('Axis Distance [mm]')
 

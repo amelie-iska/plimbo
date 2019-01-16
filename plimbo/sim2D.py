@@ -643,8 +643,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         dnot = self.d_wnt_deg_notum * term_notum  # decay of Wnt1 via Notum
 
         # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        effective_d = ((dnot + self.d_wnt) * dptc + self.d_wnt * dnot + self.d_wnt ** 2) / (
-        dptc + dnot + 2 * self.d_wnt)
+        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(dptc + dnot + 2*self.d_wnt)
 
         # Gradient of concentration
         _, g_wnt_x, g_wnt_y = self.cells.gradient(self.c_WNT)
@@ -657,7 +656,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # change in the combined concentration of Wnt1 and Wnt11:
-        del_wnt = -div_flux + rnai_wnt*self.r_wnt*self.NerveDensity - effective_d*self.c_WNT
+        del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
 
         return del_wnt  # change in Wnt
 
@@ -854,6 +853,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_clims['Hh'] = (0, 650.0)
         mol_clims['NRF'] = (0, 3000.0)
         mol_clims['Notum'] = (0, 1.0)
+        mol_clims['NotumRNA'] = (0, 1.0)
         mol_clims['APC'] = (0, 1.0)
         mol_clims['cAMP'] = (0, 1.0)
         mol_clims['Head'] = (0, 1.0)
@@ -868,7 +868,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         mol_cmaps['Wnt'] = cm.magma
         mol_cmaps['Hh'] = cm.magma
         mol_cmaps['NRF'] = cm.magma
-        mol_cmaps['Notum'] = cm.afmhot
+        mol_cmaps['NotumRNA'] = cm.afmhot
+        mol_cmaps['Notum'] = cm.PiYG_r
         mol_cmaps['APC'] = cm.magma
         mol_cmaps['cAMP'] = cm.magma
         mol_cmaps['Head'] = cm.RdBu_r
@@ -916,7 +917,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
             self.assign_easy_x(self.cells_i)
             carray1 = self.molecules_time['Erk'][ti]
             carray2 = self.molecules_time['β-Cat'][ti]
-            carray3 = self.molecules_time['Notum'][ti]
+
+            # plot the relative rate of Notum transcription instead of Notum
+            iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            carray3 = iNRF / (1 + iNRF)
+            # carray3 = self.molecules_time['Notum'][ti]
 
         elif plot_type == 'reinit':
 
@@ -925,7 +930,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
             self.assign_easy_x(self.cells_i)
             carray1 = self.molecules_time2['Erk'][ti]
             carray2 = self.molecules_time2['β-Cat'][ti]
-            carray3 = self.molecules_time2['Notum'][ti]
+
+            # plot the relative rate of Notum transcription instead of Notum
+            iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            carray3 = iNRF / (1 + iNRF)
+            # carray3 = self.molecules_time2['Notum'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -933,7 +942,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
             self.assign_easy_x(self.cells_s)
             carray1 = self.molecules_sim_time['Erk'][ti]
             carray2 = self.molecules_sim_time['β-Cat'][ti]
-            carray3 = self.molecules_sim_time['Notum'][ti]
+
+            # plot the relative rate of Notum transcription instead of Notum
+            iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            carray3 = iNRF / (1 + iNRF)
+            # carray3 = self.molecules_sim_time['Notum'][ti]
 
 
         else:
@@ -965,9 +978,9 @@ class PlanariaGRN2D(PlanariaGRNABC):
         col2.set_array(carray2)
 
 
-        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['Notum'], linewidth=0.0)
+        col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['NotumRNA'], linewidth=0.0)
         if autoscale is False:
-            col3.set_clim(clims['Notum'][0], clims['Notum'][1])
+            col3.set_clim(clims['NotumRNA'][0], clims['NotumRNA'][1])
         col3.set_array(carray3)
 
 
@@ -981,7 +994,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         ax2.axis('tight')
 
         ax3.add_collection(col3)
-        ax3.set_title('Notum')
+        ax3.set_title('Notum (RNA)')
         ax3.axis('tight')
 
         if axisoff:
