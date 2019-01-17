@@ -643,7 +643,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         dnot = self.d_wnt_deg_notum * term_notum  # decay of Wnt1 via Notum
 
         # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(dptc + dnot + 2*self.d_wnt)
+        ndense = self.NerveDensity
+        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(self.d_wnt*ndense + dptc*ndense + dnot + self.d_wnt)
 
         # Gradient of concentration
         _, g_wnt_x, g_wnt_y = self.cells.gradient(self.c_WNT)

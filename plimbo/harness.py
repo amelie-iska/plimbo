@@ -111,9 +111,7 @@ class ModelHarness(object):
 
         # default RNAi testing sequence vector:
         self.RNAi_vect_default = [
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.1,
-             'dynein': 1, 'kinesin': 1, 'ptc': 1},
-            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.25,
+            {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 0.15,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
             {'bc': 1, 'erk': 1, 'apc': 1, 'notum': 1, 'wnt': 1, 'hh': 1, 'camp': 5.0,
              'dynein': 1, 'kinesin': 1, 'ptc': 1},
@@ -138,7 +136,7 @@ class ModelHarness(object):
 
         ]
 
-        self.RNAi_tags_default = ['cAMP_Down0p1', 'cAMP_Down0p25', 'cAMP_Up', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
+        self.RNAi_tags_default = ['cAMP_Down', 'cAMP_Up', 'RNAi_BC', 'RNAi_ERK', 'RNAi_APC',
                                   'RNAi_Notum', 'RNAi_Ptc', 'RNAi_WNT', 'RNAi_HH', 'Dynein', 'Kinesin']
 
         self.xscales_default = [0.5, 1.5, 3.0]

@@ -36,9 +36,9 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
             self.pdict = OrderedDict({ #params optimized for 2D
 
                 # Beta cat parameters
-                'r_bc': 2.5e-3,
-                'd_bc': 3.0e-6,
-                'd_bc_deg': 5.0e-3,
+                'r_bc': 2.5e-3,  #
+                'd_bc': 2.5e-6,  #
+                'd_bc_deg': 5.0e-3,  #
                 'K_bc_apc': 0.5,
                 'n_bc_apc': 2.0,
                 'K_bc_camp': 1.0,
@@ -46,43 +46,43 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'D_bc': 1.0e-12,
 
                 # ERK parameters
-                'K_erk_bc': 30.0,
+                'K_erk_bc': 40.0,  # 30
                 'n_erk_bc': 2.0,
 
                 # APC parameters
-                'K_apc_wnt': 15.0,
-                'n_apc_wnt': 2.0,
+                'K_apc_wnt': 30.0,  #
+                'n_apc_wnt': 2.0,  #
 
                 # Hedgehog parameters:
-                'r_hh': 1.0e-2,
-                'd_hh': 1.0e-5,
-                'D_hh': 1.75e-11,
-                'u_hh': 6.25e-8,
+                'r_hh': 5.0e-3,  #
+                'd_hh': 5.0e-6,  #
+                'D_hh': 1.5e-11,  #
+                'u_hh': 5.0e-8,  #
 
                 # Wnt1 parameters
-                'r_wnt': 1.0e-2,
-                'd_wnt': 1.0e-5,
-                'K_wnt_notum': 0.6,
-                'n_wnt_notum': 2.0,
+                'r_wnt': 1.0e-2,  #
+                'd_wnt': 0.75e-5,  #
+                'K_wnt_notum': 1.25,  #
+                'n_wnt_notum': 1.5,  # 2.0
                 'D_wnt': 5.0e-12,
-                'd_wnt_deg_notum': 5.0e-3,
-                'd_wnt_deg_ptc': 2.5e-3,
-                'K_wnt_hh': 175.0,
-                'n_wnt_hh': 3.0,
+                'd_wnt_deg_notum': 1.0e-2,  #
+                'd_wnt_deg_ptc': 1.5e-4,  #
+                'K_wnt_hh': 375.0,  # 400
+                'n_wnt_hh': 2.0,  #
 
                 # NRF parameters
-                'r_nrf': 5.0e-3,
-                'd_nrf': 5.0e-6,
-                'K_nrf_bc': 250.0,
-                'n_nrf_bc': 1.0,
-                'D_nrf': 1.5e-11,
-                'u_nrf': -2.0e-8,
+                'r_nrf': 1.0e-2,  # 7.5e-3 ?
+                'd_nrf': 1.0e-5,  # 7.5e-6 ?
+                'K_nrf_bc': 250.0,  # Turning this down increases activity of Hh
+                'n_nrf_bc': 2.0,  #
+                'D_nrf': 1.0e-11,  #
+                'u_nrf': -5.0e-8,  #
 
                 # Notum parameters
                 'r_notum': 5.0e-3,
                 'd_notum': 5.0e-3,
-                'K_notum_nrf': 475.0,
-                'n_notum_nrf': 2.5,
+                'K_notum_nrf': 250.0,  # 250  Turning this down increases activity of HH
+                'n_notum_nrf': 2.5,  # 2.0
                 'D_notum': 1.0e-11,
 
                 # Markov model parameters:
@@ -94,78 +94,12 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 'Beta_B': 5.0e-3,  # head/tail tissue decay time constant
 
-                'hdac_to': 90.0 * 3600,  # time at which hdac stops growing
+                'hdac_to': 90.0 * 3600,  # 96 time at which hdac stops growing
                 'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
 
             })
 
-            # self.pdict = OrderedDict({ #params optimized for 1D
-            #
-            #     # Beta cat parameters
-            #     'r_bc': 2.5e-3,
-            #     'd_bc': 2.5e-6,
-            #     'd_bc_deg': 5.0e-3,
-            #     'K_bc_apc': 0.5,
-            #     'n_bc_apc': 2.0,
-            #     'K_bc_camp': 1.0,
-            #     'n_bc_camp': 2.0,
-            #     'D_bc': 1.0e-12,  #
-            #
-            #     # ERK parameters
-            #     'K_erk_bc': 15.0,
-            #     'n_erk_bc': 2.0,
-            #
-            #     # APC parameters
-            #     'K_apc_wnt': 15.0,
-            #     'n_apc_wnt': 2.0,
-            #
-            #     # Hedgehog parameters:
-            #     'r_hh': 1.0e-2,
-            #     'd_hh': 1.0e-5,
-            #     'D_hh': 1.5e-11,  #
-            #     'u_hh': 5.0e-8,  #
-            #
-            #     # Wnt1 parameters
-            #     'r_wnt': 1.0e-2,
-            #     'd_wnt': 1.0e-5,
-            #     'K_wnt_notum': 0.75,  #
-            #     'n_wnt_notum': 1.0,  # 1.5
-            #     'D_wnt': 5.0e-12,  #
-            #     'd_wnt_deg_notum': 2.0e-3,  #
-            #     'd_wnt_deg_ptc': 1.0e-3,  #
-            #     'K_wnt_hh': 200.0,  #
-            #     'n_wnt_hh': 3.0,  #
-            #
-            #     # NRF parameters
-            #     'r_nrf': 5.0e-3,
-            #     'd_nrf': 5.0e-6,  #
-            #     'K_nrf_bc': 250.0,
-            #     'n_nrf_bc': 1.0,
-            #     'D_nrf': 1.5e-11,
-            #     'u_nrf': -2.5e-8,  #
-            #
-            #     # Notum parameters
-            #     'r_notum': 5.0e-3,
-            #     'd_notum': 5.0e-3,
-            #     'K_notum_nrf': 500.0,
-            #     'n_notum_nrf': 2.0,
-            #     'D_notum': 1.0e-11,
-            #
-            #     # Markov model parameters:
-            #     'C1': 0.75,  # 0.75 # ERK constant to modulate head formation
-            #     'K1': 0.05,  # 0.05
-            #
-            #     'C2': 300.0,  # 300.0  # Beta-catenin concentration to modulate tail formation
-            #     'K2': 20.0,  # 20.0
-            #
-            #     'Beta_B': 5.0e-3,  # head/tail tissue decay time constant
-            #
-            #     'hdac_to': 96.0 * 3600,  # time at which hdac stops growing
-            #     'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
 
-            #
-            #
-            # })
 
         else:
             self.pdict = pdict
