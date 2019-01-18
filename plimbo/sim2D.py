@@ -883,7 +883,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
     def triplot(self, ti, plot_type='init',
                 autoscale=True, fname = 'Triplot_', dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
+                clims=None, cmaps=None, fontsize=16.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                 ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if clims is None:
@@ -995,7 +995,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         ax2.axis('tight')
 
         ax3.add_collection(col3)
-        ax3.set_title('Notum (RNA)')
+        ax3.set_title('Notum')
         ax3.axis('tight')
 
         if axisoff:
@@ -1039,7 +1039,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.close()
 
     def hexplot(self, ti, plot_type='init', autoscale=True, fname = 'Hexplot_', dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 14), axisoff=False, linew = 3.0,
+                clims=None, cmaps=None, fontsize=16.0, fsize=(6, 14), axisoff=False, linew = 3.0,
                 ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if clims is None:
@@ -1250,7 +1250,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.close()
 
     def biplot(self, ti, plot_type='init', autoscale=True, fname = 'Biplot_', dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False,
+                clims=None, cmaps=None, fontsize=16.0, fsize=(10, 6), axisoff=False,
                ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if clims is None:
@@ -1361,7 +1361,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
         plt.close()
 
     def plot(self, ti, ctag, plot_type='init', autoscale=True, dirsave = 'Plot', reso = 150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff = False):
+                clims=None, cmaps=None, fontsize=16.0, fsize=(4, 6), axisoff = False):
 
         if clims is None:
             clims = self.default_clims
@@ -1493,7 +1493,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
             plt.close()
 
     def animate_triplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
+                clims=None, cmaps=None, fontsize=16.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                         ref_data=None, extra_text = None):
 
         if ani_type == 'init' or ani_type == 'reinit':
@@ -1511,7 +1511,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
                              ref_data=ref_data, extra_text = extra_text)
 
     def animate_biplot(self, ani_type='init', autoscale=True, dirsave=None, reso=150,
-               clims=None, cmaps=None, fontsize=18.0, fsize=(10, 6), axisoff=False,
+               clims=None, cmaps=None, fontsize=16.0, fsize=(10, 6), axisoff=False,
                        ref_data=None, extra_text = None):
 
         if ani_type == 'init' or ani_type == 'reinit':
@@ -1529,7 +1529,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
                             ref_data=ref_data, extra_text = extra_text)
 
     def animate_plot(self, ctag, ani_type='init', autoscale=True, dirsave='PlotAni', reso=150,
-             clims=None, cmaps=None, fontsize=18.0, fsize=(4, 6), axisoff=False):
+             clims=None, cmaps=None, fontsize=16.0, fsize=(4, 6), axisoff=False):
 
         if ani_type == 'init' or ani_type == 'reinit':
 
@@ -1544,7 +1544,7 @@ class PlanariaGRN2D(PlanariaGRNABC):
                              clims = clims, cmaps=cmaps, fontsize=fontsize, fsize=fsize, axisoff = axisoff)
 
     def markovplot(self, ti, plot_type='init', autoscale=True, fname = 'Markov', dirsave=None, reso=150,
-                clims=None, cmaps=None, fontsize=18.0, fsize=(6, 8), axisoff=False, linew = 3.0,
+                clims=None, cmaps=None, fontsize=16.0, fsize=(6, 8), axisoff=False, linew = 3.0,
                 ref_data = None, extra_text = None, txt_x = 0.05, txt_y = 0.92):
 
         if cmaps is None:

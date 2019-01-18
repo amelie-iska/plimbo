@@ -436,7 +436,8 @@ class PlanariaGRN1D(PlanariaGRNABC):
         dnot = self.d_wnt_deg_notum*term_notum # decay of Wnt1 via Notum
 
         # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(dptc + dnot + 2*self.d_wnt)
+        ndense = self.NerveDensity
+        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(self.d_wnt*ndense + dptc*ndense + dnot + self.d_wnt)
 
         # Gradient and mean of concentration
         g_wnt, m_wnt = self.get_gradient(self.c_WNT, self.runtype)
@@ -666,12 +667,12 @@ class PlanariaGRN1D(PlanariaGRNABC):
         if autoscale is False:
             axarr[0].set_ylim(clims['Erk'][0], clims['Erk'][1])
 
-        axarr[1].set_title("beta-cat")
+        axarr[1].set_title("β-cat")
         axarr[1].set_ylabel('Concentration [nM]')
         if autoscale is False:
             axarr[1].set_ylim(clims['β-Cat'][0], clims['β-Cat'][1])
 
-        axarr[2].set_title("Notum RNA")
+        axarr[2].set_title("Notum")
         axarr[2].set_ylabel('Concentration [nM]')
         if autoscale is False:
             axarr[2].set_ylim(clims['NotumRNA'][0], clims['NotumRNA'][1])

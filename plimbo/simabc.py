@@ -46,11 +46,11 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'D_bc': 1.0e-12,
 
                 # ERK parameters
-                'K_erk_bc': 40.0,  # 30
+                'K_erk_bc': 40.0,  # 40
                 'n_erk_bc': 2.0,
 
                 # APC parameters
-                'K_apc_wnt': 30.0,  #
+                'K_apc_wnt': 30.0,  # 30
                 'n_apc_wnt': 2.0,  #
 
                 # Hedgehog parameters:
@@ -61,19 +61,19 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 # Wnt1 parameters
                 'r_wnt': 1.0e-2,  #
-                'd_wnt': 0.75e-5,  #
-                'K_wnt_notum': 1.25,  #
-                'n_wnt_notum': 1.5,  # 2.0
+                'd_wnt': 8.0e-6,  # 7.5e-6
+                'K_wnt_notum': 1.0,  #
+                'n_wnt_notum': 1.75,  #
                 'D_wnt': 5.0e-12,
-                'd_wnt_deg_notum': 1.0e-2,  #
+                'd_wnt_deg_notum': 5.0e-3,  #
                 'd_wnt_deg_ptc': 1.5e-4,  #
-                'K_wnt_hh': 375.0,  # 400
-                'n_wnt_hh': 2.0,  #
+                'K_wnt_hh': 375.0,  #
+                'n_wnt_hh': 2.5,  #
 
                 # NRF parameters
-                'r_nrf': 1.0e-2,  # 7.5e-3 ?
-                'd_nrf': 1.0e-5,  # 7.5e-6 ?
-                'K_nrf_bc': 250.0,  # Turning this down increases activity of Hh
+                'r_nrf': 1.0e-2,  #
+                'd_nrf': 1.0e-5,  #
+                'K_nrf_bc': 250.0,  #
                 'n_nrf_bc': 2.0,  #
                 'D_nrf': 1.0e-11,  #
                 'u_nrf': -5.0e-8,  #
@@ -81,8 +81,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 # Notum parameters
                 'r_notum': 5.0e-3,
                 'd_notum': 5.0e-3,
-                'K_notum_nrf': 250.0,  # 250  Turning this down increases activity of HH
-                'n_notum_nrf': 2.5,  # 2.0
+                'K_notum_nrf': 250.0,  #
+                'n_notum_nrf': 2.0,  #
                 'D_notum': 1.0e-11,
 
                 # Markov model parameters:
@@ -98,6 +98,20 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
 
             })
+
+            # Default params for illustrative model in 1D:
+
+            # param_1D['u_hh'] = 3.5e-8
+            # param_1D['n_wnt_notum'] = 1.5
+            # param_1D['K_wnt_hh'] = 250.0
+            # param_1D['u_nrf'] = -3.0e-08
+            # param_1D['K_nrf_bc'] = 200.0
+            # param_1D['K_notum_nrf'] = 200.0
+            # param_1D['r_nrf'] = 6.0e-3  #
+            # param_1D['d_nrf'] = 6.0e-6  #
+            # param_1D['d_wnt_deg_notum'] = 1.5e-3  #
+            # param_1D['d_wnt_deg_ptc'] = 2.5e-4
+            # param_1D['d_wnt'] = 5.0e-6
 
 
 
