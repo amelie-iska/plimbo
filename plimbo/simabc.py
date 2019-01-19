@@ -46,51 +46,51 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'D_bc': 1.0e-12,
 
                 # ERK parameters
-                'K_erk_bc': 40.0,  # 40
-                'n_erk_bc': 2.0,
+                'K_erk_bc': 30.0,  #
+                'n_erk_bc': 2.0,  #
 
                 # APC parameters
-                'K_apc_wnt': 30.0,  # 30
+                'K_apc_wnt': 30.0,  #
                 'n_apc_wnt': 2.0,  #
 
                 # Hedgehog parameters:
                 'r_hh': 5.0e-3,  #
                 'd_hh': 5.0e-6,  #
                 'D_hh': 1.5e-11,  #
-                'u_hh': 5.0e-8,  #
+                'u_hh': 3.0e-8,  #
 
                 # Wnt1 parameters
                 'r_wnt': 1.0e-2,  #
-                'd_wnt': 8.0e-6,  # 7.5e-6
-                'K_wnt_notum': 1.0,  #
-                'n_wnt_notum': 1.75,  #
-                'D_wnt': 5.0e-12,
-                'd_wnt_deg_notum': 5.0e-3,  #
-                'd_wnt_deg_ptc': 1.5e-4,  #
-                'K_wnt_hh': 375.0,  #
-                'n_wnt_hh': 2.5,  #
+                'd_wnt': 1.0e-5,  #
+                'K_wnt_notum': 0.5,  #
+                'n_wnt_notum': 2.5,  # 2.5
+                'D_wnt': 5.0e-12,  #
+                'd_wnt_deg_notum': 1.0e-4,  # 1.0e-4
+                'd_wnt_deg_ptc': 7.5e-5,  #
+                'K_wnt_hh': 300.0,  #
+                'n_wnt_hh': 2.5,  # 2.5
 
                 # NRF parameters
-                'r_nrf': 1.0e-2,  #
-                'd_nrf': 1.0e-5,  #
-                'K_nrf_bc': 250.0,  #
-                'n_nrf_bc': 2.0,  #
-                'D_nrf': 1.0e-11,  #
-                'u_nrf': -5.0e-8,  #
+                'r_nrf': 7.5e-3,  #
+                'd_nrf': 7.5e-6,  #
+                'K_nrf_bc': 150.0,  # 150
+                'n_nrf_bc': 2.0,  # 2.0
+                'D_nrf': 1.5e-11,  #
+                'u_nrf': -6.0e-8,  #
 
                 # Notum parameters
-                'r_notum': 5.0e-3,
-                'd_notum': 5.0e-3,
-                'K_notum_nrf': 250.0,  #
-                'n_notum_nrf': 2.0,  #
-                'D_notum': 1.0e-11,
+                'r_notum': 2.5e-3,  #
+                'd_notum': 2.5e-3,  #
+                'K_notum_nrf': 250.0,  # 250, 150
+                'n_notum_nrf': 2.0,  # 2.0, 1.0
+                'D_notum': 1.5e-11,  #
 
                 # Markov model parameters:
                 'C1': 0.75,  # ERK constant to modulate head formation
                 'K1': 0.05,
 
                 'C2': 300.0,  # Beta-catenin concentration to modulate tail formation
-                'K2': 20.0,
+                'K2': 40.0,
 
                 'Beta_B': 5.0e-3,  # head/tail tissue decay time constant
 
@@ -98,20 +98,6 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
                 'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
 
             })
-
-            # Default params for illustrative model in 1D:
-
-            # param_1D['u_hh'] = 3.5e-8
-            # param_1D['n_wnt_notum'] = 1.5
-            # param_1D['K_wnt_hh'] = 250.0
-            # param_1D['u_nrf'] = -3.0e-08
-            # param_1D['K_nrf_bc'] = 200.0
-            # param_1D['K_notum_nrf'] = 200.0
-            # param_1D['r_nrf'] = 6.0e-3  #
-            # param_1D['d_nrf'] = 6.0e-6  #
-            # param_1D['d_wnt_deg_notum'] = 1.5e-3  #
-            # param_1D['d_wnt_deg_ptc'] = 2.5e-4
-            # param_1D['d_wnt'] = 5.0e-6
 
 
 

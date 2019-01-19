@@ -611,6 +611,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         term_nrf = iNRF / (1 + iNRF)
 
+        # term_nrf = self.c_NRF/self.K_notum_nrf
+
         # Gradient of concentration
         _, g_not_x, g_not_y = self.cells.gradient(self.c_Notum)
 
@@ -642,9 +644,15 @@ class PlanariaGRN2D(PlanariaGRNABC):
         dptc = self.d_wnt_deg_ptc * term_hh * rnai_ptc  # decay of Wnt11 via Ptc
         dnot = self.d_wnt_deg_notum * term_notum  # decay of Wnt1 via Notum
 
-        # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        ndense = self.NerveDensity
-        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(self.d_wnt*ndense + dptc*ndense + dnot + self.d_wnt)
+        # # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
+        # # ndense = self.NerveDensity
+        # effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(self.d_wnt + dptc + dnot + self.d_wnt)
+
+        # effective decay rate of wnt1 + wnt11 combo (where Notum acts on all Wnts and Ptc acts on Wnt11):
+        # gm = self.NerveDensity # growth modulator for Wnt1
+        # gm = 1.0
+
+        # effective_d = ((dnot + self.d_wnt)*(dnot + dptc + self.d_wnt))/(self.d_wnt*(1 + gm) + dptc*gm + dnot*(1 + gm))
 
         # Gradient of concentration
         _, g_wnt_x, g_wnt_y = self.cells.gradient(self.c_WNT)
@@ -657,7 +665,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         div_flux = self.cells.div(fx, fy, cbound=True)
 
         # change in the combined concentration of Wnt1 and Wnt11:
-        del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
+        # del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
+        del_wnt = -div_flux + rnai_wnt*self.r_wnt - (dnot + dptc + self.d_wnt)*self.c_WNT
 
         return del_wnt  # change in Wnt
 
@@ -920,9 +929,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
             carray2 = self.molecules_time['β-Cat'][ti]
 
             # plot the relative rate of Notum transcription instead of Notum
-            iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
-            carray3 = iNRF / (1 + iNRF)
+            # iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            # carray3 = iNRF / (1 + iNRF)
             # carray3 = self.molecules_time['Notum'][ti]
+
+            carray3 = self.molecules_time['NRF'][ti]
 
         elif plot_type == 'reinit':
 
@@ -933,9 +944,10 @@ class PlanariaGRN2D(PlanariaGRNABC):
             carray2 = self.molecules_time2['β-Cat'][ti]
 
             # plot the relative rate of Notum transcription instead of Notum
-            iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
-            carray3 = iNRF / (1 + iNRF)
+            # iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            # carray3 = iNRF / (1 + iNRF)
             # carray3 = self.molecules_time2['Notum'][ti]
+            carray3 = self.molecules_time2['NRF'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -945,9 +957,11 @@ class PlanariaGRN2D(PlanariaGRNABC):
             carray2 = self.molecules_sim_time['β-Cat'][ti]
 
             # plot the relative rate of Notum transcription instead of Notum
-            iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
-            carray3 = iNRF / (1 + iNRF)
+            # iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            # carray3 = iNRF / (1 + iNRF)
+
             # carray3 = self.molecules_sim_time['Notum'][ti]
+            carray3 = self.molecules_sim_time['NRF'][ti]
 
 
         else:
@@ -981,7 +995,9 @@ class PlanariaGRN2D(PlanariaGRNABC):
 
         col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['NotumRNA'], linewidth=0.0)
         if autoscale is False:
-            col3.set_clim(clims['NotumRNA'][0], clims['NotumRNA'][1])
+            # col3.set_clim(clims['NotumRNA'][0], clims['NotumRNA'][1])
+            # col3.set_clim(clims['Notum'][0], clims['Notum'][1])
+            col3.set_clim(clims['NRF'][0], clims['NRF'][1])
         col3.set_array(carray3)
 
 

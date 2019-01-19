@@ -435,9 +435,15 @@ class PlanariaGRN1D(PlanariaGRNABC):
         dptc = self.d_wnt_deg_ptc*term_hh*rnai_ptc # decay of Wnt11 via Ptc
         dnot = self.d_wnt_deg_notum*term_notum # decay of Wnt1 via Notum
 
-        # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11:
-        ndense = self.NerveDensity
-        effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(self.d_wnt*ndense + dptc*ndense + dnot + self.d_wnt)
+        # effective decay rate of wnt1 + wnt11 combo (where Notum acts on Wnt1 and Ptc acts on Wnt11):
+        # ndense = self.NerveDensity
+        # effective_d = ((dnot + self.d_wnt)*(dptc + self.d_wnt))/(self.d_wnt + dptc + dnot + self.d_wnt)
+
+        # effective decay rate of wnt1 + wnt11 combo (where Notum acts on all Wnts and Ptc acts on Wnt11):
+        # gm = self.NerveDensity # growth modulator for Wnt1
+        # gm = 1.0
+
+        # effective_d = ((dnot + self.d_wnt)*(dnot + dptc + self.d_wnt))/(self.d_wnt*(1 + gm) + dptc*gm + dnot*(1 + gm))
 
         # Gradient and mean of concentration
         g_wnt, m_wnt = self.get_gradient(self.c_WNT, self.runtype)
@@ -449,7 +455,9 @@ class PlanariaGRN1D(PlanariaGRNABC):
         div_flux = self.get_div(flux, self.runtype)
 
         # effective change in the combined concentration of Wnt1 and Wnt11:
-        del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
+        # del_wnt = -div_flux + rnai_wnt*self.r_wnt - effective_d*self.c_WNT
+        del_wnt = -div_flux + rnai_wnt*self.r_wnt - (dnot + dptc + self.d_wnt)*self.c_WNT
+
 
         return del_wnt  # change in Wnt
 
