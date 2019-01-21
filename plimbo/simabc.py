@@ -37,7 +37,7 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 # Beta cat parameters
                 'r_bc': 2.5e-3,  #
-                'd_bc': 2.5e-6,  #
+                'd_bc': 1.0e-6,  #
                 'd_bc_deg': 5.0e-3,  #
                 'K_bc_apc': 0.5,
                 'n_bc_apc': 2.0,
@@ -96,6 +96,9 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
 
                 'hdac_to': 90.0 * 3600,  # 96 time at which hdac stops growing
                 'hdac_ts': 12.0 * 3600,  # time period over which hdac stops growing
+
+                'nd_min': 0.4, # minimum value of the nerve map
+                'nd_max': 1.0  # maximu value of the nerve map
 
             })
 
@@ -244,8 +247,8 @@ class PlanariaGRNABC(object, metaclass=ABCMeta):
         self.hdac_ts = self.pdict['hdac_ts']
 
         # offset to nerve map used to help match 1D and 2D cases by setting same range on transport map:
-        self.n_min = 0.4
-        self.n_max = 1.0
+        self.n_min = self.pdict['nd_min']
+        self.n_max = self.pdict['nd_max']
 
 
     @abstractmethod

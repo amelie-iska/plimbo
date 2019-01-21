@@ -931,9 +931,9 @@ class PlanariaGRN2D(PlanariaGRNABC):
             # plot the relative rate of Notum transcription instead of Notum
             # iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
             # carray3 = iNRF / (1 + iNRF)
-            # carray3 = self.molecules_time['Notum'][ti]
+            carray3 = self.molecules_time['Notum'][ti]
 
-            carray3 = self.molecules_time['NRF'][ti]
+            # carray3 = self.molecules_time['NRF'][ti]
 
         elif plot_type == 'reinit':
 
@@ -946,8 +946,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
             # plot the relative rate of Notum transcription instead of Notum
             # iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
             # carray3 = iNRF / (1 + iNRF)
-            # carray3 = self.molecules_time2['Notum'][ti]
-            carray3 = self.molecules_time2['NRF'][ti]
+            carray3 = self.molecules_time2['Notum'][ti]
+            # carray3 = self.molecules_time2['NRF'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -960,8 +960,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
             # iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
             # carray3 = iNRF / (1 + iNRF)
 
-            # carray3 = self.molecules_sim_time['Notum'][ti]
-            carray3 = self.molecules_sim_time['NRF'][ti]
+            carray3 = self.molecules_sim_time['Notum'][ti]
+            # carray3 = self.molecules_sim_time['NRF'][ti]
 
 
         else:
@@ -996,8 +996,8 @@ class PlanariaGRN2D(PlanariaGRNABC):
         col3 = PolyCollection(self.verts_r * 1e3, edgecolor=None, cmap=cmaps['NotumRNA'], linewidth=0.0)
         if autoscale is False:
             # col3.set_clim(clims['NotumRNA'][0], clims['NotumRNA'][1])
-            # col3.set_clim(clims['Notum'][0], clims['Notum'][1])
-            col3.set_clim(clims['NRF'][0], clims['NRF'][1])
+            col3.set_clim(clims['Notum'][0], clims['Notum'][1])
+            # col3.set_clim(clims['NRF'][0], clims['NRF'][1])
         col3.set_array(carray3)
 
 

@@ -575,9 +575,9 @@ class PlanariaGRN1D(PlanariaGRNABC):
             carray2 = self.molecules_time['β-Cat'][ti]
 
             # plot the relative rate of Notum transcription instead of Notum
-            iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
-            carray3 = iNRF / (1 + iNRF)
-            # carray3 = self.molecules_time['Notum'][ti]
+            # iNRF = (self.molecules_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            # carray3 = iNRF / (1 + iNRF)
+            carray3 = self.molecules_time['Notum'][ti]
 
         elif plot_type == 'reinit':
 
@@ -586,9 +586,9 @@ class PlanariaGRN1D(PlanariaGRNABC):
             carray2 = self.molecules_time2['β-Cat'][ti]
 
             # plot the relative rate of Notum transcription instead of Notum
-            iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
-            carray3 = iNRF / (1 + iNRF)
-            # carray3 = self.molecules_time2['Notum'][ti]
+            # iNRF = (self.molecules_time2['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            # carray3 = iNRF / (1 + iNRF)
+            carray3 = self.molecules_time2['Notum'][ti]
 
         elif plot_type == 'sim':
             tsample = self.tsample_sim
@@ -596,9 +596,9 @@ class PlanariaGRN1D(PlanariaGRNABC):
             carray2 = self.molecules_sim_time['β-Cat'][ti]
 
             # plot the relative rate of Notum transcription instead of Notum
-            iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
-            carray3 = iNRF / (1 + iNRF)
-            # carray3 = self.molecules_sim_time['Notum'][ti]
+            # iNRF = (self.molecules_sim_time['NRF'][ti]/ self.K_notum_nrf) ** self.n_notum_nrf
+            # carray3 = iNRF / (1 + iNRF)
+            carray3 = self.molecules_sim_time['Notum'][ti]
 
             xs, cs1 = self.get_plot_segs(carray1)
             _, cs2 = self.get_plot_segs(carray2)
@@ -683,7 +683,7 @@ class PlanariaGRN1D(PlanariaGRNABC):
         axarr[2].set_title("Notum")
         axarr[2].set_ylabel('Concentration [nM]')
         if autoscale is False:
-            axarr[2].set_ylim(clims['NotumRNA'][0], clims['NotumRNA'][1])
+            axarr[2].set_ylim(clims['Notum'][0], clims['Notum'][1])
 
         axarr[2].set_xlabel('Axis Distance [mm]')
 

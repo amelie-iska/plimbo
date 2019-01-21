@@ -218,6 +218,9 @@ class ModelHarness(object):
                 'hdac_to': 's',  # time at which hdac stops growing
                 'hdac_ts': 's',  # time period over which hdac stops growing
 
+                'nd_min': '',
+                'nd_max': ''
+
             })
 
         else:
