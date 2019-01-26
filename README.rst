@@ -100,9 +100,9 @@ Usage
 =====
 
 To use the Planaria Interface for Modeling Body Organization (PLIMBO), open the
-installed ``~/PLIMBO/PLIMBO_Runner.ipynb`` file with `Jupyter Notebook`_. This
-file provides all main functions of PLIMBO in a convenient format, complete with
-detailed documentation.
+installed ``~/PLIMBO/Plimbo_Runner.ipynb`` file with `Jupyter Notebook`_. This
+file provides all main functions of PLIMBO in a convenient format, complete
+with detailed documentation.
 
 Contact
 =======
