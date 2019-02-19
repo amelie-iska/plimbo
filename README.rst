@@ -40,7 +40,6 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 - [\ *Windows*\ ] Emulate **Ubuntu Linux** via the `Windows Subsystem for Linux
   (WSL) <WSL_>`__. [#windows_not]_
 - Install the **Python 3.x** [#python2_not]_ (e.g., 3.6) variant of Anaconda_.
-- Install `Jupyter Notebook`_.
 - Open a **Bash terminal.** [#terminal]_
 - Run the following commands.
 
@@ -60,16 +59,13 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 
     .. code-block:: console
 
-       mkdir ~/PLIMBO &&
-       cd ~/PLIMBO &&
-       curl https://gitlab.com/betse/plimbo/-/archive/v0.0.1/plimbo-v0.0.1.tar.gz -o plimbo.tar.gz &&
-       tar -xvzf plimbo.tar.gz
+       curl https://gitlab.com/betse/plimbo/-/archive/v0.0.1/plimbo-v0.0.1.tar.gz -o plimbo.tar.gz && tar -xvzf plimbo.tar.gz
 
   - Install **PLIMBO.**
 
     .. code-block:: console
 
-       sudo ln -s plimbo "$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/"
+       sudo ln -s plimbo-v0.0.1/plimbo "$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/"
 
 .. [#windows_not]
    The `Windows Subsystem for Linux (WSL) <WSL_>`__ and – hence PLIMBO itself –
@@ -102,10 +98,11 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 Usage
 =====
 
-To use the Planaria Interface for Modeling Body Organization (PLIMBO), open the
-installed ``~/PLIMBO/Plimbo_Runner.ipynb`` file with `Jupyter Notebook`_. This
-file provides all main functions of PLIMBO in a convenient format, complete
-with detailed documentation.
+To use PLIMBO, open the
+`"plimbo-0.0.1/plimbo/Plimbo_Runner.ipynb" file extracted above <notebook_>`__
+with `Jupyter Notebook`_, which comes preinstalled with Anaconda_. This notebook
+serves as a high-level interface to the PLIMBO ecosystem, complete with detailed
+documentation.
 
 Contact
 =======
@@ -154,6 +151,8 @@ PLIMBO is open-source software `released <license_>`__ under the permissive
    https://gitlab.com/betse/plimbo/issues
 .. _license:
    LICENSE
+.. _notebook:
+   Plimbo_Runner.ipynb
 .. _project:
    https://gitlab.com/betse/plimbo
 .. _testing:
