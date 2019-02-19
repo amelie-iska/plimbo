@@ -54,13 +54,16 @@ PLIMBO currently supports **Linux**, **macOS**, and **Windows** out-of-the-box:
 
     .. code-block:: console
 
-       conda install betse scikit-learn
+       conda install betse=0.9.2 scikit-learn=0.20.2
 
   - Download the `most recent stable release <tarballs_>`__ of **PLIMBO.**
 
     .. code-block:: console
 
-       mkdir ~/PLIMBO && cd ~/PLIMBO && curl https://gitlab.com/betse/plimbo/tags
+       mkdir ~/PLIMBO &&
+       cd ~/PLIMBO &&
+       curl https://gitlab.com/betse/plimbo/-/archive/v0.0.1/plimbo-v0.0.1.tar.gz -o plimbo.tar.gz &&
+       tar -xvzf plimbo.tar.gz
 
   - Install **PLIMBO.**
 
